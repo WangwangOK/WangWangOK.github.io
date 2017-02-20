@@ -89,13 +89,13 @@
 
 <meta name="description" content="C存在两种不同的环境：翻译环境和执行环境;">
 <meta property="og:type" content="article">
-<meta property="og:title" content="凌云壮志幾多愁">
+<meta property="og:title" content="《C和指针》Note之基础">
 <meta property="og:url" content="http://yoursite.com/2017/02/20/c_and_pointer_note_base/index.html">
 <meta property="og:site_name" content="凌云壮志幾多愁">
 <meta property="og:description" content="C存在两种不同的环境：翻译环境和执行环境;">
-<meta property="og:updated_time" content="2017-02-19T16:59:38.000Z">
+<meta property="og:updated_time" content="2017-02-20T12:12:48.000Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="凌云壮志幾多愁">
+<meta name="twitter:title" content="《C和指针》Note之基础">
 <meta name="twitter:description" content="C存在两种不同的环境：翻译环境和执行环境;">
 
 
@@ -130,7 +130,7 @@
 
 
 
-  <title>  | 凌云壮志幾多愁 </title>
+  <title> 《C和指针》Note之基础 | 凌云壮志幾多愁 </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
@@ -315,7 +315,7 @@
             
             
               
-                
+                《C和指针》Note之基础
               
             
           </h1>
@@ -367,25 +367,21 @@
 
       
         <p>C存在两种不同的环境：<code>翻译环境</code>和<code>执行环境</code>;<br><a id="more"></a><br>翻译环境是将源代码转换为可执行的机器指令，而执行环境用于实际执行代码。</p>
-<p>###翻译<br>其中翻译阶段主要包括了<code>编译</code>和<code>链接</code>两部分。</p>
+<h3 id="翻译"><a href="#翻译" class="headerlink" title="翻译"></a>翻译</h3><p>其中翻译阶段主要包括了<code>编译</code>和<code>链接</code>两部分。</p>
 <blockquote>
-<p>####编译<br>将源代码转换为目标代码的过程，在这个过程中包含了<code>预处理</code>（预处理相关操作，比如define替换为实际值）和<code>解析</code>（判断源代码的意思），在最后生成<code>目标代码</code>（机器指令的初步形式）。</p>
-<p>####链接<br>链接器会把各个目标文件捆绑起来形成一个可执行程序。在这个过程中会引入c函数库。</p>
+<p>__ 编译<br>将源代码转换为目标代码的过程，在这个过程中包含了<code>预处理</code>（预处理相关操作，比如define替换为实际值）和<code>解析</code>（判断源代码的意思），在最后生成<code>目标代码</code>（机器指令的初步形式）。</p>
+<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>链接器会把各个目标文件捆绑起来形成一个可执行程序。在这个过程中会引入c函数库。</p>
 </blockquote>
-<p>###执行<br>程序载入到内存中，并初始化在堆栈中没有初始化的变量。</p>
+<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>程序载入到内存中，并初始化在堆栈中没有初始化的变量。</p>
 <blockquote>
-<p>####运行时堆栈<br>用户保存函数的局部变量和返回值。</p>
-<p>####静态内存<br>存储在静态内存中的变量将会在程序执行期间一直保留！</p>
+<p>__ 运行时堆栈<br>用户保存函数的局部变量和返回值。</p>
+<h4 id="静态内存"><a href="#静态内存" class="headerlink" title="静态内存"></a>静态内存</h4><p>存储在静态内存中的变量将会在程序执行期间一直保留！</p>
 </blockquote>
 <p>程序的终止可以是<code>main函数</code>完成返回，也可以是主动执行了<code>exit</code>。</p>
-<p>###一个技巧<br>如果在使用注释的时候<code>/**/</code>嵌套了多层会导致注释失效，这时候我们可以在最外层添加:</p>
-<pre>
-#if 0
-//中间为代码
-#endif
-</pre>
-
-<p>而且在使用注释的时候并不会把注释掉的部分从源代码中删除，只是不去执行而已，使用<code>if endif</code>的话是在逻辑上删除了这一段代码的。<br>这在后面的预处理器那一节会讲更多。</p>
+<h3 id="一个技巧"><a href="#一个技巧" class="headerlink" title="一个技巧"></a>一个技巧</h3><p>如果在使用注释的时候<code>/**/</code>嵌套了多层会导致注释失效，这时候我们可以在最外层添加:</p>
+<p><pre></pre></p>
+<p>#if 0<br>//中间为代码</p>
+<p>#endif<br><br>而且在使用注释的时候并不会把注释掉的部分从源代码中删除，只是不去执行而已，使用<code>if endif</code>的话是在逻辑上删除了这一段代码的。<br>这在后面的预处理器那一节会讲更多。</p>
 
       
     </div>
@@ -471,8 +467,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            Inhaltsverzeichnis
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            Übersicht
+          </li>
+        </ul>
+      
 
-      <section class="site-overview sidebar-panel sidebar-panel-active">
+      <section class="site-overview sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
           <img class="site-author-image" itemprop="image"
                src="/uploads/avatar/2017_02_20.JPG"
@@ -559,6 +564,22 @@
 
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#翻译"><span class="nav-number">1.</span> <span class="nav-text">翻译</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#链接"><span class="nav-number">1.1.</span> <span class="nav-text">链接</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#执行"><span class="nav-number">2.</span> <span class="nav-text">执行</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#静态内存"><span class="nav-number">2.1.</span> <span class="nav-text">静态内存</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#一个技巧"><span class="nav-number">3.</span> <span class="nav-text">一个技巧</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
     </div>
