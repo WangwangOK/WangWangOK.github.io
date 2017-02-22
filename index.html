@@ -393,91 +393,14 @@
 
       
         
-          
-            <a id="more"></a> 
-<p>当前C语言环境:</p>
-<pre>
-Apple LLVM version 8.0.0 (clang-800.0.38)
-Target: x86_64-apple-darwin15.6.0
-Thread model: posix
-InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-</pre>
-
-<h3 id="粗略的总结一下知识点"><a href="#粗略的总结一下知识点" class="headerlink" title="粗略的总结一下知识点"></a>粗略的总结一下知识点</h3><ul>
-<li>1.变量标识符与内存位置之间的关联并不是硬件提供的，而是编译器为我们提供的，<strong>硬件仍然通过地址访问内存位置。</strong></li>
-<li><ol>
-<li>数组中的元素存储于连续的内存地址中。</li>
-</ol>
-</li>
-<li>3.<code>NULL</code>指针作为一个不指向任何东西的特殊指针。<strong>在对指针进行解引用操作之前，必须确保它不是<code>NULL</code>指针</strong>(因为对一个NULL指针进行解引用是非法操作)。</li>
-<li>4.指针的指针中，<em>操作符具有从右向左的结合性，所以这个表达式相当于`</em>(*c)`，所以可以从里向外求值。<br>对于如下代码中:<pre>int a = 10;
-int *b = &a;
-int **c = &b;</pre>
-
-</li>
-</ul>
-<table>
-<thead>
-<tr>
-<th>表达式</th>
-<th style="text-align:center">相当的表达式</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>a</td>
-<td style="text-align:center">10</td>
-</tr>
-<tr>
-<td>b</td>
-<td style="text-align:center">&amp;a</td>
-</tr>
-<tr>
-<td>*b</td>
-<td style="text-align:center">12,a</td>
-</tr>
-<tr>
-<td>c</td>
-<td style="text-align:center">&amp;b</td>
-</tr>
-<tr>
-<td>*c</td>
-<td style="text-align:center">&amp;a,b</td>
-</tr>
-<tr>
-<td>**c</td>
-<td style="text-align:center">12,a,*b</td>
-</tr>
-</tbody>
-</table>
-<blockquote>
-<p>注意⚠️<br>在指针没有被初始化之前，一定不要对这个指针变量使用间接操作符。</p>
-</blockquote>
-<h3 id="习题练习纪录"><a href="#习题练习纪录" class="headerlink" title="习题练习纪录"></a>习题练习纪录</h3><ul>
-<li>1.字符串查找相关，两个字符串中找出第一个相同的字符串。<br>解答:<pre>
-char *find_char(char const \*source,char const \*chars){
-  if (source == NULL || chars == NULL) {
-      return NULL;
-  }
-  char const \*f_p = chars;
-  do {
-      do {
-          if (\*source == \*chars) {
-              char \*result = (char \*)source;
-              char \*cp;
-              \*cp = \*result;
-              return cp;
-          }
-      } while (\*chars++ != '\0');
-      chars = f_p;
-  } while (\*source++ != '\0');
-  return NULL;
-}
-</pre>
-</li>
-</ul>
-
-          
+          <p>指针。<br>
+          <!--noindex-->
+          <div class="post-button text-center">
+            <a class="btn" href="/2017/02/22/c_and_pointer_note_case3/#more" rel="contents">
+              阅读全文 &raquo;
+            </a>
+          </div>
+          <!--/noindex-->
         
       
     </div>
