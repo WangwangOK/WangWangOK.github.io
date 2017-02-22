@@ -71,7 +71,7 @@
 <link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="C," />
+  <meta name="keywords" content="C,指针," />
 
 
 
@@ -93,7 +93,7 @@
 <meta property="og:url" content="http://yoursite.com/2017/02/22/c_and_pointer_note_case3/index.html">
 <meta property="og:site_name" content="凌云壮志幾多愁">
 <meta property="og:description" content="指针。">
-<meta property="og:updated_time" content="2017-02-22T15:46:54.000Z">
+<meta property="og:updated_time" content="2017-02-22T15:57:44.000Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="《C和指针Note》之指针">
 <meta name="twitter:description" content="指针。">
@@ -398,10 +398,7 @@ InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault
 
 <h3 id="粗略的总结一下知识点"><a href="#粗略的总结一下知识点" class="headerlink" title="粗略的总结一下知识点"></a>粗略的总结一下知识点</h3><ul>
 <li>1.变量标识符与内存位置之间的关联并不是硬件提供的，而是编译器为我们提供的，<strong>硬件仍然通过地址访问内存位置。</strong></li>
-<li><ol>
-<li>数组中的元素存储于连续的内存地址中。</li>
-</ol>
-</li>
+<li>2.数组中的元素存储于连续的内存地址中。</li>
 <li>3.<code>NULL</code>指针作为一个不指向任何东西的特殊指针。<strong>在对指针进行解引用操作之前，必须确保它不是<code>NULL</code>指针</strong>(因为对一个NULL指针进行解引用是非法操作)。</li>
 <li>4.指针的指针中，<em>操作符具有从右向左的结合性，所以这个表达式相当于`</em>(*c)`，所以可以从里向外求值。<br>对于如下代码中:<pre>int a = 10;
 int *b = &a;
@@ -448,22 +445,22 @@ int **c = &b;</pre>
 </blockquote>
 <h3 id="习题练习纪录"><a href="#习题练习纪录" class="headerlink" title="习题练习纪录"></a>习题练习纪录</h3><ul>
 <li>1.字符串查找相关，两个字符串中找出第一个相同的字符串。<br>解答:<pre>
-char *find_char(char const \*source,char const \*chars){
+char *find_char(char const *source,char const *chars){
   if (source == NULL || chars == NULL) {
       return NULL;
   }
-  char const \*f_p = chars;
+  char const *f_p = chars;
   do {
       do {
-          if (\*source == \*chars) {
-              char \*result = (char \*)source;
-              char \*cp;
-              \*cp = \*result;
+          if (*source == *chars) {
+              char *result = (char *)source;
+              char *cp;
+              *cp = *result;
               return cp;
           }
-      } while (\*chars++ != '\0');
+      } while (*chars++ != '\0');
       chars = f_p;
-  } while (\*source++ != '\0');
+  } while (*source++ != '\0');
   return NULL;
 }
 </pre>
@@ -494,6 +491,8 @@ char *find_char(char const \*source,char const \*chars){
           
             <a href="/tags/C/" rel="tag"># C</a>
           
+            <a href="/tags/指针/" rel="tag"># 指针</a>
+          
         </div>
       
 
@@ -514,6 +513,10 @@ char *find_char(char const \*source,char const \*chars){
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/02/22/c_and_pointer_note_case4/" rel="prev" title="《C和指针Note》之数组和指针">
+                《C和指针Note》之数组和指针 <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -585,7 +588,7 @@ char *find_char(char const \*source,char const \*chars){
           
             <div class="site-state-item site-state-posts">
               <a href="/archives">
-                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-count">4</span>
                 <span class="site-state-item-name">日志</span>
               </a>
             </div>
@@ -603,7 +606,7 @@ char *find_char(char const \*source,char const \*chars){
           
             <div class="site-state-item site-state-tags">
               <a href="/tags">
-                <span class="site-state-item-count">1</span>
+                <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">标签</span>
               </a>
             </div>
