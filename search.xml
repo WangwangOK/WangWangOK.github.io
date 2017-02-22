@@ -3,7 +3,14 @@
   
     
     <entry>
-      <title><![CDATA[《C和指针》Note之基础]]></title>
+      <title><![CDATA[《C和指针Note》之操作符和表达式]]></title>
+      <url>%2F2017%2F02%2F22%2Fc_and_pointer_note_case2%2F</url>
+      <content type="text"><![CDATA[这篇主要记录操作符和表达式相关的只是！当前C语言环境:1234Apple LLVM version 8.0.0 (clang-800.0.38)Target: x86_64-apple-darwin15.6.0Thread model: posixInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin ###移位操作符左移操作符&lt;&lt;,右移操作符&gt;&gt;;而且位移的操作数必须是整数类型。其中右移操作符存在两种情况：算术移位和逻辑移位；这里主要来说一说算术移位。 ######逻辑移位左边移入的位用0填充 ######算术移位算术移位也就是说会考虑到符号位，即左边移入的位由原值的符号位决定，如果符号位为1则移入的位为1，符号位为0则移入的位为0；对于移位操作，还必须知道数字在计算机中是以二进制的形式存在的，而且负数的表示形式还稍有不同。 负数在计算机中的二进制表示形式 假设在当前计算机中，int型占8位。比如要知道数字-10在计算机的表现形式，第一步：数字10的二进制值为00001010，第二步用100000000来减去00001010。得到的就是-10在二进制中的表现形式为:11110110。更多关于负数补码的介绍阮一峰的网络日志－－关于2的补码 这里我举例说明一下移位操作: int uint = 10; //00001010int sint = -10;//11110110printf(“%d\n”,uint &gt;&gt; 2);//00000010printf(“%d\n”,sint &gt;&gt; 2);//11111101在当前环境下： Apple LLVM version 8.0.0 (clang-800.0.38)Target: x86_64-apple-darwin15.6.0Thread model: posixInstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin打印的结果分别为2和-3,所以从这里看出来编译器对于左移操作是算术移位。 ###++和–操作符对于这两个操作符的计算就很简单了，还是来举例说明一下: int a,b,c,d;a = b = 10;c = ++a;d = b++;但是需要来理解这其中的原理: ++和–操作符原理抽象的说，前缀和后缀形式的增值操作符都复制一份变量值的拷贝，这些操作符的结果不是被他们所修改的变量，而是变量值的拷贝。 ###逗号操作符逗号操作符将多个表达式分隔开，这些表达式从左向右逐个进行求值，__整个逗号表达式的值就是最后那个表达式的值。 int (^f1)(int) = ^(int value){ return value + 1;};int (^f2)(int) = ^(int value){ return value + 2;};int (^f3)(int,int) = ^(int a,int b){ return a + b;};int x,a,b,c;x = 0;//从这里开始a = f1(x);b = f2(x + a);for (c = f3(a,b); c &lt; 10; c = f3(a,b)) { printf(“while statements c is:%d\n”,c); a = f1(++x); b = f2(x + a);}//到这里结束，这其中的代码将会被修改上面为原始的代码片段，现在我们需要使用逗号操作符来简化上面的代码，同时我选择用while循环来代替for循环。 while (a = f1(x),b = f2(x + a),c = f3(a,b),++x,c &lt; 10) { printf(“while statements c is:%d\n”,c);}现在，循环中用于获得下一个值的语句只需要出现一次，逗号操作符使源码更易于维护。]]></content>
+    </entry>
+
+    
+    <entry>
+      <title><![CDATA[《C和指针Note》之基础]]></title>
       <url>%2F2017%2F02%2F20%2Fc_and_pointer_note_base%2F</url>
       <content type="text"><![CDATA[C存在两种不同的环境：翻译环境和执行环境;翻译环境是将源代码转换为可执行的机器指令，而执行环境用于实际执行代码。 翻译其中翻译阶段主要包括了编译和链接两部分。 __ 编译将源代码转换为目标代码的过程，在这个过程中包含了预处理（预处理相关操作，比如define替换为实际值）和解析（判断源代码的意思），在最后生成目标代码（机器指令的初步形式）。 链接链接器会把各个目标文件捆绑起来形成一个可执行程序。在这个过程中会引入c函数库。 执行程序载入到内存中，并初始化在堆栈中没有初始化的变量。 __ 运行时堆栈用户保存函数的局部变量和返回值。 静态内存存储在静态内存中的变量将会在程序执行期间一直保留！ 程序的终止可以是main函数完成返回，也可以是主动执行了exit。 一个技巧如果在使用注释的时候/**/嵌套了多层会导致注释失效，这时候我们可以在最外层添加:123#if 0//中间为代码#endif 而且在使用注释的时候并不会把注释掉的部分从源代码中删除，只是不去执行而已，使用if endif的话是在逻辑上删除了这一段代码的。这在后面的预处理器那一节会讲更多。]]></content>
     </entry>
