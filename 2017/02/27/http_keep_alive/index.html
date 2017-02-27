@@ -1,0 +1,948 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="HTTP," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="HTTP/1.1允许http设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的http请求重用现存的连接。在事务处理结束之后仍然保持打开状态的TCP连接被称为持久连接。持久连接会在不同事务之间保持打开状态，直到客户端或者服务器决定将其关闭。已经打开的连接可以避免慢启动的拥堵适应阶段。以便更快的进行数据传输。">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP持久连接">
+<meta property="og:url" content="http://yoursite.com/2017/02/27/http_keep_alive/index.html">
+<meta property="og:site_name" content="凌云壮志幾多愁">
+<meta property="og:description" content="HTTP/1.1允许http设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的http请求重用现存的连接。在事务处理结束之后仍然保持打开状态的TCP连接被称为持久连接。持久连接会在不同事务之间保持打开状态，直到客户端或者服务器决定将其关闭。已经打开的连接可以避免慢启动的拥堵适应阶段。以便更快的进行数据传输。">
+<meta property="og:image" content="http://yoursite.com/uploads/md_srouce/http_keep_alive_1.png">
+<meta property="og:image" content="http://yoursite.com/uploads/md_srouce/http_keep_alive_2.png">
+<meta property="og:image" content="http://yoursite.com/uploads/md_srouce/http_keep_alive_3.png">
+<meta property="og:updated_time" content="2017-02-27T15:32:10.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HTTP持久连接">
+<meta name="twitter:description" content="HTTP/1.1允许http设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的http请求重用现存的连接。在事务处理结束之后仍然保持打开状态的TCP连接被称为持久连接。持久连接会在不同事务之间保持打开状态，直到客户端或者服务器决定将其关闭。已经打开的连接可以避免慢启动的拥堵适应阶段。以便更快的进行数据传输。">
+<meta name="twitter:image" content="http://yoursite.com/uploads/md_srouce/http_keep_alive_1.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/02/27/http_keep_alive/"/>
+
+
+
+
+
+  <title> HTTP持久连接 | 凌云壮志幾多愁 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">凌云壮志幾多愁</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/27/http_keep_alive/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="王望">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/uploads/avatar/2017_02_20.JPG">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="凌云壮志幾多愁">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="凌云壮志幾多愁" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                HTTP持久连接
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-02-27T23:18:00+08:00">
+                2017-02-27
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/网络/" itemprop="url" rel="index">
+                    <span itemprop="name">网络</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>HTTP/1.1允许http设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的http请求重用现存的连接。在事务处理结束之后仍然保持打开状态的TCP连接被称为<strong>持久连接</strong>。持久连接会在不同事务之间保持打开状态，直到客户端或者服务器决定将其关闭。<br>已经打开的连接可以避免慢启动的拥堵适应阶段。以便更快的进行数据传输。<br><a id="more"></a> </p>
+<h2 id="持久以及并行连接"><a href="#持久以及并行连接" class="headerlink" title="持久以及并行连接"></a>持久以及并行连接</h2><p>并行连接的缺点: </p>
+<ul>
+<li>每个事务打开／关闭一个新的连接，会耗费时间和宽带的；</li>
+<li>由于TCP慢启动，每条新连接的性能都会有降低；</li>
+<li>可打开的并行连接数量实际上是有限的。</li>
+</ul>
+<p>持久连接降低了时延和建立连接的开销，但是持久连接时可能会累积出大量的空闲连接。所以需要配合使用持久连接和并行连接。</p>
+<h2 id="HTTP-1-0-keep-alive连接"><a href="#HTTP-1-0-keep-alive连接" class="headerlink" title="HTTP/1.0+ keep-alive连接"></a>HTTP/1.0+ keep-alive连接</h2><h4 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h4><p>实现了HTTP/1.0 keep-alive连接的客户端可以通过包含<code>Connection: Keep-Alive</code>首部请求将一条连接保持在打开状态。</p>
+<h4 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h4><p>如果服务器愿意为下一条请求将连接保持在打开状态，就在通用首部中包含相同的内容。如果没有包含<code>Connection: Keep-Alive</code>首部，客户端就认为服务器不支持keep-alive，会在发回响应报文之后关闭连接。<br><img src="/uploads/md_srouce/http_keep_alive_1.png" alt="HTTP:1.0 keep-alive事务首部的握手过程.png"></p>
+<blockquote>
+<p>⚠️注意<br>keep-alive首部只是请求将连接保持在活跃状态。在发出keep-alive请求之后，客户端和服务器可以在任意时刻关闭空闲的keep-alive连接，并可以限制keep-alive连接所处理事务的数量。</p>
+</blockquote>
+<h4 id="通用首部Keep-Alive选项"><a href="#通用首部Keep-Alive选项" class="headerlink" title="通用首部Keep-Alive选项"></a>通用首部<code>Keep-Alive</code>选项</h4><ul>
+<li>参数timeout是在Keep-Alive响应首部发送的。它<strong>估计</strong>了服务器希望将连接保持在活跃状态的时间。</li>
+<li>参数max是在Keep-Alive响应首部发送的。它<strong>估计</strong>了服务器还希望为多少个事务抱持此连接的活跃状态。</li>
+<li>Keep-Alive首部还可支持任意未经处理的属性。语法为：name [=value]</li>
+</ul>
+<p>Keep-Alive首部只有在提供了<code>Connection:Keep-Alive</code>时才能使用。例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Connection:Keep-Alive</div><div class="line">Keep-Alive:max=5, timeout=120</div></pre></td></tr></table></figure></p>
+<h4 id="Keep-Alive连接的限制和规则"><a href="#Keep-Alive连接的限制和规则" class="headerlink" title="Keep-Alive连接的限制和规则"></a>Keep-Alive连接的限制和规则</h4><ul>
+<li>在HTTP1.0中，keep-alive并不是默认使用的。客户端必须发送一个<code>Connection:Keep-Alive</code>请求首部来激活keep-alive连接；</li>
+<li>代理或网关必须将报文转发或将其高速缓存之前，删除在Connection首部中命名的所有首部字段以及Connection首部自身。</li>
+<li>不应该与无法确定是否支持Connection首部代理服务器建立keep-alive连接，以防止出现哑代理。</li>
+</ul>
+<h2 id="HTTP-1-1-持久连接-Persistent-Connection"><a href="#HTTP-1-1-持久连接-Persistent-Connection" class="headerlink" title="HTTP/1.1 持久连接(Persistent Connection)"></a>HTTP/1.1 持久连接(Persistent Connection)</h2><p>HTTP/1.1 持久连接在默认情况下是<strong>激活</strong>的，要在事务处理结束之后将连接关闭，HTTP/1.1应用程序必须向报文中显示的添加一个<code>Connection:close</code>首部。不然HTTP/1.1 连接就仍然维持在打开状态。</p>
+<blockquote>
+<p>⚠️<br>不发送<code>Connection:close</code>并不意味着服务器承诺永远将连接保持在打开状态。</p>
+</blockquote>
+<h4 id="持久连接的限制和规则"><a href="#持久连接的限制和规则" class="headerlink" title="持久连接的限制和规则"></a>持久连接的限制和规则</h4><ul>
+<li>发送了Connection:close请求首部之后，客户端就无法在那条连接上发送更多的请求了。 </li>
+<li>如果客户端不想再连接上发送其他请求，就应该在最后一条请求中发送一个Connection:close请求首部。</li>
+<li>只有当连接上所有报文的实体主体部分的长度和首部字段<code>Content Length</code>一样（或者用分块传输编码方式），这样连接才能持久保持</li>
+<li>HTTP1.1的代理服务器不应该与HTTP1.0客户端建立持久连接。</li>
+<li><strong>HTTP1.1设备可以在任意时刻关闭连接</strong>，尽管是出于传输报文的过程中关闭连接。</li>
+</ul>
+<h2 id="管道化连接"><a href="#管道化连接" class="headerlink" title="管道化连接"></a>管道化连接</h2><p>HTTP1.1允许在持久连接上可选的使用<code>请求管道</code>。这是在keep-alive连接上的进一步性能优化。<br>在响应到达前，可以<strong>将多条请求放入队列中</strong>，这样做可以降低网络的环回时间，提高性能。</p>
+<h4 id="管道化连接的几个限制"><a href="#管道化连接的几个限制" class="headerlink" title="管道化连接的几个限制"></a>管道化连接的几个限制</h4><ul>
+<li>如果http客户端无法确认连接是持久的，就不应该使用管道；</li>
+<li>必须按照与请求相同的顺序回送http响应。</li>
+<li>http客户端必须做好连接会在任意时刻关闭的准备，还要准备好重发所有未完成的管道化请求。</li>
+<li>http客户端不应该用管道化的方式发送会产生副作用的请求(比如POST)。</li>
+</ul>
+<p><img src="/uploads/md_srouce/http_keep_alive_2.png" alt="管道化连接.png"></p>
+<h2 id="关闭连接"><a href="#关闭连接" class="headerlink" title="关闭连接"></a>关闭连接</h2><p>在连接管理中需要知道什么时候关闭连接以及如何去关闭连接。</p>
+<h4 id="“任意”接触连接"><a href="#“任意”接触连接" class="headerlink" title="“任意”接触连接"></a>“任意”接触连接</h4><p><strong>所有的HTTP客户端、服务器或者代理都可以在任意时刻关闭一条TCP传输连接</strong>。通常会在一条报文结束时关闭连接。</p>
+<blockquote>
+<p>但是，服务器永远都无法确定在它关闭“空闲”连接那时候，在客户端有没有数据要发送。如果出现这种情况，客户端就会在写入半截请求报文时发现出现连接错误的请求。</p>
+</blockquote>
+<h4 id="Content-Length及截尾操作"><a href="#Content-Length及截尾操作" class="headerlink" title="Content-Length及截尾操作"></a>Content-Length及截尾操作</h4><p>每条HTTP响应都应该有精确的Content-Length首部，用以描述响应主题的尺寸。<br>客户端或者代理受到一条随连接关闭而结束的http响应，且实际传输的实体长度与<code>Content-Length</code>并不匹配，接收端就应该质疑长度的正确性。<br>如果接收端是缓存代理，接收端就不应该缓存这条响应。代理应该将有问题的报文原封不动地转发出去，而不应该试图去“校正”Content-Length。</p>
+<h4 id="连接关闭容限，重试以及幂等性"><a href="#连接关闭容限，重试以及幂等性" class="headerlink" title="连接关闭容限，重试以及幂等性"></a>连接关闭容限，重试以及幂等性</h4><p>如果客户端执行事务的过程中，传输连接关闭了，<strong>那么除非事务处理会带来一些副作用，否则客户端就应该重新打开连接</strong>，并重试。</p>
+<h6 id="幂等"><a href="#幂等" class="headerlink" title="幂等"></a>幂等</h6><p>如果一个事务，不管是执行一次还是多次，得到的结果都是相同的，那么这个事务就是幂等的。</p>
+<blockquote>
+<p>GET、HEAD、PUT、DELETE、TRACE和OPTIONS方法都是的。</p>
+</blockquote>
+<p>客户端不应该用管道化的方式传送非幂等请求(就是说比如POST请求不应该使用管道化方式)。</p>
+<h4 id="正常关闭连接"><a href="#正常关闭连接" class="headerlink" title="正常关闭连接"></a>正常关闭连接</h4><p>TCP连接都是双向的。tcp连接的每一端都有一个输入队列和一个输出队列，用于数据的读或写。<br><img src="/uploads/md_srouce/http_keep_alive_3.png" alt="tcp双向的连接.png"></p>
+<h6 id="完全关闭和半关闭"><a href="#完全关闭和半关闭" class="headerlink" title="完全关闭和半关闭"></a>完全关闭和半关闭</h6><p>应用程序可以关闭tcp输入和输出信道中的任意一个，或者将两者都关闭了。</p>
+<blockquote>
+<p>套接字调用<code>close()</code>会将tcp连接的输入和输出信道都关闭，这就是<strong>完全关闭</strong>。<br>用<code>shutdown()</code>单独关闭输入或者输出信道，被称为<strong>半关闭</strong>。</p>
+</blockquote>
+<h6 id="TCP关闭及重置错误"><a href="#TCP关闭及重置错误" class="headerlink" title="TCP关闭及重置错误"></a>TCP关闭及重置错误</h6><p>总之，<strong>关闭连接的输出信道总是很安全的</strong>。连接另一端的对等实体会在其缓冲区中读出所有数据之后收到一条通知，说明流结束了。<br><strong>关闭连接的输入信道比较危险</strong>，除非你知道另一端不打算再发送其他数据。如果另一端向你已关闭的输入信道发送数据，操作系统会向另一端的机器回送一条TCP“<strong>连接被对端重置</strong>”。</p>
+<blockquote>
+<p>大部分操作系统都会将这种情况作为严重错误来处理，<strong>删除对端还未读去的所有缓存数据</strong>。但是这样做对于管道化来说简直就是噩梦，因为:比如你已经在一条持久连接上发送了10条管道式请求，响应已经收到了，正在操作系统的缓存区中存着。但是你发送了第11条请求，但是服务器认为你使用这条连接的时间太长，决定将其关闭，这个重置信息会清空你的缓冲区。</p>
+</blockquote>
+<h6 id="正常关闭"><a href="#正常关闭" class="headerlink" title="正常关闭"></a>正常关闭</h6><p>实现正常关闭的应用程序首先应该关闭它们的输出信道，然后等待另一端的对等实体关闭它的输出信道。当两端都告诉对方它们不会再发送任何数据之后，连接就会被完全关闭，而不会有重置风险。如果在一定的时间区间内对端没有关闭输入信道，应用程序可以强制关闭连接。</p>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/HTTP/" rel="tag"># HTTP</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/02/22/c_and_pointer_note_case4/" rel="next" title="《C和指针Note》之数组和指针">
+                <i class="fa fa-chevron-left"></i> 《C和指针Note》之数组和指针
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar/2017_02_20.JPG"
+               alt="王望" />
+          <p class="site-author-name" itemprop="name">王望</p>
+           
+              <p class="site-description motion-element" itemprop="description">男儿不展风云志，空负天生八尺躯。</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/wangwangok" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/wwloading/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.jianshu.com/u/11188e5bb304" title="我的简书" target="_blank">我的简书</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#持久以及并行连接"><span class="nav-number">1.</span> <span class="nav-text">持久以及并行连接</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-1-0-keep-alive连接"><span class="nav-number">2.</span> <span class="nav-text">HTTP/1.0+ keep-alive连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#客户端"><span class="nav-number">2.0.1.</span> <span class="nav-text">客户端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#服务端"><span class="nav-number">2.0.2.</span> <span class="nav-text">服务端</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#通用首部Keep-Alive选项"><span class="nav-number">2.0.3.</span> <span class="nav-text">通用首部Keep-Alive选项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Keep-Alive连接的限制和规则"><span class="nav-number">2.0.4.</span> <span class="nav-text">Keep-Alive连接的限制和规则</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#HTTP-1-1-持久连接-Persistent-Connection"><span class="nav-number">3.</span> <span class="nav-text">HTTP/1.1 持久连接(Persistent Connection)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#持久连接的限制和规则"><span class="nav-number">3.0.1.</span> <span class="nav-text">持久连接的限制和规则</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#管道化连接"><span class="nav-number">4.</span> <span class="nav-text">管道化连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#管道化连接的几个限制"><span class="nav-number">4.0.1.</span> <span class="nav-text">管道化连接的几个限制</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关闭连接"><span class="nav-number">5.</span> <span class="nav-text">关闭连接</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#“任意”接触连接"><span class="nav-number">5.0.1.</span> <span class="nav-text">“任意”接触连接</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Content-Length及截尾操作"><span class="nav-number">5.0.2.</span> <span class="nav-text">Content-Length及截尾操作</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#连接关闭容限，重试以及幂等性"><span class="nav-number">5.0.3.</span> <span class="nav-text">连接关闭容限，重试以及幂等性</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#幂等"><span class="nav-number">5.0.3.0.1.</span> <span class="nav-text">幂等</span></a></li></ol></li></ol></li><li class="nav-item nav-level-4"><a class="nav-link" href="#正常关闭连接"><span class="nav-number">5.0.4.</span> <span class="nav-text">正常关闭连接</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#完全关闭和半关闭"><span class="nav-number">5.0.4.0.1.</span> <span class="nav-text">完全关闭和半关闭</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#TCP关闭及重置错误"><span class="nav-number">5.0.4.0.2.</span> <span class="nav-text">TCP关闭及重置错误</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#正常关闭"><span class="nav-number">5.0.4.0.3.</span> <span class="nav-text">正常关闭</span></a></li></ol></li></ol></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">王望</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>

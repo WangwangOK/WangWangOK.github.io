@@ -1,0 +1,972 @@
+<!doctype html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+  
+  
+  
+  
+
+  
+    
+    
+  
+
+  
+
+  
+
+  
+
+  
+
+  
+    
+    
+    <link href="//fonts.googleapis.com/css?family=Lato:300,300italic,400,400italic,700,700italic&subset=latin,latin-ext" rel="stylesheet" type="text/css">
+  
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.0" rel="stylesheet" type="text/css" />
+
+
+  <meta name="keywords" content="C,指针," />
+
+
+
+
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=5.1.0" />
+
+
+
+
+
+
+<meta name="description" content="记录指针和数组直接的关系!">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《C和指针Note》之数组和指针">
+<meta property="og:url" content="http://yoursite.com/2017/02/22/c_and_pointer_note_case4/index.html">
+<meta property="og:site_name" content="凌云壮志幾多愁">
+<meta property="og:description" content="记录指针和数组直接的关系!">
+<meta property="og:updated_time" content="2017-02-22T16:05:01.000Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《C和指针Note》之数组和指针">
+<meta name="twitter:description" content="记录指针和数组直接的关系!">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    sidebar: {"position":"left","display":"post"},
+    fancybox: true,
+    motion: true,
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="http://yoursite.com/2017/02/22/c_and_pointer_note_case4/"/>
+
+
+
+
+
+  <title> 《C和指针Note》之数组和指针 | 凌云壮志幾多愁 </title>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    
+  
+
+  <div class="container one-collumn sidebar-position-left page-post-detail ">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">凌云壮志幾多愁</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+        <li class="menu-item menu-item-search">
+          
+            <a href="javascript:;" class="popup-trigger">
+          
+            
+              <i class="menu-item-icon fa fa-search fa-fw"></i> <br />
+            
+            搜索
+          </a>
+        </li>
+      
+    </ul>
+  
+
+  
+    <div class="site-search">
+      
+  <div class="popup local-search-popup">
+  <div class="local-search-header clearfix">
+    <span class="search-icon">
+      <i class="fa fa-search"></i>
+    </span>
+    <span class="popup-btn-close">
+      <i class="fa fa-times-circle"></i>
+    </span>
+    <div class="local-search-input-wrapper">
+      <input autocapitalize="off" autocomplete="off" autocorrect="off" placeholder="搜索..." spellcheck="false" type="text" id="local-search-input">
+    </div>
+  </div>
+  <div id="local-search-result"></div>
+</div>
+
+
+
+    </div>
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal " itemscope itemtype="http://schema.org/Article">
+  <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/02/22/c_and_pointer_note_case4/">
+
+  <span style="display:none" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <meta itemprop="name" content="王望">
+    <meta itemprop="description" content="">
+    <meta itemprop="image" content="/uploads/avatar/2017_02_20.JPG">
+  </span>
+
+  <span style="display:none" itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <meta itemprop="name" content="凌云壮志幾多愁">
+    <span style="display:none" itemprop="logo" itemscope itemtype="http://schema.org/ImageObject">
+      <img style="display:none;" itemprop="url image" alt="凌云壮志幾多愁" src="">
+    </span>
+  </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+            
+            
+              
+                《C和指针Note》之数组和指针
+              
+            
+          </h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2017-02-22T23:55:26+08:00">
+                2017-02-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+            <span class="post-category" >
+            
+              <span class="post-meta-divider">|</span>
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">分类于</span>
+              
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing">
+                  <a href="/categories/C语言/" itemprop="url" rel="index">
+                    <span itemprop="name">C语言</span>
+                  </a>
+                </span>
+
+                
+                
+              
+            </span>
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p>记录指针和数组直接的关系!<br><a id="more"></a><br>当前C语言环境:</p>
+<pre>
+Apple LLVM version 8.0.0 (clang-800.0.38)
+Target: x86_64-apple-darwin15.6.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+</pre>
+
+<h2 id="一维数组"><a href="#一维数组" class="headerlink" title="一维数组"></a>一维数组</h2><h3 id="数组名"><a href="#数组名" class="headerlink" title="数组名"></a>数组名</h3><p>数组名的值是一个指针常量，也是数组第一个元素的地址。</p>
+<blockquote>
+<p>注意⚠️<br>数组具有确定的数量的元素，而指针只是一个标量值，<strong><em>只有数组名在表达式中使用时，编译器才会为他参数一个指针常量(意思就是你不能修改这个指针的值)</em></strong>。</p>
+</blockquote>
+<p>指针常量所指向的是内存中数组的起始位置，如果修改这个指针常量，唯一可行的操作就是把整个数组移动到内存的其他位置，但是在程序完成链接之后，内存中数组的位置是固定的，所以当程序运行时，在想移动数组就晚了。</p>
+<h5 id="数组名不作为指针常量来表示的两种场景"><a href="#数组名不作为指针常量来表示的两种场景" class="headerlink" title="数组名不作为指针常量来表示的两种场景"></a>数组名不作为指针常量来表示的两种场景</h5><blockquote>
+<p>注意：这里说的是<strong>不作为</strong>指针常量。</p>
+</blockquote>
+<ul>
+<li>1.数组名作为sizeof操作符：<br>sizeof返回整个数组所占用的字节，而不是每个元素所占用的字节，也不是指向数组的指针的长度。</li>
+<li>2.数组名用于单目操作符&amp;时：<br>返回一个指向数组的指针，而不是一个指向指针常量的指针。</li>
+</ul>
+<pre>
+int a[10];
+int *c;
+c = &a[0];c = a;//这里赋值的是一个指针的拷贝。
+</pre>
+
+<h3 id="下标引用和指针-间接取值操作"><a href="#下标引用和指针-间接取值操作" class="headerlink" title="下标引用和指针(间接取值操作)"></a>下标引用和指针(间接取值操作)</h3><p><code>array[3]，*(array + 3)</code>出了优先级之外，下标引用和间接访问完全相同。</p>
+<p><pre><br>int array[10];<br>int *ap = array + 2;<br></pre></p>
+<ul>
+<li>1.<code>ap</code>:这是一个指针地址，所以该表达式和<code>&amp;array[2]</code>或者<code>array+2</code>相同。</li>
+<li>2.<code>*ap</code>:间接访问，与<code>array[2]</code>和<code>*(array + 2)</code>相同。</li>
+<li>3.<code>ap[6]</code>:C的下标引用和间接访问表达式是一样的，所以ap[6]和<code>*(ap + 6)</code>相同，与<code>array[8]</code>和<code>*(array + 8)</code>相同。</li>
+<li>4.<code>ap + 6</code>:ap为一个指针地址，地址向后偏移6，则<code>ap + 6</code>和<code>&amp;array[8]</code>，<code>array + 8</code>相同。</li>
+<li>5.<code>*(ap + 6)</code>:上面说过<code>ap+6</code>为一个地址，由此可以得出<code>*(ap+6)</code>为间接求得地址对应的值，它和<code>array[8]</code>和<code>*(array+8)</code>相同，其实它和<code>2&gt;.</code>类似。</li>
+<li>–&gt;6.<code>ap[-1]</code>:使用-1的偏移量使得道它前一个元素，也就是<code>array[1]</code>或者<code>*(array + 2 - 1)</code>。</li>
+</ul>
+<p>上面说这么多，其实只要抓住：当前表示的地址，元素还是间接获取操作就可以了。</p>
+<blockquote>
+<p>注意⚠️:<br>上面提到的<strong>“C的下标引用和间接访问表达式是一样的”</strong>。</p>
+</blockquote>
+<h6 id="思考题"><a href="#思考题" class="headerlink" title="思考题:"></a>思考题:</h6><p><code>2[array]</code>，这个表达式中的array是上文中的array。在这个上下文环境中，<code>2[array]</code>表达的意思是什么：</p>
+<h6 id="解答"><a href="#解答" class="headerlink" title="解答:"></a>解答:</h6><p>因为前面我一直在强调，下标引用和间接表达式求值是相同的，所以:</p>
+<ul>
+<li>第一步：我们可以把<code>2[array]</code>改写成<code>*(2 + array)</code></li>
+<li>第二步:由于加法运算符的两个操作数是可以交换位置的，所以把上面的表达式改写为:<code>*(array + 2)</code>;<br>也就是说<code>2[array]</code>其实和<code>array[2]</code>是相等的。</li>
+</ul>
+<h6 id="关于指针间接操作符和下标操作的比较"><a href="#关于指针间接操作符和下标操作的比较" class="headerlink" title="关于指针间接操作符和下标操作的比较"></a>关于指针间接操作符和下标操作的比较</h6><blockquote>
+<p>相对于指针的间接访问和下标操作，在可读性方面下标的方式更好，但是在执行效率上面<strong><em>下标不会比指针更有效率，但是指针有时候比下标效率更高</em></strong>。</p>
+</blockquote>
+<p>具体的效率比较为:</p>
+<ul>
+<li>1.当你根据某个固定数目的增量在一个数组中移动时，使用指针变量将比使用下标产生效率更高的代码。</li>
+<li>2.声明为寄存器变量的指针通常比用于静态内存和堆栈中的指针效率更高。<br>关于如何将变量声明为寄存器变量，我们可以使用<code>register</code>关键字来声明，比如:<code>register int *p1;</code>，<code>register</code>：这个关键字请求编译器尽可能的将变量存在CPU 内部寄存器中而不是通过内存寻址访问以提高效率。<strong>register 变量必须是一个单个的值，并且其长度应小于或等于整型的长度。而且register 变量可能不存放在内存中，所以不能用取址运算符“&amp;”来获取register 变量的地址。</strong></li>
+<li>3.像&amp;array[2]或者array+2这种在运行时求值的常量表达式代价很高。</li>
+</ul>
+<h3 id="数组的初始化"><a href="#数组的初始化" class="headerlink" title="数组的初始化"></a>数组的初始化</h3><p>数组的初始化需要一系列的值，例如：</p>
+<p><pre><br>int array[5] = {1,2,3,4,5};//如果在初始化的时候，初始化的个数比数组的大小小的话，空余的元素将会被赋值为0。<br>int array[] =  {1,2,3,4,5};//如果在声明中没有给出数组的长度，编译器会把数组的长度设置为刚好能够容易所有初始值的长度。<br></pre>对于<strong>静态数组</strong>：存储于静态内存的数组只初始化一次，当程序执行时，静态数组已经初始化完毕。如果数组没有被初始化，数组元素的初始值将会自动设置为0。<br>对于<strong>自动变量</strong>：由于自动变量位于运行时堆栈，所以自动变量在缺省的情况下是未被初始化的。<br>所以这里需要思考的是：当数组的初始化在一个函数中，程序在每次进入该函数的时候，是否值得每次都对该数组重新进行初始化。如果不需要的的话，我们可以把该数组声明为<code>static</code>。</p>
+<p>######指定初始化器(c99)<br>只初始化数组中的指定元素，方法是：在初始化列表中使用带方括号的下标指明待初始化的元素。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">int array[5] = &#123;[5] = 23&#125;;//把array[5]初始化为23</div></pre></td></tr></table></figure></p>
+<h2 id="多维数组"><a href="#多维数组" class="headerlink" title="多维数组"></a>多维数组</h2><p>如<code>int xy[3][2]</code>数组维数不止一个的称为<code>多维数组</code>。<br>数组<code>xy[3][2]</code>在内存中的存储顺序为:</p>
+<p><pre><code>(0,0) (0,1)  (1,0) (1,1)  (2,0) (2,1)//多维数组中的元素存储顺序按照最右边的下标率先变化的原则，称为<strong>行主序</strong>。</code></pre>关于是把第一个下标(上面定义的数组<code>xy</code>中的3)解释为行还是解释为列，都可以的，只要你在使用这个数组的时候使用同一种就可以。如果你把第一个下标解释为行第二个下标解释为列，那么当你按照存储顺序逐个访问数组元素时，所获得的元素是按行排列的，相反则是按列排列的。</p>
+<h3 id="数组名和下标"><a href="#数组名和下标" class="headerlink" title="数组名和下标"></a>数组名和下标</h3><p><code>int xy[3][2]</code>，数组名<code>xy</code>是一个指向包涵2个整型元素的数组的指针（指向数组的指针）。<br>下面我们来看看数组的下标和指针之间的关系:</p>
+<ul>
+<li>1.<code>xy</code>:在三个包含两个整型元素的数组中，<code>xy</code>为指向第一个子数组。（注意：这是指针，说明了指向）</li>
+<li>2.<code>xy + 1</code>:在三个包含两个整型元素的数组中，<code>xy</code>为指向第二个子数组，+1是根据包含2个整型元素的数组长度进行调整的，所以是指向第二个子数组。（注意：同上，这是指针，说明了指向）</li>
+<li>3.<code>*(xy + 1)</code>:获取指向第二个子数组的指针，通过间接操作符得到这个子数组，或者可以把该表达式写为<code>xy[1]</code>（即表示的是第二个子数组）。</li>
+<li>4.<code>*(xy + 1) ＋ 1</code>：在第三点中我们取得了第二个子数组，记得我们在上面讲一维数组的时候，获取数组第n个元素的地址的办法是:<code>array + n</code>或者<code>&amp;array[n]</code>，在和<code>*(xy + 1) ＋ 1</code>进行对比之后不难发现，其表达的意思就是获取第二个子数组中第2个元素（因为数组下标是从0开始）的地址或者可以把该表达式写为<code>xy[1] ＋ 1</code>（注意：同上，这是指针，是一个地址）</li>
+<li>5.<code>*(*(xy + 1) + 1)</code>：由间接操作符，获得第4点中的指针指向的具体元素。同上我们可以写为:<code>*(xy[1] + 1)</code>，进一步改写<code>xy[1][1]</code>;</li>
+</ul>
+<h3 id="指向数组的指针"><a href="#指向数组的指针" class="headerlink" title="指向数组的指针"></a>指向数组的指针</h3><p><pre><br>int vector[10];<br>int matrix[3][4];<br>int *vp = vector;<br>int (*mp)[10] = matrix;//下标引用的优先级是高于间接引用的，所以我们需要在间接引用这里手动加上括号才行<br></pre>所以<code>mp</code>是一个指向整型数组的指针，<code>vp</code>是指向整型变量的指针。</p>
+<blockquote>
+<p>这里需要注意一下：<br>一定不要把指向数组的指针和指针数组浓混了，那个确保算术优先级的括号是很重要的，<code>int (*mp)[10]</code>代表的是指向数组的指针，而<code>int *mp[10]</code>表示的是指针数组。</p>
+</blockquote>
+<p>当数组作为函数的参数的时候，多维数组和一维数组相同，<strong>都是用指针作为参数进行传递，这个指针是指向数组第一个元素的指针</strong>。</p>
+<h6 id="一维数组作为函数参数的函数声明形式"><a href="#一维数组作为函数参数的函数声明形式" class="headerlink" title="一维数组作为函数参数的函数声明形式"></a>一维数组作为函数参数的函数声明形式</h6><p>实参：<code>int vectors[10];</code><br>函数声明:<code>void vector(int *vec);</code>或者<code>void vector (int vet[])</code></p>
+<h6 id="多维数组作为函数参数的函数声明形式"><a href="#多维数组作为函数参数的函数声明形式" class="headerlink" title="多维数组作为函数参数的函数声明形式"></a>多维数组作为函数参数的函数声明形式</h6><p>实参：<code>int matrixs[3][10];</code><br>函数声明:<code>void matrix(int (*mat)[10])</code>;或者void matrix(int mat[][10]);<code>void matrix(int mat[][10]);</code><br>这里的关键在于编译器必须知道第二个及以后各维的长度才能对各下标进行求值，因此在原型中必须声明这个维的长度</p>
+<h6 id="关于多维数组初始化"><a href="#关于多维数组初始化" class="headerlink" title="关于多维数组初始化"></a>关于多维数组初始化</h6><ul>
+<li><p>第一种方式:<br><pre><code>int xy[3][2] = {1,2,3,4,5,6};</code></pre>这种就是在声明变量的时候就在后面跟着一长串的初始数据。</p>
+</li>
+<li><p>第二种方式:<br><pre><br>int xy[3][2];<br>xy[0][0] = 1;<br>xy[0][1] = 2;<br>…<br>xy[2][0] = 5<br>xy[2][1] = 6;</pre>这和第一种的差别就在于，这一种是对数组元素一个一个的去赋值，这种存储顺序是以最右边下标率先变化的（前面注释提到的行主序）。</p>
+</li>
+<li><p>第三种方式:<br>因为多维数组可以看成是每个元素由一个子数组组成，所以我们可以按照一个子数组为一个个体来初始化。<br><pre><br>int xy[3][2] = {<br>{1,2},<br>{3,4},<br>{5,6}<br>};<br></pre>这样看起来和第一种的方式是有点类似的。</p>
+</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>1 .数组变量是const指针，所以是不能被赋值的；</li>
+<li>2.如果指针指向的不是一片连续的空间，那么对地址进行加操作（或者减操作）是没有意义；</li>
+</ul>
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+    <div>
+      
+        
+
+      
+    </div>
+
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/C/" rel="tag"># C</a>
+          
+            <a href="/tags/指针/" rel="tag"># 指针</a>
+          
+        </div>
+      
+
+      
+        
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2017/02/22/c_and_pointer_note_case3/" rel="next" title="《C和指针Note》之指针">
+                <i class="fa fa-chevron-left"></i> 《C和指针Note》之指针
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2017/02/27/http_keep_alive/" rel="prev" title="HTTP持久连接">
+                HTTP持久连接 <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+          
+          </div>
+          
+
+
+          
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap" >
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <img class="site-author-image" itemprop="image"
+               src="/uploads/avatar/2017_02_20.JPG"
+               alt="王望" />
+          <p class="site-author-name" itemprop="name">王望</p>
+           
+              <p class="site-description motion-element" itemprop="description">男儿不展风云志，空负天生八尺躯。</p>
+          
+        </div>
+        <nav class="site-state motion-element">
+        
+          
+            <div class="site-state-item site-state-posts">
+              <a href="/archives">
+                <span class="site-state-item-count">5</span>
+                <span class="site-state-item-name">日志</span>
+              </a>
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-categories">
+              
+                <span class="site-state-item-count">2</span>
+                <span class="site-state-item-name">分类</span>
+              
+            </div>
+          
+
+          
+            <div class="site-state-item site-state-tags">
+              <a href="/tags">
+                <span class="site-state-item-count">3</span>
+                <span class="site-state-item-name">标签</span>
+              </a>
+            </div>
+          
+
+        </nav>
+
+        
+
+        <div class="links-of-author motion-element">
+          
+            
+              <span class="links-of-author-item">
+                <a href="https://github.com/wangwangok" target="_blank" title="GitHub">
+                  
+                    <i class="fa fa-fw fa-github"></i>
+                  
+                  GitHub
+                </a>
+              </span>
+            
+              <span class="links-of-author-item">
+                <a href="http://weibo.com/wwloading/profile?rightmod=1&wvr=6&mod=personinfo&is_all=1" target="_blank" title="Weibo">
+                  
+                    <i class="fa fa-fw fa-weibo"></i>
+                  
+                  Weibo
+                </a>
+              </span>
+            
+          
+        </div>
+
+        
+        
+
+        
+        
+          <div class="links-of-blogroll motion-element links-of-blogroll-inline">
+            <div class="links-of-blogroll-title">
+              <i class="fa  fa-fw fa-globe"></i>
+              
+            </div>
+            <ul class="links-of-blogroll-list">
+              
+                <li class="links-of-blogroll-item">
+                  <a href="http://www.jianshu.com/u/11188e5bb304" title="我的简书" target="_blank">我的简书</a>
+                </li>
+              
+            </ul>
+          </div>
+        
+
+        
+
+
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#一维数组"><span class="nav-number">1.</span> <span class="nav-text">一维数组</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数组名"><span class="nav-number">1.1.</span> <span class="nav-text">数组名</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#数组名不作为指针常量来表示的两种场景"><span class="nav-number">1.1.0.1.</span> <span class="nav-text">数组名不作为指针常量来表示的两种场景</span></a></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#下标引用和指针-间接取值操作"><span class="nav-number">1.2.</span> <span class="nav-text">下标引用和指针(间接取值操作)</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#思考题"><span class="nav-number">1.2.0.0.1.</span> <span class="nav-text">思考题:</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#解答"><span class="nav-number">1.2.0.0.2.</span> <span class="nav-text">解答:</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#关于指针间接操作符和下标操作的比较"><span class="nav-number">1.2.0.0.3.</span> <span class="nav-text">关于指针间接操作符和下标操作的比较</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数组的初始化"><span class="nav-number">1.3.</span> <span class="nav-text">数组的初始化</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#多维数组"><span class="nav-number">2.</span> <span class="nav-text">多维数组</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#数组名和下标"><span class="nav-number">2.1.</span> <span class="nav-text">数组名和下标</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#指向数组的指针"><span class="nav-number">2.2.</span> <span class="nav-text">指向数组的指针</span></a><ol class="nav-child"><li class="nav-item nav-level-6"><a class="nav-link" href="#一维数组作为函数参数的函数声明形式"><span class="nav-number">2.2.0.0.1.</span> <span class="nav-text">一维数组作为函数参数的函数声明形式</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#多维数组作为函数参数的函数声明形式"><span class="nav-number">2.2.0.0.2.</span> <span class="nav-text">多维数组作为函数参数的函数声明形式</span></a></li><li class="nav-item nav-level-6"><a class="nav-link" href="#关于多维数组初始化"><span class="nav-number">2.2.0.0.3.</span> <span class="nav-text">关于多维数组初始化</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">2.3.</span> <span class="nav-text">总结</span></a></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright" >
+  
+  &copy; 
+  <span itemprop="copyrightYear">2017</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">王望</span>
+</div>
+
+
+<div class="powered-by">
+  由 <a class="theme-link" href="https://hexo.io">Hexo</a> 强力驱动
+</div>
+
+<div class="theme-info">
+  主题 -
+  <a class="theme-link" href="https://github.com/iissnan/hexo-theme-next">
+    NexT.Mist
+  </a>
+</div>
+
+
+        
+
+        
+      </div>
+    </footer>
+
+    <div class="back-to-top">
+      <i class="fa fa-arrow-up"></i>
+    </div>
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+  
+  <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+
+  
+  <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+
+  
+  <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+
+  
+  <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.0"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.0"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.0"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.0"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.0"></script>
+
+
+
+  
+
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+  
+  
+  <script type="text/javascript">
+    // Popup Window;
+    var isfetched = false;
+    // Search DB path;
+    var search_path = "search.xml";
+    if (search_path.length == 0) {
+      search_path = "search.xml";
+    }
+    var path = "/" + search_path;
+    // monitor main search box;
+
+    function proceedsearch() {
+      $("body").append('<div class="popoverlay">').css('overflow', 'hidden');
+      $('.popup').toggle();
+    }
+    // search function;
+    var searchFunc = function(path, search_id, content_id) {
+      'use strict';
+      $.ajax({
+        url: path,
+        dataType: "xml",
+        async: true,
+        success: function( xmlResponse ) {
+          // get the contents from search data
+          isfetched = true;
+          $('.popup').detach().appendTo('.header-inner');
+          var datas = $( "entry", xmlResponse ).map(function() {
+            return {
+              title: $( "title", this ).text(),
+              content: $("content",this).text(),
+              url: $( "url" , this).text()
+            };
+          }).get();
+          var $input = document.getElementById(search_id);
+          var $resultContent = document.getElementById(content_id);
+          $input.addEventListener('input', function(){
+            var matchcounts = 0;
+            var str='<ul class=\"search-result-list\">';
+            var keywords = this.value.trim().toLowerCase().split(/[\s\-]+/);
+            $resultContent.innerHTML = "";
+            if (this.value.trim().length > 1) {
+              // perform local searching
+              datas.forEach(function(data) {
+                var isMatch = false;
+                var content_index = [];
+                var data_title = data.title.trim().toLowerCase();
+                var data_content = data.content.trim().replace(/<[^>]+>/g,"").toLowerCase();
+                var data_url = decodeURIComponent(data.url);
+                var index_title = -1;
+                var index_content = -1;
+                var first_occur = -1;
+                // only match artiles with not empty titles and contents
+                if(data_title != '') {
+                  keywords.forEach(function(keyword, i) {
+                    index_title = data_title.indexOf(keyword);
+                    index_content = data_content.indexOf(keyword);
+                    if( index_title >= 0 || index_content >= 0 ){
+                      isMatch = true;
+                      if (i == 0) {
+                        first_occur = index_content;
+                      }
+                    }
+
+                  });
+                }
+                // show search results
+                if (isMatch) {
+                  matchcounts += 1;
+                  str += "<li><a href='"+ data_url +"' class='search-result-title'>"+ data_title +"</a>";
+                  var content = data.content.trim().replace(/<[^>]+>/g,"");
+                  if (first_occur >= 0) {
+                    // cut out 100 characters
+                    var start = first_occur - 20;
+                    var end = first_occur + 80;
+                    if(start < 0){
+                      start = 0;
+                    }
+                    if(start == 0){
+                      end = 50;
+                    }
+                    if(end > content.length){
+                      end = content.length;
+                    }
+                    var match_content = content.substring(start, end);
+                    // highlight all keywords
+                    keywords.forEach(function(keyword){
+                      var regS = new RegExp(keyword, "gi");
+                      match_content = match_content.replace(regS, "<b class=\"search-keyword\">"+keyword+"</b>");
+                    });
+
+                    str += "<p class=\"search-result\">" + match_content +"...</p>"
+                  }
+                  str += "</li>";
+                }
+              })};
+            str += "</ul>";
+            if (matchcounts == 0) { str = '<div id="no-result"><i class="fa fa-frown-o fa-5x" /></div>' }
+            if (keywords == "") { str = '<div id="no-result"><i class="fa fa-search fa-5x" /></div>' }
+            $resultContent.innerHTML = str;
+          });
+          proceedsearch();
+        }
+      });}
+
+    // handle and trigger popup window;
+    $('.popup-trigger').click(function(e) {
+      e.stopPropagation();
+      if (isfetched == false) {
+        searchFunc(path, 'local-search-input', 'local-search-result');
+      } else {
+        proceedsearch();
+      };
+    });
+
+    $('.popup-btn-close').click(function(e){
+      $('.popup').hide();
+      $(".popoverlay").remove();
+      $('body').css('overflow', '');
+    });
+    $('.popup').click(function(e){
+      e.stopPropagation();
+    });
+  </script>
+
+
+  
+
+  
+
+  
+
+  
+
+
+</body>
+</html>
