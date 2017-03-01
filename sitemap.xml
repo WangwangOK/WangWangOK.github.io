@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2017/03/02/bluepill/</loc>
+    
+    <lastmod>2017-03-01T16:21:25.000Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2017/02/27/http_keep_alive/</loc>
     
     <lastmod>2017-02-27T15:32:10.000Z</lastmod>
