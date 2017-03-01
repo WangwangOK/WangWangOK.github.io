@@ -1,0 +1,395 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom">
+  <title>凌云壮志幾多愁</title>
+  
+  <link href="/atom.xml" rel="self"/>
+  
+  <link href="http://yoursite.com/"/>
+  <updated>2017-02-27T15:32:10.000Z</updated>
+  <id>http://yoursite.com/</id>
+  
+  <author>
+    <name>王望</name>
+    
+  </author>
+  
+  <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>HTTP持久连接</title>
+    <link href="http://yoursite.com/2017/02/27/http_keep_alive/"/>
+    <id>http://yoursite.com/2017/02/27/http_keep_alive/</id>
+    <published>2017-02-27T15:18:00.000Z</published>
+    <updated>2017-02-27T15:32:10.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>HTTP/1.1允许http设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的http请求重用现存的连接。在事务处理结束之后仍然保持打开状态的TCP连接被称为<strong>持久连接</strong>。持久连接会在不同事务之间保持打开状态，直到客户端或者服务器决定将其关闭。<br>已经打开的连接可以避免慢启动的拥堵适应阶段。以便更快的进行数据传输。<br><a id="more"></a> </p>
+<h2 id="持久以及并行连接"><a href="#持久以及并行连接" class="headerlink" title="持久以及并行连接"></a>持久以及并行连接</h2><p>并行连接的缺点: </p>
+<ul>
+<li>每个事务打开／关闭一个新的连接，会耗费时间和宽带的；</li>
+<li>由于TCP慢启动，每条新连接的性能都会有降低；</li>
+<li>可打开的并行连接数量实际上是有限的。</li>
+</ul>
+<p>持久连接降低了时延和建立连接的开销，但是持久连接时可能会累积出大量的空闲连接。所以需要配合使用持久连接和并行连接。</p>
+<h2 id="HTTP-1-0-keep-alive连接"><a href="#HTTP-1-0-keep-alive连接" class="headerlink" title="HTTP/1.0+ keep-alive连接"></a>HTTP/1.0+ keep-alive连接</h2><h4 id="客户端"><a href="#客户端" class="headerlink" title="客户端"></a>客户端</h4><p>实现了HTTP/1.0 keep-alive连接的客户端可以通过包含<code>Connection: Keep-Alive</code>首部请求将一条连接保持在打开状态。</p>
+<h4 id="服务端"><a href="#服务端" class="headerlink" title="服务端"></a>服务端</h4><p>如果服务器愿意为下一条请求将连接保持在打开状态，就在通用首部中包含相同的内容。如果没有包含<code>Connection: Keep-Alive</code>首部，客户端就认为服务器不支持keep-alive，会在发回响应报文之后关闭连接。<br><img src="/uploads/md_srouce/http_keep_alive_1.png" alt="HTTP:1.0 keep-alive事务首部的握手过程.png"></p>
+<blockquote>
+<p>⚠️注意<br>keep-alive首部只是请求将连接保持在活跃状态。在发出keep-alive请求之后，客户端和服务器可以在任意时刻关闭空闲的keep-alive连接，并可以限制keep-alive连接所处理事务的数量。</p>
+</blockquote>
+<h4 id="通用首部Keep-Alive选项"><a href="#通用首部Keep-Alive选项" class="headerlink" title="通用首部Keep-Alive选项"></a>通用首部<code>Keep-Alive</code>选项</h4><ul>
+<li>参数timeout是在Keep-Alive响应首部发送的。它<strong>估计</strong>了服务器希望将连接保持在活跃状态的时间。</li>
+<li>参数max是在Keep-Alive响应首部发送的。它<strong>估计</strong>了服务器还希望为多少个事务抱持此连接的活跃状态。</li>
+<li>Keep-Alive首部还可支持任意未经处理的属性。语法为：name [=value]</li>
+</ul>
+<p>Keep-Alive首部只有在提供了<code>Connection:Keep-Alive</code>时才能使用。例如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Connection:Keep-Alive</div><div class="line">Keep-Alive:max=5, timeout=120</div></pre></td></tr></table></figure></p>
+<h4 id="Keep-Alive连接的限制和规则"><a href="#Keep-Alive连接的限制和规则" class="headerlink" title="Keep-Alive连接的限制和规则"></a>Keep-Alive连接的限制和规则</h4><ul>
+<li>在HTTP1.0中，keep-alive并不是默认使用的。客户端必须发送一个<code>Connection:Keep-Alive</code>请求首部来激活keep-alive连接；</li>
+<li>代理或网关必须将报文转发或将其高速缓存之前，删除在Connection首部中命名的所有首部字段以及Connection首部自身。</li>
+<li>不应该与无法确定是否支持Connection首部代理服务器建立keep-alive连接，以防止出现哑代理。</li>
+</ul>
+<h2 id="HTTP-1-1-持久连接-Persistent-Connection"><a href="#HTTP-1-1-持久连接-Persistent-Connection" class="headerlink" title="HTTP/1.1 持久连接(Persistent Connection)"></a>HTTP/1.1 持久连接(Persistent Connection)</h2><p>HTTP/1.1 持久连接在默认情况下是<strong>激活</strong>的，要在事务处理结束之后将连接关闭，HTTP/1.1应用程序必须向报文中显示的添加一个<code>Connection:close</code>首部。不然HTTP/1.1 连接就仍然维持在打开状态。</p>
+<blockquote>
+<p>⚠️<br>不发送<code>Connection:close</code>并不意味着服务器承诺永远将连接保持在打开状态。</p>
+</blockquote>
+<h4 id="持久连接的限制和规则"><a href="#持久连接的限制和规则" class="headerlink" title="持久连接的限制和规则"></a>持久连接的限制和规则</h4><ul>
+<li>发送了Connection:close请求首部之后，客户端就无法在那条连接上发送更多的请求了。 </li>
+<li>如果客户端不想再连接上发送其他请求，就应该在最后一条请求中发送一个Connection:close请求首部。</li>
+<li>只有当连接上所有报文的实体主体部分的长度和首部字段<code>Content Length</code>一样（或者用分块传输编码方式），这样连接才能持久保持</li>
+<li>HTTP1.1的代理服务器不应该与HTTP1.0客户端建立持久连接。</li>
+<li><strong>HTTP1.1设备可以在任意时刻关闭连接</strong>，尽管是出于传输报文的过程中关闭连接。</li>
+</ul>
+<h2 id="管道化连接"><a href="#管道化连接" class="headerlink" title="管道化连接"></a>管道化连接</h2><p>HTTP1.1允许在持久连接上可选的使用<code>请求管道</code>。这是在keep-alive连接上的进一步性能优化。<br>在响应到达前，可以<strong>将多条请求放入队列中</strong>，这样做可以降低网络的环回时间，提高性能。</p>
+<h4 id="管道化连接的几个限制"><a href="#管道化连接的几个限制" class="headerlink" title="管道化连接的几个限制"></a>管道化连接的几个限制</h4><ul>
+<li>如果http客户端无法确认连接是持久的，就不应该使用管道；</li>
+<li>必须按照与请求相同的顺序回送http响应。</li>
+<li>http客户端必须做好连接会在任意时刻关闭的准备，还要准备好重发所有未完成的管道化请求。</li>
+<li>http客户端不应该用管道化的方式发送会产生副作用的请求(比如POST)。</li>
+</ul>
+<p><img src="/uploads/md_srouce/http_keep_alive_2.png" alt="管道化连接.png"></p>
+<h2 id="关闭连接"><a href="#关闭连接" class="headerlink" title="关闭连接"></a>关闭连接</h2><p>在连接管理中需要知道什么时候关闭连接以及如何去关闭连接。</p>
+<h4 id="“任意”接触连接"><a href="#“任意”接触连接" class="headerlink" title="“任意”接触连接"></a>“任意”接触连接</h4><p><strong>所有的HTTP客户端、服务器或者代理都可以在任意时刻关闭一条TCP传输连接</strong>。通常会在一条报文结束时关闭连接。</p>
+<blockquote>
+<p>但是，服务器永远都无法确定在它关闭“空闲”连接那时候，在客户端有没有数据要发送。如果出现这种情况，客户端就会在写入半截请求报文时发现出现连接错误的请求。</p>
+</blockquote>
+<h4 id="Content-Length及截尾操作"><a href="#Content-Length及截尾操作" class="headerlink" title="Content-Length及截尾操作"></a>Content-Length及截尾操作</h4><p>每条HTTP响应都应该有精确的Content-Length首部，用以描述响应主题的尺寸。<br>客户端或者代理受到一条随连接关闭而结束的http响应，且实际传输的实体长度与<code>Content-Length</code>并不匹配，接收端就应该质疑长度的正确性。<br>如果接收端是缓存代理，接收端就不应该缓存这条响应。代理应该将有问题的报文原封不动地转发出去，而不应该试图去“校正”Content-Length。</p>
+<h4 id="连接关闭容限，重试以及幂等性"><a href="#连接关闭容限，重试以及幂等性" class="headerlink" title="连接关闭容限，重试以及幂等性"></a>连接关闭容限，重试以及幂等性</h4><p>如果客户端执行事务的过程中，传输连接关闭了，<strong>那么除非事务处理会带来一些副作用，否则客户端就应该重新打开连接</strong>，并重试。</p>
+<h6 id="幂等"><a href="#幂等" class="headerlink" title="幂等"></a>幂等</h6><p>如果一个事务，不管是执行一次还是多次，得到的结果都是相同的，那么这个事务就是幂等的。</p>
+<blockquote>
+<p>GET、HEAD、PUT、DELETE、TRACE和OPTIONS方法都是的。</p>
+</blockquote>
+<p>客户端不应该用管道化的方式传送非幂等请求(就是说比如POST请求不应该使用管道化方式)。</p>
+<h4 id="正常关闭连接"><a href="#正常关闭连接" class="headerlink" title="正常关闭连接"></a>正常关闭连接</h4><p>TCP连接都是双向的。tcp连接的每一端都有一个输入队列和一个输出队列，用于数据的读或写。<br><img src="/uploads/md_srouce/http_keep_alive_3.png" alt="tcp双向的连接.png"></p>
+<h6 id="完全关闭和半关闭"><a href="#完全关闭和半关闭" class="headerlink" title="完全关闭和半关闭"></a>完全关闭和半关闭</h6><p>应用程序可以关闭tcp输入和输出信道中的任意一个，或者将两者都关闭了。</p>
+<blockquote>
+<p>套接字调用<code>close()</code>会将tcp连接的输入和输出信道都关闭，这就是<strong>完全关闭</strong>。<br>用<code>shutdown()</code>单独关闭输入或者输出信道，被称为<strong>半关闭</strong>。</p>
+</blockquote>
+<h6 id="TCP关闭及重置错误"><a href="#TCP关闭及重置错误" class="headerlink" title="TCP关闭及重置错误"></a>TCP关闭及重置错误</h6><p>总之，<strong>关闭连接的输出信道总是很安全的</strong>。连接另一端的对等实体会在其缓冲区中读出所有数据之后收到一条通知，说明流结束了。<br><strong>关闭连接的输入信道比较危险</strong>，除非你知道另一端不打算再发送其他数据。如果另一端向你已关闭的输入信道发送数据，操作系统会向另一端的机器回送一条TCP“<strong>连接被对端重置</strong>”。</p>
+<blockquote>
+<p>大部分操作系统都会将这种情况作为严重错误来处理，<strong>删除对端还未读去的所有缓存数据</strong>。但是这样做对于管道化来说简直就是噩梦，因为:比如你已经在一条持久连接上发送了10条管道式请求，响应已经收到了，正在操作系统的缓存区中存着。但是你发送了第11条请求，但是服务器认为你使用这条连接的时间太长，决定将其关闭，这个重置信息会清空你的缓冲区。</p>
+</blockquote>
+<h6 id="正常关闭"><a href="#正常关闭" class="headerlink" title="正常关闭"></a>正常关闭</h6><p>实现正常关闭的应用程序首先应该关闭它们的输出信道，然后等待另一端的对等实体关闭它的输出信道。当两端都告诉对方它们不会再发送任何数据之后，连接就会被完全关闭，而不会有重置风险。如果在一定的时间区间内对端没有关闭输入信道，应用程序可以强制关闭连接。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;HTTP/1.1允许http设备在事务处理结束之后将TCP连接保持在打开状态，以便为未来的http请求重用现存的连接。在事务处理结束之后仍然保持打开状态的TCP连接被称为&lt;strong&gt;持久连接&lt;/strong&gt;。持久连接会在不同事务之间保持打开状态，直到客户端或者服务器决定将其关闭。&lt;br&gt;已经打开的连接可以避免慢启动的拥堵适应阶段。以便更快的进行数据传输。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="网络" scheme="http://yoursite.com/categories/%E7%BD%91%E7%BB%9C/"/>
+    
+    
+      <category term="HTTP" scheme="http://yoursite.com/tags/HTTP/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《C和指针Note》之数组和指针</title>
+    <link href="http://yoursite.com/2017/02/22/c_and_pointer_note_case4/"/>
+    <id>http://yoursite.com/2017/02/22/c_and_pointer_note_case4/</id>
+    <published>2017-02-22T15:55:26.000Z</published>
+    <updated>2017-02-22T16:05:01.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>记录指针和数组直接的关系!<br><a id="more"></a><br>当前C语言环境:</p>
+<pre>
+Apple LLVM version 8.0.0 (clang-800.0.38)
+Target: x86_64-apple-darwin15.6.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+</pre>
+
+<h2 id="一维数组"><a href="#一维数组" class="headerlink" title="一维数组"></a>一维数组</h2><h3 id="数组名"><a href="#数组名" class="headerlink" title="数组名"></a>数组名</h3><p>数组名的值是一个指针常量，也是数组第一个元素的地址。</p>
+<blockquote>
+<p>注意⚠️<br>数组具有确定的数量的元素，而指针只是一个标量值，<strong><em>只有数组名在表达式中使用时，编译器才会为他参数一个指针常量(意思就是你不能修改这个指针的值)</em></strong>。</p>
+</blockquote>
+<p>指针常量所指向的是内存中数组的起始位置，如果修改这个指针常量，唯一可行的操作就是把整个数组移动到内存的其他位置，但是在程序完成链接之后，内存中数组的位置是固定的，所以当程序运行时，在想移动数组就晚了。</p>
+<h5 id="数组名不作为指针常量来表示的两种场景"><a href="#数组名不作为指针常量来表示的两种场景" class="headerlink" title="数组名不作为指针常量来表示的两种场景"></a>数组名不作为指针常量来表示的两种场景</h5><blockquote>
+<p>注意：这里说的是<strong>不作为</strong>指针常量。</p>
+</blockquote>
+<ul>
+<li>1.数组名作为sizeof操作符：<br>sizeof返回整个数组所占用的字节，而不是每个元素所占用的字节，也不是指向数组的指针的长度。</li>
+<li>2.数组名用于单目操作符&amp;时：<br>返回一个指向数组的指针，而不是一个指向指针常量的指针。</li>
+</ul>
+<pre>
+int a[10];
+int *c;
+c = &a[0];c = a;//这里赋值的是一个指针的拷贝。
+</pre>
+
+<h3 id="下标引用和指针-间接取值操作"><a href="#下标引用和指针-间接取值操作" class="headerlink" title="下标引用和指针(间接取值操作)"></a>下标引用和指针(间接取值操作)</h3><p><code>array[3]，*(array + 3)</code>出了优先级之外，下标引用和间接访问完全相同。</p>
+<p><pre><br>int array[10];<br>int *ap = array + 2;<br></pre></p>
+<ul>
+<li>1.<code>ap</code>:这是一个指针地址，所以该表达式和<code>&amp;array[2]</code>或者<code>array+2</code>相同。</li>
+<li>2.<code>*ap</code>:间接访问，与<code>array[2]</code>和<code>*(array + 2)</code>相同。</li>
+<li>3.<code>ap[6]</code>:C的下标引用和间接访问表达式是一样的，所以ap[6]和<code>*(ap + 6)</code>相同，与<code>array[8]</code>和<code>*(array + 8)</code>相同。</li>
+<li>4.<code>ap + 6</code>:ap为一个指针地址，地址向后偏移6，则<code>ap + 6</code>和<code>&amp;array[8]</code>，<code>array + 8</code>相同。</li>
+<li>5.<code>*(ap + 6)</code>:上面说过<code>ap+6</code>为一个地址，由此可以得出<code>*(ap+6)</code>为间接求得地址对应的值，它和<code>array[8]</code>和<code>*(array+8)</code>相同，其实它和<code>2&gt;.</code>类似。</li>
+<li>–&gt;6.<code>ap[-1]</code>:使用-1的偏移量使得道它前一个元素，也就是<code>array[1]</code>或者<code>*(array + 2 - 1)</code>。</li>
+</ul>
+<p>上面说这么多，其实只要抓住：当前表示的地址，元素还是间接获取操作就可以了。</p>
+<blockquote>
+<p>注意⚠️:<br>上面提到的<strong>“C的下标引用和间接访问表达式是一样的”</strong>。</p>
+</blockquote>
+<h6 id="思考题"><a href="#思考题" class="headerlink" title="思考题:"></a>思考题:</h6><p><code>2[array]</code>，这个表达式中的array是上文中的array。在这个上下文环境中，<code>2[array]</code>表达的意思是什么：</p>
+<h6 id="解答"><a href="#解答" class="headerlink" title="解答:"></a>解答:</h6><p>因为前面我一直在强调，下标引用和间接表达式求值是相同的，所以:</p>
+<ul>
+<li>第一步：我们可以把<code>2[array]</code>改写成<code>*(2 + array)</code></li>
+<li>第二步:由于加法运算符的两个操作数是可以交换位置的，所以把上面的表达式改写为:<code>*(array + 2)</code>;<br>也就是说<code>2[array]</code>其实和<code>array[2]</code>是相等的。</li>
+</ul>
+<h6 id="关于指针间接操作符和下标操作的比较"><a href="#关于指针间接操作符和下标操作的比较" class="headerlink" title="关于指针间接操作符和下标操作的比较"></a>关于指针间接操作符和下标操作的比较</h6><blockquote>
+<p>相对于指针的间接访问和下标操作，在可读性方面下标的方式更好，但是在执行效率上面<strong><em>下标不会比指针更有效率，但是指针有时候比下标效率更高</em></strong>。</p>
+</blockquote>
+<p>具体的效率比较为:</p>
+<ul>
+<li>1.当你根据某个固定数目的增量在一个数组中移动时，使用指针变量将比使用下标产生效率更高的代码。</li>
+<li>2.声明为寄存器变量的指针通常比用于静态内存和堆栈中的指针效率更高。<br>关于如何将变量声明为寄存器变量，我们可以使用<code>register</code>关键字来声明，比如:<code>register int *p1;</code>，<code>register</code>：这个关键字请求编译器尽可能的将变量存在CPU 内部寄存器中而不是通过内存寻址访问以提高效率。<strong>register 变量必须是一个单个的值，并且其长度应小于或等于整型的长度。而且register 变量可能不存放在内存中，所以不能用取址运算符“&amp;”来获取register 变量的地址。</strong></li>
+<li>3.像&amp;array[2]或者array+2这种在运行时求值的常量表达式代价很高。</li>
+</ul>
+<h3 id="数组的初始化"><a href="#数组的初始化" class="headerlink" title="数组的初始化"></a>数组的初始化</h3><p>数组的初始化需要一系列的值，例如：</p>
+<p><pre><br>int array[5] = {1,2,3,4,5};//如果在初始化的时候，初始化的个数比数组的大小小的话，空余的元素将会被赋值为0。<br>int array[] =  {1,2,3,4,5};//如果在声明中没有给出数组的长度，编译器会把数组的长度设置为刚好能够容易所有初始值的长度。<br></pre>对于<strong>静态数组</strong>：存储于静态内存的数组只初始化一次，当程序执行时，静态数组已经初始化完毕。如果数组没有被初始化，数组元素的初始值将会自动设置为0。<br>对于<strong>自动变量</strong>：由于自动变量位于运行时堆栈，所以自动变量在缺省的情况下是未被初始化的。<br>所以这里需要思考的是：当数组的初始化在一个函数中，程序在每次进入该函数的时候，是否值得每次都对该数组重新进行初始化。如果不需要的的话，我们可以把该数组声明为<code>static</code>。</p>
+<p>######指定初始化器(c99)<br>只初始化数组中的指定元素，方法是：在初始化列表中使用带方括号的下标指明待初始化的元素。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">int array[5] = &#123;[5] = 23&#125;;//把array[5]初始化为23</div></pre></td></tr></table></figure></p>
+<h2 id="多维数组"><a href="#多维数组" class="headerlink" title="多维数组"></a>多维数组</h2><p>如<code>int xy[3][2]</code>数组维数不止一个的称为<code>多维数组</code>。<br>数组<code>xy[3][2]</code>在内存中的存储顺序为:</p>
+<p><pre><code>(0,0) (0,1)  (1,0) (1,1)  (2,0) (2,1)//多维数组中的元素存储顺序按照最右边的下标率先变化的原则，称为<strong>行主序</strong>。</code></pre>关于是把第一个下标(上面定义的数组<code>xy</code>中的3)解释为行还是解释为列，都可以的，只要你在使用这个数组的时候使用同一种就可以。如果你把第一个下标解释为行第二个下标解释为列，那么当你按照存储顺序逐个访问数组元素时，所获得的元素是按行排列的，相反则是按列排列的。</p>
+<h3 id="数组名和下标"><a href="#数组名和下标" class="headerlink" title="数组名和下标"></a>数组名和下标</h3><p><code>int xy[3][2]</code>，数组名<code>xy</code>是一个指向包涵2个整型元素的数组的指针（指向数组的指针）。<br>下面我们来看看数组的下标和指针之间的关系:</p>
+<ul>
+<li>1.<code>xy</code>:在三个包含两个整型元素的数组中，<code>xy</code>为指向第一个子数组。（注意：这是指针，说明了指向）</li>
+<li>2.<code>xy + 1</code>:在三个包含两个整型元素的数组中，<code>xy</code>为指向第二个子数组，+1是根据包含2个整型元素的数组长度进行调整的，所以是指向第二个子数组。（注意：同上，这是指针，说明了指向）</li>
+<li>3.<code>*(xy + 1)</code>:获取指向第二个子数组的指针，通过间接操作符得到这个子数组，或者可以把该表达式写为<code>xy[1]</code>（即表示的是第二个子数组）。</li>
+<li>4.<code>*(xy + 1) ＋ 1</code>：在第三点中我们取得了第二个子数组，记得我们在上面讲一维数组的时候，获取数组第n个元素的地址的办法是:<code>array + n</code>或者<code>&amp;array[n]</code>，在和<code>*(xy + 1) ＋ 1</code>进行对比之后不难发现，其表达的意思就是获取第二个子数组中第2个元素（因为数组下标是从0开始）的地址或者可以把该表达式写为<code>xy[1] ＋ 1</code>（注意：同上，这是指针，是一个地址）</li>
+<li>5.<code>*(*(xy + 1) + 1)</code>：由间接操作符，获得第4点中的指针指向的具体元素。同上我们可以写为:<code>*(xy[1] + 1)</code>，进一步改写<code>xy[1][1]</code>;</li>
+</ul>
+<h3 id="指向数组的指针"><a href="#指向数组的指针" class="headerlink" title="指向数组的指针"></a>指向数组的指针</h3><p><pre><br>int vector[10];<br>int matrix[3][4];<br>int *vp = vector;<br>int (*mp)[10] = matrix;//下标引用的优先级是高于间接引用的，所以我们需要在间接引用这里手动加上括号才行<br></pre>所以<code>mp</code>是一个指向整型数组的指针，<code>vp</code>是指向整型变量的指针。</p>
+<blockquote>
+<p>这里需要注意一下：<br>一定不要把指向数组的指针和指针数组浓混了，那个确保算术优先级的括号是很重要的，<code>int (*mp)[10]</code>代表的是指向数组的指针，而<code>int *mp[10]</code>表示的是指针数组。</p>
+</blockquote>
+<p>当数组作为函数的参数的时候，多维数组和一维数组相同，<strong>都是用指针作为参数进行传递，这个指针是指向数组第一个元素的指针</strong>。</p>
+<h6 id="一维数组作为函数参数的函数声明形式"><a href="#一维数组作为函数参数的函数声明形式" class="headerlink" title="一维数组作为函数参数的函数声明形式"></a>一维数组作为函数参数的函数声明形式</h6><p>实参：<code>int vectors[10];</code><br>函数声明:<code>void vector(int *vec);</code>或者<code>void vector (int vet[])</code></p>
+<h6 id="多维数组作为函数参数的函数声明形式"><a href="#多维数组作为函数参数的函数声明形式" class="headerlink" title="多维数组作为函数参数的函数声明形式"></a>多维数组作为函数参数的函数声明形式</h6><p>实参：<code>int matrixs[3][10];</code><br>函数声明:<code>void matrix(int (*mat)[10])</code>;或者void matrix(int mat[][10]);<code>void matrix(int mat[][10]);</code><br>这里的关键在于编译器必须知道第二个及以后各维的长度才能对各下标进行求值，因此在原型中必须声明这个维的长度</p>
+<h6 id="关于多维数组初始化"><a href="#关于多维数组初始化" class="headerlink" title="关于多维数组初始化"></a>关于多维数组初始化</h6><ul>
+<li><p>第一种方式:<br><pre><code>int xy[3][2] = {1,2,3,4,5,6};</code></pre>这种就是在声明变量的时候就在后面跟着一长串的初始数据。</p>
+</li>
+<li><p>第二种方式:<br><pre><br>int xy[3][2];<br>xy[0][0] = 1;<br>xy[0][1] = 2;<br>…<br>xy[2][0] = 5<br>xy[2][1] = 6;</pre>这和第一种的差别就在于，这一种是对数组元素一个一个的去赋值，这种存储顺序是以最右边下标率先变化的（前面注释提到的行主序）。</p>
+</li>
+<li><p>第三种方式:<br>因为多维数组可以看成是每个元素由一个子数组组成，所以我们可以按照一个子数组为一个个体来初始化。<br><pre><br>int xy[3][2] = {<br>{1,2},<br>{3,4},<br>{5,6}<br>};<br></pre>这样看起来和第一种的方式是有点类似的。</p>
+</li>
+</ul>
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
+<li>1 .数组变量是const指针，所以是不能被赋值的；</li>
+<li>2.如果指针指向的不是一片连续的空间，那么对地址进行加操作（或者减操作）是没有意义；</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;记录指针和数组直接的关系!&lt;br&gt;
+    
+    </summary>
+    
+      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
+    
+    
+      <category term="C" scheme="http://yoursite.com/tags/C/"/>
+    
+      <category term="指针" scheme="http://yoursite.com/tags/%E6%8C%87%E9%92%88/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《C和指针Note》之指针</title>
+    <link href="http://yoursite.com/2017/02/22/c_and_pointer_note_case3/"/>
+    <id>http://yoursite.com/2017/02/22/c_and_pointer_note_case3/</id>
+    <published>2017-02-22T15:40:39.000Z</published>
+    <updated>2017-02-22T16:05:03.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>指针。<br><a id="more"></a><br>当前C语言环境:</p>
+<pre>
+Apple LLVM version 8.0.0 (clang-800.0.38)
+Target: x86_64-apple-darwin15.6.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+</pre>
+
+<h3 id="粗略的总结一下知识点"><a href="#粗略的总结一下知识点" class="headerlink" title="粗略的总结一下知识点"></a>粗略的总结一下知识点</h3><ul>
+<li>1.变量标识符与内存位置之间的关联并不是硬件提供的，而是编译器为我们提供的，<strong>硬件仍然通过地址访问内存位置。</strong></li>
+<li>2.数组中的元素存储于连续的内存地址中。</li>
+<li>3.<code>NULL</code>指针作为一个不指向任何东西的特殊指针。<strong>在对指针进行解引用操作之前，必须确保它不是<code>NULL</code>指针</strong>(因为对一个NULL指针进行解引用是非法操作)。</li>
+<li>4.指针的指针中，<em>操作符具有从右向左的结合性，所以这个表达式相当于`</em>(*c)`，所以可以从里向外求值。<br>对于如下代码中:<pre>int a = 10;
+int *b = &a;
+int **c = &b;</pre>
+
+</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th>表达式</th>
+<th style="text-align:center">相当的表达式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>a</td>
+<td style="text-align:center">10</td>
+</tr>
+<tr>
+<td>b</td>
+<td style="text-align:center">&amp;a</td>
+</tr>
+<tr>
+<td>*b</td>
+<td style="text-align:center">12,a</td>
+</tr>
+<tr>
+<td>c</td>
+<td style="text-align:center">&amp;b</td>
+</tr>
+<tr>
+<td>*c</td>
+<td style="text-align:center">&amp;a,b</td>
+</tr>
+<tr>
+<td>**c</td>
+<td style="text-align:center">12,a,*b</td>
+</tr>
+</tbody>
+</table>
+<blockquote>
+<p>注意⚠️<br>在指针没有被初始化之前，一定不要对这个指针变量使用间接操作符。</p>
+</blockquote>
+<h3 id="习题练习纪录"><a href="#习题练习纪录" class="headerlink" title="习题练习纪录"></a>习题练习纪录</h3><ul>
+<li>1.字符串查找相关，两个字符串中找出第一个相同的字符串。<br>解答:<pre>
+char *find_char(char const *source,char const *chars){
+  if (source == NULL || chars == NULL) {
+      return NULL;
+  }
+  char const *f_p = chars;
+  do {
+      do {
+          if (*source == *chars) {
+              char *result = (char *)source;
+              char *cp;
+              *cp = *result;
+              return cp;
+          }
+      } while (*chars++ != '\0');
+      chars = f_p;
+  } while (*source++ != '\0');
+  return NULL;
+}
+</pre>
+</li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;指针。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
+    
+    
+      <category term="C" scheme="http://yoursite.com/tags/C/"/>
+    
+      <category term="指针" scheme="http://yoursite.com/tags/%E6%8C%87%E9%92%88/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《C和指针Note》之操作符和表达式</title>
+    <link href="http://yoursite.com/2017/02/22/c_and_pointer_note_case2/"/>
+    <id>http://yoursite.com/2017/02/22/c_and_pointer_note_case2/</id>
+    <published>2017-02-22T15:18:03.000Z</published>
+    <updated>2017-02-22T15:35:25.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>这篇主要记录操作符和表达式相关的只是！<br><a id="more"></a><br>当前C语言环境:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Apple LLVM version 8.0.0 (clang-800.0.38)</div><div class="line">Target: x86_64-apple-darwin15.6.0</div><div class="line">Thread model: posix</div><div class="line">InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin</div></pre></td></tr></table></figure></p>
+<h3 id="移位操作符"><a href="#移位操作符" class="headerlink" title="移位操作符"></a>移位操作符</h3><p>左移操作符<code>&lt;&lt;</code>,右移操作符<code>&gt;&gt;</code>;而且位移的操作数必须是<strong><em>整数类型</em></strong>。其中右移操作符存在两种情况：算术移位和逻辑移位；这里主要来说一说算术移位。</p>
+<h6 id="逻辑移位"><a href="#逻辑移位" class="headerlink" title="逻辑移位"></a>逻辑移位</h6><p>左边移入的位用0填充</p>
+<h6 id="算术移位"><a href="#算术移位" class="headerlink" title="算术移位"></a>算术移位</h6><p>算术移位也就是说会考虑到符号位，即左边移入的位由原值的符号位决定，如果符号位为1则移入的位为1，符号位为0则移入的位为0；<br>对于移位操作，还必须知道数字在计算机中是以二进制的形式存在的，而且负数的表示形式还稍有不同。</p>
+<blockquote>
+<p>负数在计算机中的二进制表示形式</p>
+<p>假设在当前计算机中，int型占8位。比如要知道数字<code>-10</code>在计算机的表现形式，第一步：数字<code>10</code>的二进制值为00001010，第二步用100000000来减去00001010。得到的就是<code>-10</code>在二进制中的表现形式为:11110110。更多关于负数补码的介绍<a href="http://www.ruanyifeng.com/blog/2009/08/twos_complement.html" target="_blank" rel="external">阮一峰的网络日志－－关于2的补码</a></p>
+</blockquote>
+<p>这里我举例说明一下移位操作:</p>
+<p><pre><code><br>int uint = 10; //00001010<br>int sint = -10;//11110110<br>printf(“%d\n”,uint &gt;&gt; 2);//00000010<br>printf(“%d\n”,sint &gt;&gt; 2);//11111101<br></code></pre>在当前环境下：</p>
+<p><pre><code><br>Apple LLVM version 8.0.0 (clang-800.0.38)<br>Target: x86_64-apple-darwin15.6.0<br>Thread model: posix<br>InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin<br></code></pre>打印的结果分别为<code>2</code>和<code>-3</code>,所以从这里看出来编译器对于左移操作是<strong><em>算术移位</em></strong>。</p>
+<h3 id="和–操作符"><a href="#和–操作符" class="headerlink" title="++和–操作符"></a>++和–操作符</h3><p>对于这两个操作符的计算就很简单了，还是来举例说明一下:</p>
+<p><pre><br>int a,b,c,d;<br>a = b = 10;<br>c = ++a;<br>d = b++;<br></pre>但是需要来理解这其中的原理:</p>
+<blockquote>
+<p>++和–操作符原理<br>抽象的说，前缀和后缀形式的增值操作符都复制一份变量值的拷贝，这些操作符的结果不是被他们所修改的变量，而是变量值的拷贝。</p>
+</blockquote>
+<h3 id="逗号操作符"><a href="#逗号操作符" class="headerlink" title="逗号操作符"></a>逗号操作符</h3><p>逗号操作符将多个表达式分隔开，这些表达式从左向右逐个进行求值，__整个逗号表达式的值就是最后那个表达式的值。</p>
+<p><pre><br>int (^f1)(int) = ^(int value){<br>  return value + 1;<br>};<br>int (^f2)(int) = ^(int value){<br>  return value + 2;<br>};<br>int (^f3)(int,int) = ^(int a,int b){<br>  return a + b;<br>};<br>int x,a,b,c;<br>x = 0;<br>//从这里开始<br>a = f1(x);<br>b = f2(x + a);<br>for (c = f3(a,b); c &lt; 10; c = f3(a,b)) {<br>  printf(“while statements c is:%d\n”,c);<br>  a = f1(++x);<br>  b = f2(x + a);<br>}<br>//到这里结束，这其中的代码将会被修改<br></pre>上面为原始的代码片段，现在我们需要使用逗号操作符来简化上面的代码，同时我选择用<code>while</code>循环来代替<code>for</code>循环。</p>
+<p><pre><br>while (a = f1(x),b = f2(x + a),c = f3(a,b),++x,c &lt; 10) {<br>  printf(“while statements c is:%d\n”,c);<br>}<br></pre>现在，循环中用于获得下一个值的语句只需要出现一次，逗号操作符使源码更易于维护。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;这篇主要记录操作符和表达式相关的只是！&lt;br&gt;
+    
+    </summary>
+    
+      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
+    
+    
+      <category term="C" scheme="http://yoursite.com/tags/C/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>《C和指针Note》之基础</title>
+    <link href="http://yoursite.com/2017/02/20/c_and_pointer_note_base/"/>
+    <id>http://yoursite.com/2017/02/20/c_and_pointer_note_base/</id>
+    <published>2017-02-19T16:50:02.000Z</published>
+    <updated>2017-02-22T15:19:45.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>C存在两种不同的环境：<code>翻译环境</code>和<code>执行环境</code>;<br><a id="more"></a><br>翻译环境是将源代码转换为可执行的机器指令，而执行环境用于实际执行代码。</p>
+<h3 id="翻译"><a href="#翻译" class="headerlink" title="翻译"></a>翻译</h3><p>其中翻译阶段主要包括了<code>编译</code>和<code>链接</code>两部分。</p>
+<blockquote>
+<p>__ 编译<br>将源代码转换为目标代码的过程，在这个过程中包含了<code>预处理</code>（预处理相关操作，比如define替换为实际值）和<code>解析</code>（判断源代码的意思），在最后生成<code>目标代码</code>（机器指令的初步形式）。</p>
+<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>链接器会把各个目标文件捆绑起来形成一个可执行程序。在这个过程中会引入c函数库。</p>
+</blockquote>
+<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>程序载入到内存中，并初始化在堆栈中没有初始化的变量。</p>
+<blockquote>
+<p>__ 运行时堆栈<br>用户保存函数的局部变量和返回值。</p>
+<h4 id="静态内存"><a href="#静态内存" class="headerlink" title="静态内存"></a>静态内存</h4><p>存储在静态内存中的变量将会在程序执行期间一直保留！</p>
+</blockquote>
+<p>程序的终止可以是<code>main函数</code>完成返回，也可以是主动执行了<code>exit</code>。</p>
+<h3 id="一个技巧"><a href="#一个技巧" class="headerlink" title="一个技巧"></a>一个技巧</h3><p>如果在使用注释的时候<code>/**/</code>嵌套了多层会导致注释失效，这时候我们可以在最外层添加:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">#if 0</div><div class="line">//中间为代码</div><div class="line">#endif</div></pre></td></tr></table></figure></p>
+<p>而且在使用注释的时候并不会把注释掉的部分从源代码中删除，只是不去执行而已，使用<code>if endif</code>的话是在逻辑上删除了这一段代码的。<br>这在后面的预处理器那一节会讲更多。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;C存在两种不同的环境：&lt;code&gt;翻译环境&lt;/code&gt;和&lt;code&gt;执行环境&lt;/code&gt;;&lt;br&gt;
+    
+    </summary>
+    
+      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
+    
+    
+      <category term="C" scheme="http://yoursite.com/tags/C/"/>
+    
+  </entry>
+  
+</feed>
