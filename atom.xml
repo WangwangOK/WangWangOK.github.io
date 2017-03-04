@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-03-02T12:48:05.000Z</updated>
+  <updated>2017-03-04T02:54:48.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2017/03/02/unicode/"/>
     <id>http://yoursite.com/2017/03/02/unicode/</id>
     <published>2017-03-02T12:25:38.000Z</published>
-    <updated>2017-03-02T12:48:05.000Z</updated>
+    <updated>2017-03-04T02:54:48.000Z</updated>
     
     <content type="html"><![CDATA[<p><img src="/uploads/unicode/unicode_1.png" alt=""><br>Unicode对世界上大部分的文字系统进行了整理、编码，使得电脑可以用更为简单的方式来呈现和处理文字。这是<a href="https://zh.wikipedia.org/wiki/Unicode" target="_blank" rel="external">维基百科</a>对Unicode下的定义。<br><a id="more"></a><br>Unicode的实现方式包含了UTF-8、UTF-16（字符用两个字节或者四个字节表示）和UTF-32（用四个字节来表示），下面对面一一进行介绍。</p>
 <h2 id="UTF-8"><a href="#UTF-8" class="headerlink" title="UTF-8"></a>UTF-8</h2><p>UTF-8的最明显的一个特点是<strong>它是变长的，它可以使用1到4个字节表示一个符号，根据不同的符号变化字节长度</strong>。<br>先把<a href="http://www.ruanyifeng.com/blog/2007/10/ascii_unicode_and_utf-8.html" target="_blank" rel="external">阮一峰在《字符编码笔记：ASCII，Unicode和UTF-8》</a>中对UTF-8的编写规则的一个总结放出来。</p>
@@ -38,7 +38,7 @@
 <p>总结<br>UTF-8 编码字符最长可达六个字节</p>
 </blockquote>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">Unicode 字符:			    UTF-8 码:</div><div class="line">U-00000000 - U-0000007F:	0xxxxxxx      ///表示ASCII</div><div class="line">U-00000080 - U-000007FF:	110xxxxx 10xxxxxx      ///</div><div class="line">U-00000800 - U-0000FFFF:	1110xxxx 10xxxxxx 10xxxxxx</div><div class="line">U-00010000 - U-001FFFFF:	11110xxx 10xxxxxx 10xxxxxx 10xxxxxx</div><div class="line">U-00200000 - U-03FFFFFF:	111110xx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx</div><div class="line">U-04000000 - U-7FFFFFFF:	1111110x 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx 10xxxxxx</div></pre></td></tr></table></figure>
-<p>举个例子：汉字“王”的Unicode码为<code>U+73B8</code>转换为二进制为:<code>0111 0011 1010 1000</code>，”73b8”位于上面的第三类，把转换的16个二进制依次放入（一定是一次放入不管空格的）上诉的x中：<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">11100111 10001110 10101000</div><div class="line">/// 同样我们来验证一下阮一峰举例的“严”字</div><div class="line">/// 4E25 同样属于上诉的第三类 ，对应的二进制 =&gt; 0100 1110 0010 0101</div><div class="line">/// 11100100 10111000 10100101 得到的结果和他文章中的一样。</div></pre></td></tr></table></figure></p>
+<p>举个例子：汉字“王”的Unicode码为<code>U+73B8</code>转换为二进制为:<code>0111 0011 1010 1000</code>，”73b8”位于上面的第三类，把转换的16个二进制依次放入（一定是依次放入不管空格的）上诉的x中：<br> <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">11100111 10001110 10101000</div><div class="line">/// 同样我们来验证一下阮一峰举例的“严”字</div><div class="line">/// 4E25 同样属于上诉的第三类 ，对应的二进制 =&gt; 0100 1110 0010 0101</div><div class="line">/// 11100100 10111000 10100101 得到的结果和他文章中的一样。</div></pre></td></tr></table></figure></p>
 <p>到这里我自己觉得应该是把UTF-8的编码方式说清楚了，最后再来一个编码的顺序（很适合于我的方式）</p>
 <blockquote>
 <p>编码的顺序<br>对于单字节：<br>直接将其转换为八位的二进制就可以了；<br>对于多字节：<br>1.找到Unicode码对应的二进制数据<br>2.查看该Unicode码在分类中属于第几类<br>3.一次填入二进制码</p>
