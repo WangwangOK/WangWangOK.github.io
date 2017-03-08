@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-03-08T13:38:23.000Z</updated>
+  <updated>2017-03-08T13:43:13.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2017/03/08/animation_kvc_translate/"/>
     <id>http://yoursite.com/2017/03/08/animation_kvc_translate/</id>
     <published>2017-03-08T12:59:45.000Z</published>
-    <updated>2017-03-08T13:38:23.000Z</updated>
+    <updated>2017-03-08T13:43:13.000Z</updated>
     
     <content type="html"><![CDATA[<p>CoreAnimation让CAAnimation和CALayer都遵守NSKeyValueCoding协议，因此为它们增加了一些默认的keys（对应的value），添加的keyPath中包含了了CGPoint,CGRect,CGSize和CATransform3D类型。<br><a id="more"></a> </p>
 <h2 id="1-键值编码兼容的容器类"><a href="#1-键值编码兼容的容器类" class="headerlink" title="1.键值编码兼容的容器类"></a>1.键值编码兼容的容器类</h2><p>CAAnimation和CALayer类就是作为键值编码兼容的容器类，我们可以根据任意的keys来设置对应的value，即便这个key不是CALayer公开的属性，比如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[theLayer setValue:[NSNumber numberWithInteger:50] forKey:@&quot;someKey&quot;];</div></pre></td></tr></table></figure></p>
@@ -29,13 +29,7 @@
 <blockquote>
 <p>对于为key提供了默认value的类，在创建这个类的子类时必须要重写它的<code>defaultValueForKey</code>方法。</p>
 </blockquote>
-<p>当你在实现这个方法的时候，需要检查key的参数列表，并且返回一个合适的value值，下面提供了一个例子，layer提供了<code>defaultValueForKey:</code>方法，为<code>maskToBounds</code>属性设置默认值：</p>
-<p><pre><code></code></pre></p>
-<ul>
-<li>(id)defaultValueForKey:(NSString *)key{<br> if ([key isEqualToString:@”masksToBounds”])<pre><code>return [NSNumber numberWithBool:YES];
-return [super defaultValueForKey:key];
-</code></pre>}<br></li>
-</ul>
+<p>当你在实现这个方法的时候，需要检查key的参数列表，并且返回一个合适的value值，下面提供了一个例子，layer提供了<code>defaultValueForKey:</code>方法，为<code>maskToBounds</code>属性设置默认值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">- (id)defaultValueForKey:(NSString *)key&#123;</div><div class="line">   if ([key isEqualToString:@&quot;masksToBounds&quot;])</div><div class="line">      return [NSNumber numberWithBool:YES];</div><div class="line">      return [super defaultValueForKey:key];</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h2 id="3-封装"><a href="#3-封装" class="headerlink" title="3.封装"></a>3.封装</h2><p>当一个key的数据是由一个标量值或者一个C的数据结构时，<strong>你必须要在其被分配到layer之前对其进行封装</strong>。同样的，当要访问这些Type时，也必须检查对象，然后使用合适的方法来打开合适的值。下表显示了Objective-c和c类型封装</p>
 <table>
 <thead>
@@ -68,8 +62,49 @@ return [super defaultValueForKey:key];
 </tbody>
 </table>
 <p>不同类型封装的类</p>
-<h2 id="4-为KeyPath的提供的结构"><a href="#4-为KeyPath的提供的结构" class="headerlink" title="4.为KeyPath的提供的结构"></a>4.为KeyPath的提供的结构</h2><p>CAAnimation和CALayer类使用KeyPath来访问指定的字段，这功能可以让你在做动画时为特定的KeyPath提供数据。使用<figure class="highlight plain"><figcaption><span>valueForKeyPath:```获取相应的值。</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">#### (1)、CATransform3D KeyPaths</div><div class="line">你可以使用更强大的KeyPath，查找包含了```CATransform3D ```类型属性的值。在需要指定layer的``transforms``完整的KeyPath时，我们可以根据下表中提供的数据，使用```transform```和```sublayerTransform```的值。例如，我们需要制定绕着layer的z轴旋转时，我就需要指定KeyPath为```transform.rotation.z```。</div><div class="line"></div><div class="line"> | Field Key Path | 描述 | </div><div class="line"> | :---- :| :----: |</div><div class="line"> | rotation.x | 围绕X轴，旋转值为弧度，```NSNumber```类型 | </div><div class="line"> | rotation.y | 围绕y轴，旋转值为弧度，```NSNumber```类型 |</div><div class="line"> | rotation.z | 围绕z轴，旋转值为弧度，```NSNumber```类型 |</div><div class="line"> | rotation | 围绕z轴，旋转值为弧度，```NSNumber```类型，它和设置``rotation.z``一样 |</div><div class="line"> | scale.x | x轴缩放，```NSNumber```类型 |</div><div class="line"> | scale.y | y轴缩放，```NSNumber```类型  |</div><div class="line"> | scale.z | z轴缩放，```NSNumber```类型  |</div><div class="line"> | scale | 三个轴缩放的平均值，```NSNumber```类型 |</div><div class="line"> | translation.x | x轴位移，```NSNumber```类型 |</div><div class="line"> | translation.y | y轴位移，```NSNumber```类型 |</div><div class="line"> | translation.z | z轴位移，```NSNumber```类型 |</div><div class="line"> | translation | x，y上面位移，```NSSize``` 和```CGSize ```|</div><div class="line"></div><div class="line">下面展示了怎样通过setValue:forKeyPath方法来修改一个layer，这个例子设置了layer在x轴上位移了10个像素点，来显示layer在x轴上的移动:</div></pre></td></tr></table></figure></p>
-<p>[myLayer setValue:[NSNumber numberWithFloat:10.0] forKeyPath:@”transform.translation.x”];<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">&gt;⚠注意：通过keyPath来设置value值的时候不能像Objective-C里面对属性的赋值，必须配合KeyPath字符串使用setValue:forKeyPath方法来进行赋值。</div><div class="line"></div><div class="line">#### (2)、CGPoint KeyPath</div><div class="line">如果当前给的是一个``CGPoint``类型，则可以根据下表进行设置。例如，当我们想要修改layer的``position``的x值时，可以在KeyPath中写``position.x``。</div><div class="line"></div><div class="line"> | Structure Field | 描述 | </div><div class="line"> | :---- :| :----: |</div><div class="line"> | x | x的分量 | </div><div class="line"> | y | y的分量 |</div><div class="line"></div><div class="line">#### (3)、CGSize KeyPath</div><div class="line"> | Structure Field | 描述 | </div><div class="line"> | :---- :| :----: |</div><div class="line"> | width | size的width值 | </div><div class="line"> | height | size的height值 |</div><div class="line"></div><div class="line">#### (4)、CGRect KeyPath</div><div class="line">例如，要更改layer的``bounds``属性的width值，可以写入关键路径```bounds.size.width</div></pre></td></tr></table></figure></p>
+<h2 id="4-为KeyPath的提供的结构"><a href="#4-为KeyPath的提供的结构" class="headerlink" title="4.为KeyPath的提供的结构"></a>4.为KeyPath的提供的结构</h2><p>CAAnimation和CALayer类使用KeyPath来访问指定的字段，这功能可以让你在做动画时为特定的KeyPath提供数据。使用<figure class="highlight plain"><figcaption><span>valueForKeyPath:```获取相应的值。</span></figcaption><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">#### (1)、CATransform3D KeyPaths</div><div class="line">你可以使用更强大的KeyPath，查找包含了``CATransform3D``类型属性的值。在需要指定layer的``transforms``完整的KeyPath时，我们可以根据下表中提供的数据，使用``transform``和``sublayerTransform``的值。例如，我们需要制定绕着layer的z轴旋转时，我就需要指定KeyPath为``transform.rotation.z``。</div><div class="line"></div><div class="line"> | Field Key Path | 描述 | </div><div class="line"> | :---- :| :----: |</div><div class="line"> | rotation.x | 围绕X轴，旋转值为弧度，``NSNumber``类型 | </div><div class="line"> | rotation.y | 围绕y轴，旋转值为弧度，``NSNumber``类型 |</div><div class="line"> | rotation.z | 围绕z轴，旋转值为弧度，``NSNumber``类型 |</div><div class="line"> | rotation | 围绕z轴，旋转值为弧度，``NSNumber``类型，它和设置``rotation.z``一样 |</div><div class="line"> | scale.x | x轴缩放，``NSNumber``类型 |</div><div class="line"> | scale.y | y轴缩放，``NSNumber``类型  |</div><div class="line"> | scale.z | z轴缩放，``NSNumber``类型  |</div><div class="line"> | scale | 三个轴缩放的平均值，``NSNumber``类型 |</div><div class="line"> | translation.x | x轴位移，``NSNumber``类型 |</div><div class="line"> | translation.y | y轴位移，``NSNumber``类型 |</div><div class="line"> | translation.z | z轴位移，``NSNumber``类型 |</div><div class="line"> | translation | x，y上面位移，``NSSize`` 和``CGSize``|</div><div class="line"></div><div class="line">下面展示了怎样通过setValue:forKeyPath方法来修改一个layer，这个例子设置了layer在x轴上位移了10个像素点，来显示layer在x轴上的移动:</div></pre></td></tr></table></figure></p>
+<p>[myLayer setValue:[NSNumber numberWithFloat:10.0] forKeyPath:@”transform.translation.x”];<br>```</p>
+<blockquote>
+<p>⚠注意：通过keyPath来设置value值的时候不能像Objective-C里面对属性的赋值，必须配合KeyPath字符串使用setValue:forKeyPath方法来进行赋值。</p>
+</blockquote>
+<h4 id="2-、CGPoint-KeyPath"><a href="#2-、CGPoint-KeyPath" class="headerlink" title="(2)、CGPoint KeyPath"></a>(2)、CGPoint KeyPath</h4><p>如果当前给的是一个<code>CGPoint</code>类型，则可以根据下表进行设置。例如，当我们想要修改layer的<code>position</code>的x值时，可以在KeyPath中写<code>position.x</code>。</p>
+<table>
+<thead>
+<tr>
+<th>Structure Field</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>x</td>
+<td style="text-align:center">x的分量</td>
+</tr>
+<tr>
+<td>y</td>
+<td style="text-align:center">y的分量</td>
+</tr>
+</tbody>
+</table>
+<h4 id="3-、CGSize-KeyPath"><a href="#3-、CGSize-KeyPath" class="headerlink" title="(3)、CGSize KeyPath"></a>(3)、CGSize KeyPath</h4><table>
+<thead>
+<tr>
+<th>Structure Field</th>
+<th style="text-align:center">描述</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>width</td>
+<td style="text-align:center">size的width值</td>
+</tr>
+<tr>
+<td>height</td>
+<td style="text-align:center">size的height值</td>
+</tr>
+</tbody>
+</table>
+<h4 id="4-、CGRect-KeyPath"><a href="#4-、CGRect-KeyPath" class="headerlink" title="(4)、CGRect KeyPath"></a>(4)、CGRect KeyPath</h4><p>例如，要更改layer的<code>bounds</code>属性的width值，可以写入关键路径<code>bounds.size.width</code></p>
 <table>
 <thead>
 <tr>
