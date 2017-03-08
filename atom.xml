@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-03-08T13:09:27.000Z</updated>
+  <updated>2017-03-08T13:17:44.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,9 +20,9 @@
     <link href="http://yoursite.com/2017/03/08/animation_kvc_translate/"/>
     <id>http://yoursite.com/2017/03/08/animation_kvc_translate/</id>
     <published>2017-03-08T12:59:45.000Z</published>
-    <updated>2017-03-08T13:09:27.000Z</updated>
+    <updated>2017-03-08T13:17:44.000Z</updated>
     
-    <content type="html"><![CDATA[<p>CoreAnimation让CAAnimation和CALayer都继承于NSKeyValueCoding协议，因为这个继承关系为它们增加了一些默认的keys（对应的value），添加的keyPath中包括了CGPoint,CGRect,CGSize和CATransform3D类型。<br><a id="more"></a> </p>
+    <content type="html"><![CDATA[<p>CoreAnimation让CAAnimation和CALayer都遵守NSKeyValueCoding协议，因此为它们增加了一些默认的keys（对应的value），添加的keyPath中包含了了CGPoint,CGRect,CGSize和CATransform3D类型。<br><a id="more"></a> </p>
 <h2 id="1-键值编码兼容的容器类"><a href="#1-键值编码兼容的容器类" class="headerlink" title="1.键值编码兼容的容器类"></a>1.键值编码兼容的容器类</h2><p>CAAnimation和CALayer类就是作为键值编码兼容的容器类，我们可以根据任意的keys来设置对应的value，即便这个key不是CALayer公开的属性，比如：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[theLayer setValue:[NSNumber numberWithInteger:50] forKey:@&quot;someKey&quot;];</div></pre></td></tr></table></figure></p>
 <p>同样也可以通过任意已知的keys来查找对应的values，可以使用下面的代码通过预先设置好的somekey来检索values：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">someKeyValue=[theLayer valueForKey:@&quot;someKey&quot;];</div></pre></td></tr></table></figure></p>
 <h2 id="2-默认支持的value"><a href="#2-默认支持的value" class="headerlink" title="2.默认支持的value"></a>2.默认支持的value</h2><p>CoreAnimation在键值编码时规定：一个类可以给没有value的key提供一个默认值。CAAnimation和CALayer类都提供了类方法<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">&gt;对于为key提供了默认value的类，在创建这个类的子类时必须要重写它的```defaultValueForKey```方法。</div><div class="line"></div><div class="line"></div><div class="line">当你在实现这个方法的时候，需要检查key的参数列表，并且返回一个合适的value值，下面提供了一个例子，layer提供了```defaultValueForKey:```方法，为```maskToBounds```属性设置默认值：</div></pre></td></tr></table></figure></p>
@@ -73,7 +73,7 @@ return [super defaultValueForKey:key];
     
     <summary type="html">
     
-      &lt;p&gt;CoreAnimation让CAAnimation和CALayer都继承于NSKeyValueCoding协议，因为这个继承关系为它们增加了一些默认的keys（对应的value），添加的keyPath中包括了CGPoint,CGRect,CGSize和CATransform3D类型。&lt;br&gt;
+      &lt;p&gt;CoreAnimation让CAAnimation和CALayer都遵守NSKeyValueCoding协议，因此为它们增加了一些默认的keys（对应的value），添加的keyPath中包含了了CGPoint,CGRect,CGSize和CATransform3D类型。&lt;br&gt;
     
     </summary>
     
