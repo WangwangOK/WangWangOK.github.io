@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-03-21T12:45:04.000Z</updated>
+  <updated>2017-05-09T14:22:33.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,72 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>最大堆</title>
+    <link href="http://yoursite.com/2017/05/09/data_struct_max_heap/"/>
+    <id>http://yoursite.com/2017/05/09/data_struct_max_heap/</id>
+    <published>2017-05-09T14:20:26.000Z</published>
+    <updated>2017-05-09T14:22:33.000Z</updated>
+    
+    <content type="html"><![CDATA[<p>什么是最大堆和最小堆？最大（小）堆是指在树中，存在一个结点而且该结点有儿子结点，该结点的data域值都不小于（大于）其儿子结点的data域值，并且它是一个完全二叉树（不是满二叉树）。<br><a id="more"></a><br>  注意区分选择树，因为<strong><em>选择树（selection tree）</em></strong>概念和最小堆有些类似，他们都有一个特点是<strong><em>“树中的根结点都表示树中的最小元素结点”</em></strong>。同理最大堆的根结点是树中元素最大的。那么来看具体的看一下它长什么样？（最小堆这里省略）<br><img src="http://upload-images.jianshu.io/upload_images/619906-6866218c0158cfdc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图-1"></p>
+<blockquote>
+<p>这里需要注意的是：在多个子树中，并不是说其中一个子树的父结点一定大于另一个子树的儿子结点。最大堆是树结构，而且一定要是完全二叉树。</p>
+</blockquote>
+<h4 id="最大堆ADT"><a href="#最大堆ADT" class="headerlink" title="最大堆ADT"></a>最大堆ADT</h4><p>那么我们在做最大堆的抽象数据类型（ADT）时就需要考虑三个操作：<br>（1）、创建一个最大堆；<br>（2）、最大堆的插入操作；<br>（3）、最大堆的删除操作；<br>最大堆ADT如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">struct Max_Heap &#123;</div><div class="line">  object: 由多个元素组成的完全二叉树，其每个结点都不小于该结点的子结点关键字值</div><div class="line">  functions:</div><div class="line">    其中heap∈Max_Heap,n,max_size∈int,Element为堆中的元素类型，item∈ Element</div><div class="line">    Max_Heap createHeap(max_size)       := 创建一个总容量不大于max_size的空堆</div><div class="line">    void max_heap_insert(heap, item ,n) := 插入一个元素到heap中</div><div class="line">    Element max_heap_delete(heap,n)     := if(heap不为空) &#123;return 被删除的元素 &#125;else&#123;return NULL&#125;</div><div class="line">&#125;</div><div class="line">///其中:=符号组读作“定义为”</div></pre></td></tr></table></figure></p>
+<h4 id="最大堆内存表现形式"><a href="#最大堆内存表现形式" class="headerlink" title="最大堆内存表现形式"></a>最大堆内存表现形式</h4><p>  我们只是简单的定义了最大堆的ADT，为了能够用代码实现它就必须要考虑最大堆的内存表现形式。从最大堆的定义中，我们知道不管是对最大堆做插入还是删除操作，<strong>我们必须要保证插入或者删除完成之后，该二叉树仍然是一个完全二叉树</strong>。基于此，我们就必须要去操作某一个结点的父结点。<br>  第一种方式，我们使用链表的方式来实现，那么我们需要添加一个额外的指针来指向该结点的父结点。此时就包括了左子结点指针、右子结点指针和父结点指针，那么空链的数目有可能是很大的，比如叶子结点的左右子结点指针和根结点的父结点指针，所以不选择这种实现方式（关于用链表实现一般二叉树时处理左右子结点指针的问题在线索二叉树中有提及）。<br>  第二种方式，使用数组实现，在二叉树进行遍历的方法分为：先序遍历、中序遍历、后序遍历和层序遍历。我们可以通过层序遍历的方式将二叉树结点存储在数组中，由于最大堆是完全二叉树不会存在数组的空间浪费。那么来看看层序遍历是怎么做的？对下图的最大堆进行层序遍历：<br><img src="http://upload-images.jianshu.io/upload_images/619906-f1c0ab6c89bc68d7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br><img src="http://upload-images.jianshu.io/upload_images/619906-4ef737815fce2175.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="层序遍历流程变化">从这里可以看出最后得到的顺序和上面图中所标的顺序是一样的。<br>  那么对于数组我们怎么操作父结点和左右子结点呢？对于完全二叉树采用顺序存储表示，那么对于任意一个下标为i(1 ≤ i ≤ n)的结点：<br>（1）、父结点为：<strong><em>i / 2（i ≠ 1）</em></strong>，若i = 1，则i是根节点。<br>（2）、左子结点：<strong><em>2i（2i ≤ n）</em></strong>， 若不满足则无左子结点。<br>（3）、右子结点：<strong><em>2i + 1(2i + 1 ≤ n)</em></strong>，若不满足则无右子结点。<img src="http://upload-images.jianshu.io/upload_images/619906-4fc0e1d7aa95f1de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<blockquote>
+<p>最终我们选择<strong><em>数组</em></strong>作为最大堆的内存表现形式。</p>
+</blockquote>
+<p>基本定义:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">#define MAX_ELEMENTS 20</div><div class="line">#define HEAP_FULL(n) (MAX_ELEMENTS - 1 == n)</div><div class="line">#define HEAP_EMPTY(n) (!n)</div><div class="line">typedef struct &#123;</div><div class="line">    int key;</div><div class="line">&#125;element;</div><div class="line">element heap[MAX_ELEMENTS];</div></pre></td></tr></table></figure></p>
+<p>下面来看看最大堆的插入、删除和创建这三个最基本的操作。</p>
+<h3 id="最大堆的插入"><a href="#最大堆的插入" class="headerlink" title="最大堆的插入"></a>最大堆的插入</h3><p>最大堆的插入操作可以简单看成是<strong>“结点上浮”</strong>。当我们在向最大堆中插入一个结点我们必须满足完全二叉树的标准，那么被插入结点的位置的是固定的。而且要满足父结点关键字值不小于子结点关键字值，那么我们就需要去移动父结点和子结点的相互位置关系。具体的位置变化，可以看看下面我画的一个简单的图。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">void insert_max_heap(element item ,int *n)&#123;</div><div class="line">    if(HEAP_FULL(*n))&#123;</div><div class="line">      return;</div><div class="line">    &#125;</div><div class="line">    int i = ++(*n);</div><div class="line">    for(;(i != 1) &amp;&amp; (item.key &gt; heap[i/2].key);i = i / 2)&#123;/// i ≠ 1是因为数组的第一个元素并没有保存堆结点</div><div class="line">      heap[i] = heap[i/2];/// 这里其实和递归操作类似，就是去找父结点</div><div class="line">    &#125;</div><div class="line">    heap[i] = item;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/619906-5ee33c128001bd5f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>由于堆是一棵完全二叉树，存在n个元素，那么他的高度为:<strong><em>log2(n+1)</em></strong>，这就说明代码中的for循环会执行<strong><em>O(log2(n))</em></strong>次。因此插入函数的时间复杂度为：<strong><em>O(log2(n))</em></strong>。</p>
+<h3 id="最大堆的删除"><a href="#最大堆的删除" class="headerlink" title="最大堆的删除"></a>最大堆的删除</h3><p><strong>最大堆的删除操作，总是从堆的根结点删除元素</strong>。同样根元素被删除之后为了能够保证该树还是一个完全二叉树，我们需要来移动完全二叉树的最后一个结点，让其继续符合完全二叉树的定义，从这里可以看作是<strong><em>最大堆最后一个结点的下沉</em></strong>操作。例如在下面的最大堆中执行删除操作：<br><img src="http://upload-images.jianshu.io/upload_images/619906-2b9aae16dedbf7fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">解答：</div><div class="line">1）、对于最大堆的删除，我们不能自己进行选择删除某一个结点，我们只能删除堆的根结点。因此在图a中，我们删除根结点20；</div><div class="line">2）、当删除根结点20之后明显不是一个完全二叉树，更确切地说被分成了两棵树。</div><div class="line">3）、我们需要移动子树的某一个结点来充当该树的根节点，那么在(15,2,14,10,1)这些结点中移动哪一个呢？显然是移动结点1，如果移动了其他结点（比如14，10）就不再是一个完全二叉树了。</div><div class="line">4）、此时在结点（15，2）中选择较大的一个和1做比较，即15 &gt; 1的，所以15上浮到之前的20的结点处。</div><div class="line">5）、同第4步类似，找出（14，10）之间较大的和1做比较，即14&gt;1的，所以14上浮到原来15所处的结点。</div><div class="line">6）、因为原来14的结点是叶子结点，所以将1放在原来14所处的结点处。</div></pre></td></tr></table></figure></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/619906-cd7ca08102c205b7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>这图中是用<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div></pre></td><td class="code"><pre><div class="line">```</div><div class="line">element delete_max_heap(int *n)&#123;</div><div class="line">  int parent, child;</div><div class="line">  element temp, item;</div><div class="line">  temp = heap[(*n)--];</div><div class="line">  item = heap[1];</div><div class="line">  parent = 1,child=2;</div><div class="line">  for(;child &lt;= *n; child = child * 2)&#123;</div><div class="line">   if( (child &lt; *n) &amp;&amp; heap[child].key &lt; heap[child+1].key)&#123;/// 这一步是为了看当前结点是左子结点大还是右子结点大，然后选择较大的那个子结点</div><div class="line">        child++;</div><div class="line">      &#125;</div><div class="line">      if(item.key &gt;= heap[child].key)&#123;</div><div class="line">        break;</div><div class="line">      &#125;</div><div class="line">      heap[parent] = heap[child];///这就是上图中第二步和第三步中黄色部分操作</div><div class="line">      parent = child;/// 这其实就是一个递归操作，让parent指向当前子树的根结点</div><div class="line">   &#125;</div><div class="line">  heap[parent] = temp;</div><div class="line">  return item;</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
+<p>同最大堆的插入操作类似，同样包含n个元素的最大堆，其高度为:<strong><em>log2(n+1)</em></strong>，其时间复杂度为：<strong><em>O(log2(n))</em></strong>。</p>
+<blockquote>
+<p>总结：由此可以看出，在已经确定的最大堆中做删除操作，被删除的元素是固定的，需要被移动的结点也是固定的，这里我说的被移动的元素是指最初的移动，即最大堆的最后一个元素。移动方式为从最大的结点开始比较。</p>
+</blockquote>
+<h3 id="最大堆的创建"><a href="#最大堆的创建" class="headerlink" title="最大堆的创建"></a>最大堆的创建</h3><p>为什么要把最大堆的创建放在最后来讲？因为在堆的创建过程中，有两个方法。会分别用到最大堆的插入和最大堆的删除原理。创建最大堆有两种方法：<br>（1）、先创建一个空堆，然后根据元素一个一个去插入结点。由于插入操作的时间复杂度为<strong><em>O(log2(n))</em></strong>，那么n个元素插入进去，总的时间复杂度为<strong><em>O(n * log2(n))</em></strong>。<br>（2）、将这n个元素先顺序放入一个二叉树中形成一个完全二叉树，然后来调整各个结点的位置来满足最大堆的特性。<br>现在我们就来试一试第二种方法来创建一个最大堆：假如我们有12个元素分别为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;79,66,43,83,30,87,38,55,91,72,49,9&#125;</div></pre></td></tr></table></figure></p>
+<p>将上诉15个数字放入一个二叉树中，确切地说是放入一个完全二叉树中，如下：<br><img src="http://upload-images.jianshu.io/upload_images/619906-f14895940e2c1ded.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>但是这明显不符合最大堆的定义，所以我们需要让该完全二叉树转换成最大堆！怎么转换成一个最大堆呢？<br>  最大堆有一个特点就是<strong>其各个子树都是一个最大堆</strong>，那么我们就可以从把最小子树转换成一个最大堆，然后依次转换它的父节点对应的子树，直到最后的根节点所在的整个完全二叉树变成最大堆。那么从哪一个子树开始调整？</p>
+<blockquote>
+<p>我们从该完全二叉树中的最后一个非叶子节点为根节点的子树进行调整，然后依次去找倒数第二个倒数第三个非叶子节点…</p>
+</blockquote>
+<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>在做最大堆的创建具体步骤中，我们会用到最大堆删除操作中结点位置互换的原理，<strong><em>即关键字值较小的结点会做下沉操作</em></strong>。</p>
+<ul>
+<li>1）、就如同上面所说找到二叉树中倒数第一个非叶子结点<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div></pre></td><td class="code"><pre><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-dfabe32d4e8d1df1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">- 2）、现在来到结点```30```，明显该子树不满足最大堆。在该结点的子结点较大的为```72```，所以结点72和结点30进行位置互换。___该子树最大移动次数为1___。</div><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-15d2b9fc8dde0ddf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">- 3）、同样对结点```83```做类似的操作。___该子树最大移动次数为1___。</div><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-7405036f2377c8b2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">- 4）、现在来到结点```43```，该结点的子结点有```&#123;87,38,9&#125;```，对该子树做同样操作。由于结点43可能是其子树结点中最小的，所以___该子树最大移动次数为2___。</div><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-ceeb433a5b997243.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">- 5）、结点```66```同样操作，___该子树最大移动次数为2___。</div><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-0a942422c933d117.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">- 6）、最后来到根结点```79```，该二叉树最高深度为4，所以___该子树最大移动次数为3___。</div><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-59de31f16ee7c2ba.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line"></div><div class="line">自此通过上诉步骤创建的最大堆为:</div><div class="line">![](http://upload-images.jianshu.io/upload_images/619906-c7887558467cf8c7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">&gt;所以从上面可以看出，该二叉树总的需要移动结点次数最大为：__10__。</div><div class="line"></div><div class="line">#### 代码实现</div></pre></td></tr></table></figure></li>
+</ul>
+<p>void create_max_heap(void){<br>    int total = (<em>heap).key;<br>    /// 求倒数第一个非叶子结点<br>    int child = 2,parent = 1;<br>    for (int node = total/2;node &gt; 0; node–) {<br>        parent = node;<br>        child = 2</em>node;<br>        int max_node = 2<em>parent+1;<br>        element temp = </em>(heap + parent);<br>        for(;child &lt;= max_node &amp;&amp; max_node &lt;= total; child = child <em> 2,max_node = 2</em>parent+1){<br>            if ((<em>(heap + child)).key &lt; (</em>(heap + child + 1)).key) {/// 取右子结点<br>                child++;<br>            }<br>            if (temp.key &gt; (<em>(heap + child)).key) {<br>                break;<br>            }
+            </em>(heap + parent) = <em>(heap + child);<br>            parent = child;<br>        }
+        </em>(heap + parent) = temp;<br>    }<br>}</p>
+<p>/<em>*
+ </em></p>
+<ul>
+<li>@param heap  最大堆；</li>
+<li>@param items 输入的数据源</li>
+<li>@return 1成功，0失败<br><em>/<br>int create_binary_tree(element </em>heap,int items[MAX_ELEMENTS]){<br> int total;<br> if (!items) {<pre><code>return 0;
+</code></pre> }<br> element <em>temp = heap;<br> heap++;<br> for (total = 1; </em>items;total++,(heap)++,items = items + 1) {<pre><code>element ele = {*items};
+element temp_key = {total};
+*temp = temp_key;
+*heap = ele;
+</code></pre> }<br> return 1;<br>}<br>///函数调用<br>int items[MAX_ELEMENTS] = {79,66,43,83,30,87,38,55,91,72,49,9};<br>element <em>position = heap;<br>create_binary_tree(position, items);<br>for (int i = 0; (</em>(heap+i)).key &gt; 0; i++) {<br>printf(“binary tree element is %d\n”,(<em>(heap + i)).key);<br>}<br>create_max_heap();<br>for (int i = 0; (</em>(heap+i)).key &gt; 0; i++) {<br>printf(“heap element is %d\n”,(*(heap + i)).key);<br>}<br>```<br>上诉代码在我机器上能够成功的构建一个最大堆。由于该完全二叉树存在n个元素，那么他的高度为:<strong><em>log2(n+1)</em></strong>，这就说明代码中的for循环会执行<strong><em>O(log2(n))</em></strong>次。因此其时间复杂度为：<strong><em>O(log2(n))</em></strong>。</li>
+</ul>
+<h3 id="未完待续"><a href="#未完待续" class="headerlink" title="未完待续"></a>未完待续</h3><p>后面学习之后，继续更新…</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;什么是最大堆和最小堆？最大（小）堆是指在树中，存在一个结点而且该结点有儿子结点，该结点的data域值都不小于（大于）其儿子结点的data域值，并且它是一个完全二叉树（不是满二叉树）。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="编程" scheme="http://yoursite.com/categories/%E7%BC%96%E7%A8%8B/"/>
+    
+    
+      <category term="算法" scheme="http://yoursite.com/tags/%E7%AE%97%E6%B3%95/"/>
+    
+  </entry>
   
   <entry>
     <title>栈（Stack）和堆（Heap）</title>
