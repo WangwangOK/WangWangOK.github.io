@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-06-05T15:53:40.000Z</updated>
+  <updated>2017-06-05T15:59:04.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>最大堆</title>
+    <title>最大堆（创建、删除、插入和堆排序）</title>
     <link href="http://yoursite.com/2017/05/09/data_struct_max_heap/"/>
     <id>http://yoursite.com/2017/05/09/data_struct_max_heap/</id>
     <published>2017-05-09T14:20:26.000Z</published>
-    <updated>2017-06-05T15:53:40.000Z</updated>
+    <updated>2017-06-05T15:59:04.000Z</updated>
     
     <content type="html"><![CDATA[<p>  什么是最大堆和最小堆？最大（小）堆是指在树中，存在一个结点而且该结点有儿子结点，该结点的data域值都不小于（大于）其儿子结点的data域值，并且它是一个完全二叉树（不是满二叉树）。<br><a id="more"></a><br>  注意区分选择树，因为<strong><em>选择树（selection tree）</em></strong>概念和最小堆有些类似，他们都有一个特点是<strong><em>“树中的根结点都表示树中的最小元素结点”</em></strong>。同理最大堆的根结点是树中元素最大的。那么来看具体的看一下它长什么样？（最小堆这里省略）<br><img src="http://upload-images.jianshu.io/upload_images/619906-6866218c0158cfdc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图-1"></p>
 <blockquote>
