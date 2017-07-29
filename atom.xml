@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-06-05T15:59:04.000Z</updated>
+  <updated>2017-07-29T10:53:02.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,323 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>从头认识GCD——相关函数的使用</title>
+    <link href="http://yoursite.com/2017/07/29/gcd_func/"/>
+    <id>http://yoursite.com/2017/07/29/gcd_func/</id>
+    <published>2017-07-29T10:33:38.000Z</published>
+    <updated>2017-07-29T10:53:02.000Z</updated>
+    
+    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-d284587e19456111.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  在上一篇文章中，我们对GCD有了基本的认知，知道其中一些简单的类型，和一些简单函数。这本篇文章中，我们将继续学习GCD中我们在日常开发中使用较多的函数，及其使用方法。在本篇会介绍<strong>dispatch_after、dispatch_apply、dispatch_group_t、dispatch_semaphore_t和dispatch_barrier</strong>等相关函数。</p>
+<h2 id=""><a href="#" class="headerlink" title=" "></a><a id="more"></a> </h2><h3 id="dispatch-after／dispatch-time-t"><a href="#dispatch-after／dispatch-time-t" class="headerlink" title="dispatch_after／dispatch_time_t"></a>dispatch_after／dispatch_time_t</h3><p>我先来说说<code>dispatch_after</code>，从某种意义上来说，它属于任务提交的一种方式。在刚刚接触iOS开发的时候，我一直在想“ 对于<code>dispatch_after</code>它是同步提交代码块还是异步提交的代码块的呢？ ”。后来看到Apple的文档中说到”This function waits until the specified time and then asynchronously adds block to the specified queue”，也就是说它的延迟执行，并不是马上就将代码块就提交到指定的队列中，而是<strong>等到指定的时间通过异步的方式将提其提交到指定的队列中去</strong>。因此从这段话中也可以看出它仅仅是<code>dispatch_async</code>的一种。该函数的声明如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">void dispatch_after(dispatch_time_t when, dispatch_queue_t queue, dispatch_block_t block);</div></pre></td></tr></table></figure>
+<p>到这里就需要来系统地说一说<code>dispatch_after</code>函数的第一个参数，一个<code>dispatch_time_t</code>类型的变量。<code>dispatch_time_t</code>实际是<code>uint64_t</code>类型。系统为该类型定义了两个特殊值，分别是<strong>DISPATCH_TIME_NOW、DISPATCH_TIME_FOREVER</strong>，其中<code>DISPATCH_TIME_NOW</code>表示值为0，而<code>DISPATCH_TIME_FOREVER</code>表示为无穷大（infinity）。除了这两个特殊值之外，我们可以使用函数<code>dispatch_time()</code>来创建相对于默认时钟的时间；或者使用<code>dispatch_walltime()</code>函数获取绝对时间。<br>对于<code>dispatch_time()</code>函数，第一个参数我们传入DISPATCH_TIME_NOW或者DISPATCH_TIME_FOREVER值。</p>
+<blockquote>
+<p><code>dispatch_time()</code>函数第二个参数接受的是<strong> 基于纳秒级别的数值 </strong>。</p>
+</blockquote>
+<p>这时候就需要将具体的数字乘以一个常数，在<a href="https://developer.apple.com/documentation/dispatch/dispatch_time_multiplier_constants?language=objc" target="_blank" rel="external">官方文档</a>中列出了相关的常数。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">常数</th>
+<th style="text-align:left">意义</th>
+<th style="text-align:left">具体数值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">NSEC_PER_SEC</td>
+<td style="text-align:left">表示一秒能转换成多少纳秒</td>
+<td style="text-align:left"><code>1000000000ull</code></td>
+</tr>
+<tr>
+<td style="text-align:left">USEC_PER_SEC</td>
+<td style="text-align:left">表示一秒能转换成多少微秒</td>
+<td style="text-align:left"><code>1000000ull</code></td>
+</tr>
+<tr>
+<td style="text-align:left">NSEC_PER_USEC</td>
+<td style="text-align:left">表示一微秒转换成多少纳秒</td>
+<td style="text-align:left"><code>1000ull</code></td>
+</tr>
+</tbody>
+</table>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">/// 使用相对时间，相对于现在延迟五秒</div><div class="line">dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC);</div><div class="line">dispatch_after(time_t, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Run&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>如果我们想要该代码块延迟到某一指定时刻去执行，我们只需要去修改<code>dispatch_after</code>中的<code>dispatch_time_t</code>类型中值，在这里我们使用函数<code>dispatch_walltime</code>来获取绝对的时间戳值。<code>dispatch_walltime()</code>函数的一个参数是<code>struct timespec</code>类型的一个变量，它是一个结构：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">_STRUCT_TIMESPEC</div><div class="line">&#123;</div><div class="line">	__darwin_time_t  tv_sec;</div><div class="line">	long  tv_nsec;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>分别为秒和纳秒。<strong>timespec是基于纳秒级别的数值</strong>，关于<code>dispatch_walltime</code>具体是方式之一如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">/// 延迟到某一绝对时刻执行</div><div class="line">struct timespec __tp;</div><div class="line">double sec, n_sec;</div><div class="line">n_sec = modf(1500794750.797543543, &amp;sec);</div><div class="line">__tp.tv_sec = sec;</div><div class="line">__tp.tv_nsec = n_sec;</div><div class="line">dispatch_after(dispatch_walltime(&amp;__tp, 0), dispatch_get_main_queue(), ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>上诉代码要等到时间戳为<code>1500794750</code>时才会将代码块提交到指定的事件队列中。</p>
+<h3 id="dispatch-apply"><a href="#dispatch-apply" class="headerlink" title="dispatch_apply"></a>dispatch_apply</h3><p><strong><em>dispatch_apply</em></strong>是<code>dispatch_sync</code>函数配合不同的的<code>dispatch_queue_t</code>队列，来循环执行任务。</p>
+<blockquote>
+<p>如果在<code>dispatch_apply</code>函数中传入的是一个并发队列，那么block中的任务就可以被并发的调用！相对于一般的for循环来说要高效许多。</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_t apply_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_apply(5, apply_queue, ^(size_t index) &#123;</div><div class="line">        NSLog(@&quot;%zd&quot;,index);</div><div class="line">&#125;);</div><div class="line">NSLog(@&quot;End&quot;);</div></pre></td></tr></table></figure>
+<p>结果如下<code>0, 2, 3, 1, 4, End</code>。但是我们将上面的并发队列改成串行队列之后：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_t apply_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_SERIAL, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_apply(5, apply_queue, ^(size_t index) &#123;</div><div class="line">        NSLog(@&quot;%zd&quot;,index);</div><div class="line">&#125;);</div><div class="line">NSLog(@&quot;End&quot;);</div></pre></td></tr></table></figure>
+<p>返回的结果<code>0, 1, 2, 3, 4, End</code>和正常的for循环没有什么差距。但是不管是在并发的队列还是在串行的队列中，<code>End</code>总是最后才打印的。</p>
+<h3 id="dispatch-group-t相关函数"><a href="#dispatch-group-t相关函数" class="headerlink" title="dispatch_group_t相关函数"></a>dispatch_group_t相关函数</h3><p>使用dispatch_group可以把许多操作进行合并。在将多个任务block提交之后，我们可以在dispatch_group中获取到这些操作全部完成的时间（不管是串行执行还是并行执行）。<br>现在我们有一个场景：第一步，我们需要将多个本地资源传递给服务器。我们用<code>dispatch_group</code>相关的技术来实现这个需求。创建一个<code>dispatch_group_t</code>类型的变量实现非常简单，不像其他GCD函数需要一些其他的参数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_group_t upload_group = dispatch_group_create();</div></pre></td></tr></table></figure>
+<p>当创建好了dispatch_group之后，我们需要将这些任务进行提交，这里我使用上一节的<code>dispatch_apply</code>来将多个任务放在并发的队列中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_t upload_queue = dispatch_queue_create(&quot;com.example.upload.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_apply(5, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t index) &#123;</div><div class="line">  dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), upload_queue, ^&#123;</div><div class="line">  /// 模拟网络请求</div><div class="line">    NSLog(@&quot;Upload %zd&quot;,index);</div><div class="line">  &#125;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>在大部分的应用中的上传请求，都有一个上传完成的标志。第二步，那么在这个场景中我们如何知道所有图片已经上传成功呢？我们使用同步的方式，用户的交互不起作用，静静地等待上传完成：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">dispatch_group_t upload_group = dispatch_group_create();</div><div class="line">dispatch_queue_t upload_queue = dispatch_queue_create(&quot;com.example.upload.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_apply(5, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t index) &#123;</div><div class="line">        dispatch_group_enter(upload_group);</div><div class="line">        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), upload_queue, ^&#123;/// 模拟网络请求</div><div class="line">            NSLog(@&quot;Upload %zd&quot;,index);</div><div class="line">            dispatch_group_leave(upload_group);</div><div class="line">        &#125;);</div><div class="line">&#125;);</div><div class="line">dispatch_group_wait(upload_group, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;Upload Complete&quot;);</div></pre></td></tr></table></figure>
+<p><code>dispatch_group</code>的管理是基于计数来做的。<code>dispatch_group_enter</code>会增加该Group内部的任务计数，<code>dispatch_group_leave</code>会减少该Group中未完成的计数，它们两个函数必须配对使用。<br><code>dispatch_group_wait</code>函数和我们在上一篇文中讲到的<code>dispatch_block_wait</code>函数功能类似，只不过<code>dispatch_group_wait</code>是针对多个block的<strong>同步方法</strong>，它会等到Group中所有的任务执行完毕之后才会去继续执行后面的内容。<br>  既然上面提到了<code>dispatch_group_wait</code>函数对应<code>dispatch_block_wait</code>函数，那么很明显应该存在<code>dispatch_block_notify</code>函数对应的Group函数。我们将上面的函数进行稍加改动，将同步的方式改为异步的方式，让用户能够做其他的操作：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">dispatch_group_t upload_group = dispatch_group_create();</div><div class="line">dispatch_queue_t upload_queue = dispatch_queue_create(&quot;com.example.upload.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_apply(5, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t index) &#123;</div><div class="line">        dispatch_group_enter(upload_group);</div><div class="line">        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), upload_queue, ^&#123;/// 模拟网络请求</div><div class="line">            NSLog(@&quot;Upload %zd&quot;,index);</div><div class="line">            dispatch_group_leave(upload_group);</div><div class="line">        &#125;);</div><div class="line">&#125;);</div><div class="line">dispatch_group_notify(upload_group, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Upload Complete&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>  其实相对于使用繁琐的<code>dispatch_group_enter、dispatch_group_leave</code>，Apple给我们提供了更为简单的函数<code>dispatch_group_async</code>。我这样做的目的是为了在一开始就能让我们清楚，在Group内部是什么在决定着<code>dispatch_group_wait 、dispatch_group_notify</code>的触发时机，我们还是对上面的例子进行稍加修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_group_t upload_group = dispatch_group_create();</div><div class="line">dispatch_queue_t upload_queue = dispatch_queue_create(&quot;com.example.upload.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_apply(5, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t index) &#123;</div><div class="line">        dispatch_group_async(upload_group, upload_queue, ^&#123;</div><div class="line">            NSLog(@&quot;Upload %zd&quot;,index);</div><div class="line">        &#125;);</div><div class="line">&#125;);</div><div class="line">dispatch_group_notify(upload_group, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Upload Complete&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>很明显对于使用<code>dispatch_group_async</code>给我们带来便利的同时，在灵活性上也就出现缺失，再者就是在用Group做同步的时候使用<code>dispatch_group_enter、dispatch_group_leave</code>是更好的选择！</p>
+<h3 id="dispatch-semaphore-t相关函数"><a href="#dispatch-semaphore-t相关函数" class="headerlink" title="dispatch_semaphore_t相关函数"></a>dispatch_semaphore_t相关函数</h3><p>在系统中，给予每一个进程一个信号量，代表每个进程目前的状态，未得到控制权的进程会在特定地方被强迫停下来，等待可以继续进行的信号到来（来自<a href="https://zh.wikipedia.org/wiki/%E4%BF%A1%E8%99%9F%E6%A8%99" target="_blank" rel="external">维基百科</a>）。通俗一点儿讲就是说在进程内部有一原子递增和递减的计数器（也就是该数据变量<strong>具有原子性</strong>）。<br>如果触发了某个操作使得信号量小于等于0，那么该操作将会被阻塞，直到其信号量大于0。上面提到过，信号量是基于进程的。所以：</p>
+<blockquote>
+<p>信号量不依赖于任何队列，它可以在任何线程中使用。</p>
+</blockquote>
+<p>在GCD中，函数<code>dispatch_semaphore_signal</code>增加信号量计数，如果之前信号量计数小于等于0，该函数会唤醒当前正在等待的线程。相反，函数<code>dispatch_semaphore_wait</code>会减少信号量计数，如果当该信号量计数小于或者等于0之后，会阻塞当前线程，等待其他操作来增加信号量计数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">- (NSArray *)downloadSync&#123;</div><div class="line">    NSMutableArray *contents = [NSMutableArray array];</div><div class="line">    dispatch_semaphore_t semaphore = dispatch_semaphore_create(0);</div><div class="line">    </div><div class="line">    dispatch_group_t upload_group = dispatch_group_create();</div><div class="line">    dispatch_queue_t upload_queue = dispatch_queue_create(&quot;com.example.download.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">    dispatch_apply(5, dispatch_get_global_queue(QOS_CLASS_UTILITY, 0), ^(size_t index) &#123;</div><div class="line">        dispatch_group_enter(upload_group);</div><div class="line">        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(2 * NSEC_PER_SEC)), upload_queue, ^&#123;</div><div class="line">            NSString *cts = [NSString stringWithFormat:@&quot;%zd&quot;,index];</div><div class="line">            NSLog(@&quot;~ %@ ~&quot;,cts);</div><div class="line">            [contents addObject:cts];</div><div class="line">            dispatch_group_leave(upload_group);</div><div class="line">        &#125;);</div><div class="line">    &#125;);</div><div class="line">    dispatch_group_notify(upload_group, dispatch_get_main_queue(), ^&#123;</div><div class="line">        dispatch_semaphore_signal(semaphore);</div><div class="line">    &#125;);</div><div class="line">    dispatch_semaphore_wait(semaphore, DISPATCH_TIME_FOREVER);</div><div class="line">    return contents;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们现在来看看上面这个方法可以正常的返回吗？除了<code>dispatch_semaphore_t</code>相关的代码，我都是直接从上面拷贝下来，没有做任何修改。当我跑起来之后，始终方法<code>downloadSync</code>不会返回，这里很明显的是造成了死锁的问题！由于<code>dispatch_semaphore_wait</code>函数会阻塞当前线程（它此时是处于主线程中），<code>dispatch_group_notify</code>函数的任务线程即为主线程对应的主任务队列。<code>dispatch_semaphore_wait</code>需要等到函数<code>dispatch_semaphore_signal</code>来增加信号量计数之后才会继续执行主线程，而<code>dispatch_group_notify</code>又要在主线程中执行（由于主线程被阻塞）之后才能去调用<code>dispatch_semaphore_signal</code>函数，因此就造成了死锁，程序永远不会继续执行！。<br>解决办法也很简单，将<code>dispatch_semaphore_signal</code>放在一个并行的任务队列中进行：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">dispatch_group_notify(upload_group, dispatch_get_global_queue(QOS_CLASS_USER_INITIATED, 0), ^&#123;</div><div class="line">        dispatch_semaphore_signal(semaphore);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>上面使用信号量的相关函数，实现了异步转同步的需求。</p>
+<h3 id="dispatch-barrier"><a href="#dispatch-barrier" class="headerlink" title="dispatch_barrier"></a>dispatch_barrier</h3><p><code>dispatch_barrier</code>的作用是在并发队列中实现同步操作。在并发队列中，任务的提交顺序会影响到执行顺序，当异步提交的任务在<code>dispatch_barrier</code>之后，该任务需要等到<code>dispatch_barrier</code>提交的任务执行完成之后才会开始执行。<br>把上面的话用下面的图通俗的来解释一下：<br><img src="http://upload-images.jianshu.io/upload_images/619906-c458370900934975.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p>用下面的伪代码来实现一下上图中的相关任务：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dispatch_async(task_queue, task_1);</div><div class="line">dispatch_async(task_queue, task_2);</div><div class="line">dispatch_async(task_queue, task_3);</div><div class="line">dispatch_barrier_async(task_queue, task_4);</div><div class="line">dispatch_async(task_queue, task_5);</div></pre></td></tr></table></figure>
+<p><strong>函数<code>dispatch_barrier_async</code>中block参数，会被目标队列复制并持有，直到任务完成时被释放</strong>。官方文档中提到：</p>
+<blockquote>
+<p>目标队列必须是用户手动创建的并发队列，如果传入的是串行队列或者是全局并发队列，那么这个函数就和<code>dispatch_async</code>类似。</p>
+</blockquote>
+<p><code>dispatch_barrier_sync</code>在做同步操作时和<code>dispatch_barrier_async</code>效果类似，但是它必须得等到block任务完成之后才会返回！而且<code>dispatch_barrier_sync</code>函数的目标线程不会复制和持有block。</p>
+<h3 id="dispatch-once"><a href="#dispatch-once" class="headerlink" title="dispatch_once"></a>dispatch_once</h3><p>在这篇文章的最后以<code>dispatch_once</code>来做一个结尾，对于<code>dispatch_once</code>我们iOS开发者用的太多了。<strong>该函数在多线程环境下同样也是安全的</strong>，如果是在多线程中进行调用，它会同步地等待block任务执行完成！官方文档中提出：对于<code>dispatch_once</code>函数的</p>
+<blockquote>
+<p>第一个参数必须是存储在全局区或者静态区的变量</p>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">static dispatch_once_t predicate;</div><div class="line">dispatch_once(&amp;predicate, ^&#123;</div><div class="line">  ...        </div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>关于dispatch_once更多的文章见<a href="https://www.mikeash.com/pyblog/friday-qa-2014-06-06-secrets-of-dispatch_once.html" target="_blank" rel="external">dispatch_once</a>，以及对应的源码<a href="https://github.com/apple/swift-corelibs-libdispatch/blob/master/src/once.c" target="_blank" rel="external">once.c</a>。第三篇文章会在后面放出来，我准备写关于<code>dispatch_source</code>和<code>dispatch_data</code>以及<code>dispatch_io</code>等相关知识。</p>
+<h3 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h3><p>根据文中出现顺序</p>
+<ul>
+<li><a href="https://apple.github.io/swift-corelibs-libdispatch/" target="_blank" rel="external">Apple Dispatch Github</a></li>
+<li><a href="https://developer.apple.com/documentation/dispatch/dispatch_time_multiplier_constants?language=objc" target="_blank" rel="external">Dispatch Time Multiplier Constants</a></li>
+<li><a href="http://www.gnu.org/software/libc/manual/html_node/Elapsed-Time.html" target="_blank" rel="external">Elapsed Time</a></li>
+<li><a href="https://zh.wikipedia.org/wiki/%E4%BF%A1%E8%99%9F%E6%A8%99" target="_blank" rel="external">信号量</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-d284587e19456111.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  在上一篇文章中，我们对GCD有了基本的认知，知道其中一些简单的类型，和一些简单函数。这本篇文章中，我们将继续学习GCD中我们在日常开发中使用较多的函数，及其使用方法。在本篇会介绍&lt;strong&gt;dispatch_after、dispatch_apply、dispatch_group_t、dispatch_semaphore_t和dispatch_barrier&lt;/strong&gt;等相关函数。&lt;/p&gt;
+&lt;h2 id=&quot;&quot;&gt;&lt;a href=&quot;#&quot; class=&quot;headerlink&quot; title=&quot; &quot;&gt;&lt;/a&gt;
+    
+    </summary>
+    
+      <category term="实战" scheme="http://yoursite.com/categories/%E5%AE%9E%E6%88%98/"/>
+    
+    
+      <category term="GCD" scheme="http://yoursite.com/tags/GCD/"/>
+    
+  </entry>
+  
+  <entry>
+    <title>从头认识GCD——派发队列基础</title>
+    <link href="http://yoursite.com/2017/07/29/gcd_basic/"/>
+    <id>http://yoursite.com/2017/07/29/gcd_basic/</id>
+    <published>2017-07-29T10:33:29.000Z</published>
+    <updated>2017-07-29T10:52:59.000Z</updated>
+    
+    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。<br>  <a id="more"></a><br>  包括使用较少的<code>dispatch_qos_class_t 、dispatch_block_t</code>等等知识点。<br>  GCD任务队列能够让开发者能够更加专注于同步或者异步任务task，而不用把重点放在创建线程和具体同步和加锁等相关操作。但是如果我们想异步做更加灵活的任务的话（比如后台任务之类的），那选择线程肯定是更好的选择。毕竟操作简单带来就是灵活性的确实嘛！首先先来看看派发队列。<br>  当用户向某一线程提交一个task时，<strong>_dispatch_queue<em>t</em></strong>作为任务队列以用户期望的方式来管理这些task。 管理的任务的方式有两种类型，分别是串行队列(<code>DISPATCH_QUEUE_SERIAL</code>)和并行队列(<code>DISPATCH_QUEUE_CONCURRENT</code>)，它们两个是由宏定义的。 <br></p>
+<hr>
+<h4 id="一、获取任务队列"><a href="#一、获取任务队列" class="headerlink" title="一、获取任务队列"></a>一、获取任务队列</h4><p>现在问题来了，我们既然知道有这么一个类型了，那我们总要有方式来得到它啊是吧。就目前而言，Apple给我们提供获取该类型变量的方式有三种，分别是：</p>
+<ul>
+<li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452921-dispatch_get_main_queue?language=objc" target="_blank" rel="external">dispatch_get_main_queue</a></em></strong>：程序主线程的任务队列，这是一个串行队列（<code>DISPATCH_QUEUE_SERIAL</code>）。在程序<code>main()</code>函数被调用之前由系统自动创建。在官方文档中还提到了，我们可以主动去执行被添加到<code>main_queue</code>的任务task（也就是说我们可以主动来调用添加到主线程队列的<strong>block</strong>）。三个方法分别是：<code>dispatch_main()、UIApplicationMain 、CFRunLoopRun()</code>，选用其中一个。我尝试了一下使用<code>dispatch_main()</code>会导致程序中断。</p>
+</li>
+<li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452927-dispatch_get_global_queue?language=objc" target="_blank" rel="external">dispatch_get_global_queue</a></em></strong>：由系统定义并管理的一个全局并行队列。在获取时，我们需要指定任务队列的系统等级（<code>DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND</code>）。</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>但是在iOS8以后，使用枚举<code>qos_class_t</code>的值，提供了细粒度更高的全局任务队列，关于QOS在后面统一梳理一下。</p>
+<pre><code><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);</div></pre></td></tr></table></figure>
+</code></pre><blockquote>
+<p>该函数的返回值上使用<code>dispatch_resume、dispatch_suspend</code>无效，</p>
+</blockquote>
+<ul>
+<li><p><strong><em>dispatch_queue_create</em></strong>：除了上诉系统提供的两种类型的任务队列之外，我们还可以自己去创建任务队列。我们可以自己创建串行（<code>DISPATCH_QUEUE_SERIAL</code>）和并行（<code>DISPATCH_QUEUE_CONCURRENT</code>）两种类型的队列，但是它们都有一个变种<code>DISPATCH_QUEUE_SERIAL_INACTIVE, DISPATCH_QUEUE_CONCURRENT_INACTIVE</code>。它们同样会有涉及到QOS的创建方法，后面一起记录一下</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_create(&quot;com.example.gcd&quot;, DISPATCH_QUEUE_CONCURRENT);</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>上诉三种就是获得任务队列方法，我们在设置<code>dispatch_ge_global_queue</code>的第二个参数时一般设置为<strong><em>0</em></strong>。上面这三种方式是我们在日常开发中，使用并发编程时通过GCD的方式来获取任务队列的方法。<strong>在大部分时间使用并行的任务队列时，<code>global_queue</code>能够基本满足需求；对于我来说创建线程的场景，主要是当我们需要一个串行的任务，但是又不想在主线程去执行时使用</strong>。既然我在上面提到了QOS，下面我们就系统的来认识一下QOS。</p>
+<h4 id="二、通过QOS配置队列"><a href="#二、通过QOS配置队列" class="headerlink" title="二、通过QOS配置队列"></a>二、通过QOS配置队列</h4><p>  由于在我们的程序中，存在各种各样的场景，比如用户界面刷新，网络请求，资源下载，缓存存取之类的。为了能够保证程序的高效响应，需要对不同的任务对资源的消耗做出一些调整。<br>此时我们就可以使用QOS来解决不同任务的资源分配问题，QOS可以用于<code>dispatch_queue, NSOperation, NSOperationQueue, NSThread ,pthreads</code>中，这篇文章中主要讲一下在<strong><em>dispatch_queue</em></strong>中的使用场景。</p>
+<blockquote>
+<p>在官方文档中也说，关于QOS的只能在iOS8以后使用</p>
+</blockquote>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">QOS_CLASS</th>
+<th style="text-align:left">对应OC参数</th>
+<th style="text-align:left">相关使用场景</th>
+<th style="text-align:center">执行时机</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>USER_INTERACTIVE</strong></td>
+<td style="text-align:left">NSQualityOfServiceUserInteractive</td>
+<td style="text-align:left">等级最高。主要用户用户交互，比如主线程上的刷新用户界面等等。</td>
+<td style="text-align:center">必须是要及时处理</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>USER_INITIATED</strong></td>
+<td style="text-align:left">NSQualityOfServiceUserInitiated</td>
+<td style="text-align:left">它主要用于比如已经开了一个任务，此时需要立刻执行的场景。意思就是说需要瞬间完成的工作</td>
+<td style="text-align:center">需要很快完成工作，如几秒钟或更短。</td>
+</tr>
+<tr>
+<td style="text-align:left">❌DEFAULT</td>
+<td style="text-align:left">——</td>
+<td style="text-align:left">这个我们一般不使用，<code>dispatch_get_global_queue</code>就是这一等级。</td>
+<td style="text-align:center">——</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>UTILITY</strong></td>
+<td style="text-align:left">NSQualityOfServiceUtility</td>
+<td style="text-align:left">不需要及时响应，比如下载操作之类的，但是用户是可以看见进度之类的</td>
+<td style="text-align:center">可能需要相当长一段时间</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>BACKGROUND</strong></td>
+<td style="text-align:left">NSQualityOfServiceBackground</td>
+<td style="text-align:left">完全是后台执行，用户不知道进度的</td>
+<td style="text-align:center">同样比上面时间更长的类型</td>
+</tr>
+<tr>
+<td style="text-align:left">❌UNSPECIFIED</td>
+<td style="text-align:left">——</td>
+<td style="text-align:left">开发人员没有指定，系统根据情况进行选定QOS等级</td>
+<td style="text-align:center">——</td>
+</tr>
+</tbody>
+</table>
+<p>在dispatch_queue中，如果我们想要指定QOS的等级的话，我们可以使用函数<a href="https://developer.apple.com/documentation/dispatch/1453028-dispatch_queue_attr_make_with_qo" target="_blank" rel="external">dispatch_queue_attr_make_with_qos_class</a>。在创建任务队列时使用方法如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_attr_t attr_qos = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INTERACTIVE, 0);</div><div class="line">dispatch_queue_t queue = dispatch_queue_create(&quot;com.example.gcd&quot;, attr_qos);</div></pre></td></tr></table></figure>
+<p>因为 <strong>QOS对于<code>dispatch_queue</code>来说是无法变更的属性</strong>，以致于我们无法去更改已存在任务队列的QOS属性。但是我们可以使用<code>dispatch_queue_get_qos_class</code>函数来获取任务队列的QOS：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">dispatch_qos_class_t qos_class = dispatch_queue_get_qos_class(the_queue, 0);</div><div class="line">/// 一般用于 根据已知队列来获取同qos等级的全局任务队列</div><div class="line">dispatch_get_global_queue(dispatch_queue_get_qos_class(the_queue, nil), 0);</div><div class="line">/// 或者是 根据已知的全局任务队列来创建与其qos相等的任务队列</div><div class="line">dispatch_queue_t the_global = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);</div><div class="line">dispatch_queue_t the_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, dispatch_queue_get_qos_class(the_global, 0), 0));</div></pre></td></tr></table></figure>
+<p>当我们要获取全局队列时，在此之前可以使用<code>DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND</code>。现在我们可以使用QOS来获取一个全局的并发任务队列，因此我们有必要来了解一下它们之间的差异和共性：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">以前</th>
+<th style="text-align:left">现在QOS</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">Main Thread</td>
+<td style="text-align:left">QOS_CLASS_USER_INTERACTIVE</td>
+</tr>
+<tr>
+<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_HIGH</td>
+<td style="text-align:left">QOS_CLASS_USER_INITIATED</td>
+</tr>
+<tr>
+<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_DEFAULT</td>
+<td style="text-align:left">QOS_CLASS_DEFAULT</td>
+</tr>
+<tr>
+<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_LOW</td>
+<td style="text-align:left">QOS_CLASS_UTILITY</td>
+</tr>
+<tr>
+<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_BACKGROUND</td>
+<td style="text-align:left">QOS_CLASS_BACKGROUND</td>
+</tr>
+</tbody>
+</table>
+<p>具体使用方法如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);</div></pre></td></tr></table></figure>
+<p> 除此之外，我们还可以在<code>dispatch_block</code>中对每一个人任务块来设置Qos等级，这里我先将<code>dispatch_block</code>提出来，后面我会对其进行较为详细的解释。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t the_block = dispatch_block_create_with_qos_class(0, QOS_CLASS_UTILITY, -8, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div><div class="line">dispatch_async(the_queue, the_block);///dispatch_sync, dispatch_after等等需要用到dispatch_block的地方</div></pre></td></tr></table></figure>
+<h4 id="三、创建任务"><a href="#三、创建任务" class="headerlink" title="三、创建任务"></a>三、创建任务</h4><p>  前面两点说了任务的执行地点和怎样来创建和配置任务的执行地点，但是我们必须得知道任务是什么？怎么创建任务？在GCD中使用block来作为任务提交给特定的任务队列，例如<strong>_dispatch_block<em>t</em></strong>或者直接是一个简单的block。<br>对于<code>dispatch_block_t</code>类型的变量，首先我们得要知道怎么去创建它。首先根据我们的尝试（下面的例子出自<a href="https://developer.apple.com/documentation/dispatch/dispatch_block_t" target="_blank" rel="external">Apple官方</a>），对block进行直接赋值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t error_block;</div><div class="line">NSInteger x = 0;</div><div class="line">if (x) &#123;</div><div class="line">        error_block = ^void(void)&#123;</div><div class="line">            NSLog(@&quot;TRUE&quot;);</div><div class="line">        &#125;;</div><div class="line">&#125;else&#123;</div><div class="line">        error_block = ^void(void)&#123;</div><div class="line">            NSLog(@&quot;FALSE&quot;);</div><div class="line">        &#125;;</div><div class="line">&#125;</div><div class="line">error_block();/// unsafe</div></pre></td></tr></table></figure>
+<p>  官网中解释到：“ 由于该<code>dispatch_block_t</code>变量是在栈内存上声明的，如果执行过该变量作用域之后就有可能导致该变量被释放 ”。到这里我们还是不得不提一下<code>block</code>在MRC和ARC下的区别，我们先看一篇<a href="http://blog.parse.com/learn/engineering/objective-c-blocks-quiz/" target="_blank" rel="external">测试</a>，在这篇测试中很明显的一个点便是：“ MRC中有NSStackBlock类型，NSMallocBlock类型，NSGlobalBlock类型同时存在。但是在ARC中不再存在NSStackBlock类型，而是直接声明为NSMallocBlock类型” 。也就是说在ARC中就算是在函数方法中声明的block变量也是被声明为NSMallocBlock类型。<br>  NSMallocBlock类型就不存在上诉官网中提到的变量被提前释放的问题，这一步我并没有去实践，所以上诉结论是否为真，既然官方不建议这么做，那便放弃使用该方法。使用一下两种方式来创建<code>dispatch_block_t</code>变量：</p>
+<ul>
+<li><strong><em>dispatch_block_create</em></strong></li>
+<li><strong><em>dispatch_block_create_with_qos_class</em></strong></li>
+</ul>
+<p>当我们在使用上诉两种方法来创建<code>dispatch_block_t</code>变量时，遇到的第一个便是<code>dispatch_block_flags_t</code>参数。它是一个枚举类型：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">枚举类型</th>
+<th style="text-align:left">作用</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>DISPATCH_BLOCK_ASSIGN_CURRENT</strong></td>
+<td style="text-align:left">说明该块会被分配在创建该对象的上下文中（直接执行该块对象时推荐使用）</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>DISPATCH_BLOCK_BARRIER</strong></td>
+<td style="text-align:left">类似于在做同步操作时的<code>barrier</code></td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>DISPATCH_BLOCK_DETACHED</strong></td>
+<td style="text-align:left">表明dispatch_block与当前的执行环境属性无关</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>DISPATCH_BLOCK_ENFORCE_QOS_CLASS</strong></td>
+<td style="text-align:left">当dispatch_block提交到队列或者直接提交执行做同步操作时，该值是默认值</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>DISPATCH_BLOCK_INHERIT_QOS_CLASS</strong></td>
+<td style="text-align:left">异步执行的默认值，优先级低于<code>DISPATCH_BLOCK_ENFORCE_QOS_CLASS</code>。可以用该值来覆盖原来QOS类</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>DISPATCH_BLOCK_NO_QOS_CLASS</strong></td>
+<td style="text-align:left">表明dispatch_block不分配QOS类</td>
+</tr>
+</tbody>
+</table>
+<p>来创建<code>dispatch_block</code>变量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">/// 第一种使用QOS的方式来创建dispatch_block</div><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);</div><div class="line">&#125;);</div><div class="line">/// 直接创建dispatch_block</div><div class="line">dispatch_block_create(DISPATCH_BLOCK_NO_QOS_CLASS, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>对于<code>dispatch_block_create_with_qos_class</code>方法中relative_priority的参数的规则是：<code>relative_priority</code>的值需要在0到<code>QOS_MIN_RELATIVE_PRIORITY</code>（-15）之间。<br>  我们<strong>创建的block会被拷贝到堆上，并由<code>dispatch_block_t</code>类型的变量所持有</strong>。创建完成之后，我们可以将其提交到对应的任务队列中（下一节提到的dispatch_async等等函数…），也可以直接去执行（比如：task_block()）。<br>  既然可以直接去输入一个block块，那为什么我们还需要去使用<code>dispatch_block_t</code>？存在即有价值，那么最明显的优势便是：我们可以对该任务块执行<strong>取消操作</strong>！例如：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), task_block);</div><div class="line">dispatch_block_cancel(task_block);</div></pre></td></tr></table></figure>
+<p>但是<strong>如果dispatch_block已经开始执行，便无法取消该任务的执行</strong>。比如下面的例子中，我们对上面的代码进行一点小小的修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);/// 成功执行</div><div class="line">        /// 模拟一个长时间的耗时任务</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);/// 成功执行</div><div class="line">&#125;);</div><div class="line">dispatch_async(dispatch_get_main_queue(), task_block);</div><div class="line">dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^&#123;</div><div class="line">        /// 保证dispatch_block_t已经开始执行</div><div class="line">        dispatch_block_cancel(task_block);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<p>在这里我们是无法去取消已经执行的块。<code>dispatch_block_testcancel</code>函数的作用是让我们能够知道当前任务块是否已经被取消。</p>
+<blockquote>
+<p>在调用<code>dispatch_block_cancel</code>函数时，我们必须要确定即将被cancle的块没有捕获任何其他外部变量，如果持有将会造成内存泄漏。</p>
+</blockquote>
+<p>  除此之外我们来认识一下<strong><em>dispatch_block_wait</em></strong> 函数，它的作用是以同步的方式执行并等待，得等待指定的任务块执行完成之后，抑或者是超时之后然后去执行当前线程的后续任务。如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_async(dispatch_get_main_queue(), task_block);</div><div class="line">NSLog(@&quot;Before Wait&quot;);</div><div class="line">dispatch_block_wait(task_block, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;After Wait&quot;);</div></pre></td></tr></table></figure>
+<p>此时运行并不会得到<code>Start</code>。由于<code>dispatch_block_wait</code>函数是使用的同步的方式，只要是在该线程的执行流中，它不管你是同步提交还是异步提交（这两种提交方式在下面一节马上会讲）的方式，<code>dispatch_block_wait</code>函数如果是在被执行的block之前执行，后续的代码都会被挂起，并不仅仅是<code>dispatch_block_wait</code>函数后的代码，也包括block中的代码。因此也就导致了在同一个任务队列中（都处于main_queue中）的<code>dispatch_block_t</code>永远不会执行。解决办法也很简单，第一种我们先让block执行起来；第二种我们让它们处在不同队列中即可：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_queue_t block_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_async(block_queue, task_block);</div><div class="line">NSLog(@&quot;Before Wait&quot;);</div><div class="line">dispatch_block_wait(task_block, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;After Wait&quot;);</div></pre></td></tr></table></figure>
+<p>我们可以利用这个方法来做由异步转同步的需求（后面还会介绍<code>dispatch_semaphore_t</code>，它同样可以达到这个效果）。<br>  最后来看一下函数<strong>_dispatch_block<em>notify</em></strong>，它的作用是当指定的<code>dispatch_block_t</code>变量执行完了之后，通知到给特定的任务队列。在上面的例子中，我们在<code>block_queue</code>中去执行了我们的任务块，但是我们想要在它执行完了以后在<code>main_queue</code>中来执行相关的操作，比如我们需要在<code>main_queue</code>中更新UI界面之类的：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_queue_t block_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_async(block_queue, task_block);</div><div class="line">dispatch_block_notify(task_block, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Notify&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
+<h4 id="四、将任务提交到队列"><a href="#四、将任务提交到队列" class="headerlink" title="四、将任务提交到队列"></a>四、将任务提交到队列</h4><p>  在文章的最后，我们来看看怎样把已经创建好的任务提交到特定的任务队列中去！对于提交操作主要涉及到的函数有：<strong>dispatch_async、dispatch_sync、dispatch_block_perform、dispatch_group_async、dispatch_barrier_async、dispatch_barrier_sync</strong>。在这篇文章中先讲前面三个。再后面文章中详解<code>dispatch_group_t</code>和<code>dispatch_barrier</code>时在进行对应的学习。<br><br><code>dispatch_async</code>使用异步地方式去提交任务块，何为异步？异步方法调用它通过使用一种立即返回的异步的变体并提供额外的方法来支持接受完成通知以及完成等待改进长期运行的(同步)方法（出自<a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E6%AD%A5%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8" target="_blank" rel="external">维基百科</a>）。<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line"></div><div class="line">![异步和同步的对比](http://upload-images.jianshu.io/upload_images/619906-601bf2002a932ad4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240)</div><div class="line">上诉函数分别有对应的版本，分别是``dispatch_async_f、dispatch_sync_f``。它们两个和前面的区别在于，这两个函数不使用block的方式，而是使用C函数指针的方式来执行任务。它们中的__context__是以``void *``类型的变量作为参数，传递给函数指针指向的具体函数。</div></pre></td></tr></table></figure></p>
+<p>/// 异步使用block<br>dispatch_async(queue, ^{<br>        …<br>});<br>/// 同步使用block<br>dispatch_sync(queue, ^{<br>        …<br>});<br>/// 异步使用函数指针<br>dispatch_async_f(dispatch_get_main_queue(),  (<strong>bridge void <em> _Nullable)(self), task_place);<br>void task_place(void </em>data){<br>    …<br>}<br>/// 同步使用函数指针<br>dispatch_sync_f(block_queue, (</strong>bridge void <em> _Nullable)(self), task_place);<br>void task_place(void </em>data){<br>    …<br>}<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">最后我们来看看本应属于``dispatch_block_t``中应该讲解的函数``dispatch_block_perform``，但是它作为一个提交任务的函数，放在这里讲我觉得要更为合适一点。它会创建一个``dispatch_block_t``变量，并在该任务队列中以同步的方式来执行block中的内容。</div></pre></td></tr></table></figure></p>
+<p>dispatch_block_perform(DISPATCH_BLOCK_BARRIER, ^{<br>        NSLog(@”Start”);<br>        [NSThread sleepForTimeInterval:3];<br>        NSLog(@”End”);<br>});<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">上面的代码以下代码效果一样（取自[Apple官方文档](https://developer.apple.com/documentation/dispatch/1431048-dispatch_block_perform?language=objc)）:</div></pre></td></tr></table></figure></p>
+<p>dispatch_block_t b = dispatch_block_create(flags, block);<br>b();<br>Block_release(b);<br><code>`
+但是</code>dispatch_block_perform ``方法可以以更加高效的方式来进行以上步骤，而不需要在对象分配时将block拷贝到指定堆中。<br>  到这里把最基础的部分算是走了一遍，可以说是走了最小的一步，但是本文的目的是力求以清晰地路线把每一步所涉及到的知识深挖严查。在后续的文章中会继续介绍GCD中的其他函数和相关的使用方法。</p>
+<h4 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h4><p>以文章中出现顺序：</p>
+<ul>
+<li><a href="https://developer.apple.com/library/content/documentation/Performance/Conceptual/EnergyGuide-iOS/PrioritizeWorkWithQoS.html#//apple_ref/doc/uid/TP40015243-CH39-SW1" target="_blank" rel="external">Prioritize Work with Quality of Service Classes</a></li>
+<li><a href="https://developer.apple.com/library/content/documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html#//apple_ref/doc/uid/TP40008091-CH102-SW17" target="_blank" rel="external">Concurrency Programming Guide</a></li>
+<li><a href="http://blog.parse.com/learn/engineering/objective-c-blocks-quiz/" target="_blank" rel="external">Objective-C Blocks Quiz</a></li>
+<li><a href="https://developer.apple.com/library/content/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html" target="_blank" rel="external">Transitioning to ARC Release Notes</a></li>
+<li><a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E6%AD%A5%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8" target="_blank" rel="external">异步调用</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="实战" scheme="http://yoursite.com/categories/%E5%AE%9E%E6%88%98/"/>
+    
+    
+      <category term="GCD" scheme="http://yoursite.com/tags/GCD/"/>
+    
+  </entry>
   
   <entry>
     <title>最大堆（创建、删除、插入和堆排序）</title>
