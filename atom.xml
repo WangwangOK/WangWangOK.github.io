@@ -132,9 +132,9 @@
     <link href="http://yoursite.com/2017/07/29/gcd_basic/"/>
     <id>http://yoursite.com/2017/07/29/gcd_basic/</id>
     <published>2017-07-29T10:33:29.000Z</published>
-    <updated>2017-07-29T11:04:32.000Z</updated>
+    <updated>2017-07-29T11:11:26.000Z</updated>
     
-    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。<br>  <a id="more"></a><br>  包括使用较少的<code>dispatch_qos_class_t 、dispatch_block_t</code>等等知识点。<br>  GCD任务队列能够让开发者能够更加专注于同步或者异步任务task，而不用把重点放在创建线程和具体同步和加锁等相关操作。但是如果我们想异步做更加灵活的任务的话（比如后台任务之类的），那选择线程肯定是更好的选择。毕竟操作简单带来就是灵活性的确实嘛！首先先来看看派发队列。<br>  当用户向某一线程提交一个task时，<strong>_dispatch_queue<em>t</em></strong>作为任务队列以用户期望的方式来管理这些task。 管理的任务的方式有两种类型，分别是串行队列(<code>DISPATCH_QUEUE_SERIAL</code>)和并行队列(<code>DISPATCH_QUEUE_CONCURRENT</code>)，它们两个是由宏定义的。 <br></p>
+    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。（建议在PC端浏览）<br>  <a id="more"></a><br>  包括使用较少的<code>dispatch_qos_class_t 、dispatch_block_t</code>等等知识点。<br>  GCD任务队列能够让开发者能够更加专注于同步或者异步任务task，而不用把重点放在创建线程和具体同步和加锁等相关操作。但是如果我们想异步做更加灵活的任务的话（比如后台任务之类的），那选择线程肯定是更好的选择。毕竟操作简单带来就是灵活性的确实嘛！首先先来看看派发队列。<br>  当用户向某一线程提交一个task时，<strong>_dispatch_queue<em>t</em></strong>作为任务队列以用户期望的方式来管理这些task。 管理的任务的方式有两种类型，分别是串行队列(<code>DISPATCH_QUEUE_SERIAL</code>)和并行队列(<code>DISPATCH_QUEUE_CONCURRENT</code>)，它们两个是由宏定义的。 <br></p>
 <hr>
 <h4 id="一、获取任务队列"><a href="#一、获取任务队列" class="headerlink" title="一、获取任务队列"></a>一、获取任务队列</h4><p>现在问题来了，我们既然知道有这么一个类型了，那我们总要有方式来得到它啊是吧。就目前而言，Apple给我们提供获取该类型变量的方式有三种，分别是：</p>
 <ul>
@@ -162,8 +162,7 @@
 <table>
 <thead>
 <tr>
-<th style="text-align:left">QOS_CLASS</th>
-<th style="text-align:left">对应OC参数</th>
+<th style="text-align:left">QOS_CLASS/对应OC参数</th>
 <th style="text-align:left">相关使用场景</th>
 <th style="text-align:center">执行时机</th>
 </tr>
@@ -171,39 +170,60 @@
 <tbody>
 <tr>
 <td style="text-align:left"><strong>USER_INTERACTIVE</strong></td>
-<td style="text-align:left">NSQualityOfServiceUserInteractive</td>
 <td style="text-align:left">等级最高。主要用户用户交互，比如主线程上的刷新用户界面等等。</td>
 <td style="text-align:center">必须是要及时处理</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>USER_INITIATED</strong></td>
-<td style="text-align:left">NSQualityOfServiceUserInitiated</td>
 <td style="text-align:left">它主要用于比如已经开了一个任务，此时需要立刻执行的场景。意思就是说需要瞬间完成的工作</td>
 <td style="text-align:center">需要很快完成工作，如几秒钟或更短。</td>
 </tr>
 <tr>
-<td style="text-align:left">❌DEFAULT</td>
-<td style="text-align:left">——</td>
+<td style="text-align:left">❌ DEFAULT</td>
 <td style="text-align:left">这个我们一般不使用，<code>dispatch_get_global_queue</code>就是这一等级。</td>
 <td style="text-align:center">——</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>UTILITY</strong></td>
-<td style="text-align:left">NSQualityOfServiceUtility</td>
 <td style="text-align:left">不需要及时响应，比如下载操作之类的，但是用户是可以看见进度之类的</td>
 <td style="text-align:center">可能需要相当长一段时间</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>BACKGROUND</strong></td>
-<td style="text-align:left">NSQualityOfServiceBackground</td>
 <td style="text-align:left">完全是后台执行，用户不知道进度的</td>
 <td style="text-align:center">同样比上面时间更长的类型</td>
 </tr>
 <tr>
-<td style="text-align:left">❌UNSPECIFIED</td>
-<td style="text-align:left">——</td>
+<td style="text-align:left">❌ UNSPECIFIED</td>
 <td style="text-align:left">开发人员没有指定，系统根据情况进行选定QOS等级</td>
 <td style="text-align:center">——</td>
+</tr>
+</tbody>
+</table>
+<p>上诉QOS对应OC参数如下：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">QOS-Class</th>
+<th style="text-align:left">对应OC</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">USER_INTERACTIVE</td>
+<td style="text-align:left">NSQualityOfServiceUserInteractive</td>
+</tr>
+<tr>
+<td style="text-align:left">USER_INITIATED</td>
+<td style="text-align:left">NSQualityOfServiceUserInitiated</td>
+</tr>
+<tr>
+<td style="text-align:left">UTILITY</td>
+<td style="text-align:left">NSQualityOfServiceUtility</td>
+</tr>
+<tr>
+<td style="text-align:left">BACKGROUND</td>
+<td style="text-align:left">NSQualityOfServiceBackground</td>
 </tr>
 </tbody>
 </table>
@@ -324,7 +344,7 @@
     
     <summary type="html">
     
-      &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。&lt;br&gt;
+      &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。（建议在PC端浏览）&lt;br&gt;
     
     </summary>
     
