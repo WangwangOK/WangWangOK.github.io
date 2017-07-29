@@ -4,7 +4,7 @@
 <ul>
 <li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452921-dispatch_get_main_queue?language=objc" target="_blank" rel="external">dispatch_get_main_queue</a></em></strong>：程序主线程的任务队列，这是一个串行队列（<code>DISPATCH_QUEUE_SERIAL</code>）。在程序<code>main()</code>函数被调用之前由系统自动创建。在官方文档中还提到了，我们可以主动去执行被添加到<code>main_queue</code>的任务task（也就是说我们可以主动来调用添加到主线程队列的<strong>block</strong>）。三个方法分别是：<code>dispatch_main()、UIApplicationMain 、CFRunLoopRun()</code>，选用其中一个。我尝试了一下使用<code>dispatch_main()</code>会导致程序中断。</p>
 </li>
-<li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452927-dispatch_get_global_queue?language=objc" target="_blank" rel="external">dispatch_get_global_queue</a></em></strong>：由系统定义并管理的一个全局并行队列。在获取时，我们需要指定任务队列的系统等级（<code>DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND</code>）。</p>
+<li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452927-dispatch_get_global_queue?language=objc" target="_blank" rel="external">dispatch_get_global_queue</a></em></strong>：由系统定义并管理的一个全局并行队列。在获取时，我们需要指定任务队列的系统等级（DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND）。</p>
   <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);</div></pre></td></tr></table></figure>
 </li>
 </ul>
@@ -14,7 +14,7 @@
 <p>该函数的返回值上使用<code>dispatch_resume、dispatch_suspend</code>无效，</p>
 </blockquote>
 <ul>
-<li><p><strong><em>dispatch_queue_create</em></strong>：除了上诉系统提供的两种类型的任务队列之外，我们还可以自己去创建任务队列。我们可以自己创建串行（<code>DISPATCH_QUEUE_SERIAL</code>）和并行（<code>DISPATCH_QUEUE_CONCURRENT</code>）两种类型的队列，但是它们都有一个变种<code>DISPATCH_QUEUE_SERIAL_INACTIVE, DISPATCH_QUEUE_CONCURRENT_INACTIVE</code>。它们同样会有涉及到QOS的创建方法，后面一起记录一下</p>
+<li><p><strong><em>dispatch_queue_create</em></strong>：除了上诉系统提供的两种类型的任务队列之外，我们还可以自己去创建任务队列。我们可以自己创建串行（<code>DISPATCH_QUEUE_SERIAL</code>）和并行（<code>DISPATCH_QUEUE_CONCURRENT</code>）两种类型的队列，但是它们都有一个变种DISPATCH_QUEUE_SERIAL_INACTIVE, DISPATCH_QUEUE_CONCURRENT_INACTIVE。它们同样会有涉及到QOS的创建方法，后面一起记录一下</p>
   <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_create(&quot;com.example.gcd&quot;, DISPATCH_QUEUE_CONCURRENT);</div></pre></td></tr></table></figure>
 </li>
 </ul>
@@ -26,41 +26,41 @@
 <table>
 <thead>
 <tr>
-<th style="text-align:left">QOS_CLASS/对应OC参数</th>
-<th style="text-align:left">相关使用场景</th>
-<th style="text-align:center">执行时机</th>
+<th style="text-align:left">QOS_CLASS</th>
+<th style="text-align:left">执行时机</th>
+<th style="text-align:center">相关使用场景</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td style="text-align:left"><strong>USER_INTERACTIVE</strong></td>
-<td style="text-align:left">等级最高。主要用户用户交互，比如主线程上的刷新用户界面等等。</td>
-<td style="text-align:center">必须是要及时处理</td>
+<td style="text-align:left">必须是要及时处理</td>
+<td style="text-align:center">等级最高。主要用户用户交互，比如主线程上的刷新用户界面等等。</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>USER_INITIATED</strong></td>
-<td style="text-align:left">它主要用于比如已经开了一个任务，此时需要立刻执行的场景。意思就是说需要瞬间完成的工作</td>
-<td style="text-align:center">需要很快完成工作，如几秒钟或更短。</td>
+<td style="text-align:left">需要很快完成工作</td>
+<td style="text-align:center">它主要用于比如已经开了一个任务，此时需要立刻执行的场景。意思就是说需要瞬间完成的工作</td>
 </tr>
 <tr>
 <td style="text-align:left">❌ DEFAULT</td>
-<td style="text-align:left">这个我们一般不使用，<code>dispatch_get_global_queue</code>就是这一等级。</td>
-<td style="text-align:center">——</td>
+<td style="text-align:left">——</td>
+<td style="text-align:center">这个我们一般不使用，<code>dispatch_get_global_queue</code>就是这一等级。</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>UTILITY</strong></td>
-<td style="text-align:left">不需要及时响应，比如下载操作之类的，但是用户是可以看见进度之类的</td>
-<td style="text-align:center">可能需要相当长一段时间</td>
+<td style="text-align:left">可能需要相当长一段时间</td>
+<td style="text-align:center">不需要及时响应，比如下载操作之类的，但是用户是可以看见进度之类的</td>
 </tr>
 <tr>
 <td style="text-align:left"><strong>BACKGROUND</strong></td>
-<td style="text-align:left">完全是后台执行，用户不知道进度的</td>
-<td style="text-align:center">同样比上面时间更长的类型</td>
+<td style="text-align:left">长时间类型任务</td>
+<td style="text-align:center">完全是后台执行，用户不知道进度的</td>
 </tr>
 <tr>
 <td style="text-align:left">❌ UNSPECIFIED</td>
-<td style="text-align:left">开发人员没有指定，系统根据情况进行选定QOS等级</td>
-<td style="text-align:center">——</td>
+<td style="text-align:left">——</td>
+<td style="text-align:center">开发人员没有指定，系统根据情况进行选定QOS等级</td>
 </tr>
 </tbody>
 </table>
@@ -204,7 +204,7 @@
 <li><a href="https://developer.apple.com/library/content/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html" target="_blank" rel="external">Transitioning to ARC Release Notes</a></li>
 <li><a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E6%AD%A5%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8" target="_blank" rel="external">异步调用</a></li>
 </ul>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/07/29/gcd_func/" class="prev">PREV</a><a href="/2017/05/09/data_struct_max_heap/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/07/29/gcd_func/" class="prev">上一篇</a><a href="/2017/05/09/data_struct_max_heap/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/07/29/gcd_basic/';
 var disqus_title = '从头认识GCD——派发队列基础';
 var disqus_url = 'http://yoursite.com/2017/07/29/gcd_basic/';
