@@ -10,9 +10,6 @@
 </ul>
 </blockquote>
 <h3 id="堆（Heap）"><a href="#堆（Heap）" class="headerlink" title="堆（Heap）"></a>堆（Heap）</h3><p>  堆也是内存中一块特定区域，但是CPU并不会自动管理相关的操作，而且它的空间大小会有一定的浮动。在堆上分配内存的时候，在C中使用<code>malloc()</code>和<code>calloc()</code>函数。在不需要堆上这块内存之后，需要使用<code>free()</code>函数释放掉它。<strong>如果不释放的话就会造成内存泄漏</strong>，这块内存就会被闲置。<br>  和栈不同之处在于，<strong>堆内存数据的读写速度会比栈慢</strong>。</p>
-<blockquote>
-<p>总结<br>堆变量本质上是全局变量。</p>
-</blockquote>
 <h3 id="栈（Stack）和堆（Heap）的差异"><a href="#栈（Stack）和堆（Heap）的差异" class="headerlink" title="栈（Stack）和堆（Heap）的差异"></a>栈（Stack）和堆（Heap）的差异</h3><h4 id="配置堆栈大小"><a href="#配置堆栈大小" class="headerlink" title="配置堆栈大小"></a>配置堆栈大小</h4><p>  堆的大小在程序启动时分配，数值在不同操作系统中可能有所不同。<br>  在Cocoa中想要修改线程的栈大小的话，可以使用<code>NSThread</code>的实例方法<code>setStackSize:</code>，如果使用POSIX线程技术创建的线程的话，想要设置栈大小的话使用<code>pthread_attr_setstacksize</code>函数。</p>
 <blockquote>
 <p>⚠️如果要设置栈大小就必须要在创建线程之前完成。</p>
@@ -24,7 +21,7 @@
 <li>如果需要动态修改struct或者array的大小，将该变量放在<strong>堆</strong>上。使用<code>malloc()，calloc()，realloc()和free()</code>等函数来管理内存；</li>
 <li>如果使用相对较小的变量，并且只在函数中使用它们，此时该变量就存在于栈上。这样做会更快而且更简单；</li>
 </ul>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/05/09/data_struct_max_heap/" class="prev">上一篇</a><a href="/2017/03/08/animation_kvc_translate/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/05/09/data_struct_max_heap/" class="prev">PREV</a><a href="/2017/03/08/animation_kvc_translate/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/03/21/stack_heap_with_c/';
 var disqus_title = '栈（Stack）和堆（Heap）';
 var disqus_url = 'http://yoursite.com/2017/03/21/stack_heap_with_c/';
