@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-07-29T10:53:02.000Z</updated>
+  <updated>2017-08-01T14:51:17.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,93 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>OC与C的交互及其内存管理</title>
+    <link href="http://yoursite.com/2017/08/01/oc_bridge_c_memory/"/>
+    <id>http://yoursite.com/2017/08/01/oc_bridge_c_memory/</id>
+    <published>2017-08-01T14:44:07.000Z</published>
+    <updated>2017-08-01T14:51:17.000Z</updated>
+    
+    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-9ef7407a879ddf09.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  首先我们从最基本的C中三种链接属性，分别是：外部(external)、内部(internal)、无(none)。我们可以通过关键字<code>extern、static</code>来修改变量的链接属性。<br>  <a id="more"></a><br>  <strong>extern</strong>关键将一个变量声明为外部的链接属性之后，便可以去访问其他文件中同名该变量。<strong>static</strong>关键字在用于代码块外部的变量时是将其设置为内部链接属性，如果是在代码块内部则将该变量声明为静态变量。<br>  然后再来看看C中变量的存储类型。存储类型决定了变量的创建、销毁时机。存储变量的位置一共三个地方：<strong>普通内存、运行时堆栈、硬件寄存器</strong>。结合C中的三种链接属性，具体可以分为：</p>
+<ul>
+<li><strong>栈区</strong>：代码块中的变量在一般情况下为自动变量（由高地址向低地址生长）</li>
+<li><strong>堆区</strong>：由<code>malloc、realloc、calloc</code>等函数动态生成的变量。这些变量我们只能访问其地址，而且当我们不再使用之后需要收到去free掉（由低地址向高地址生长）。</li>
+<li><strong>全局区／静态区</strong>：代码块之外声明的变量总是存储于静态内存中（默认的链接属性为external）。未初始化的变量放在一起，已经初始化的紧挨地放着。<br>由于函数实参总是在堆栈中进行传递，所以函数的形参不能设置为static。</li>
+<li><strong>常量区</strong>：常量字符串</li>
+<li><strong>代码区</strong></li>
+</ul>
+<blockquote>
+<p>在代码块内部声明的变量的缺省存储类型是自动的，即它存储于堆栈中，称为<strong>自动变量</strong>。<br>如果代码块被多次执行，那么自动变量将会重复创建，每一次创建时，它们在内存中的位置可能会不同。</p>
+</blockquote>
+<p>至于上面提到的寄存器中的变量，因为CPU对于寄存器的读取速度非常快，通常编译器会将使用频率很高的变量将其移到寄存器中。如果寄存器变量在多线程编程时出现了问题，我们可能需要显式将该变量声明为<code>volatile</code>，让编译器不对该变量进行优化。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">/**</div><div class="line"> 全局静态区</div><div class="line"> */</div><div class="line">int a = 10;  /// external</div><div class="line">extern int b;/// external</div><div class="line">static int c;/// internal</div><div class="line">int d(int e)&#123;/// 函数d 默认为external</div><div class="line">    int f = 15;/// auto 栈区</div><div class="line">    static int g = 20;/// 静态变量 静态区</div><div class="line">    return 0;</div><div class="line">&#125;</div><div class="line"></div><div class="line">static int h(int i)&#123;/// 函数h 修改为static，internal</div><div class="line">    register int j;/// 寄存器类型，但是不一定起作用</div><div class="line">    int *k = malloc(sizeof(int));/// 堆区</div><div class="line">    free(k);</div><div class="line">    const int m = 25;/// 常量区</div><div class="line">    return 1;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="C中各个类型变量的内存管理"><a href="#C中各个类型变量的内存管理" class="headerlink" title="C中各个类型变量的内存管理"></a>C中各个类型变量的内存管理</h4><p>C语言中的内存管理与链接属性和所在内存区域都有直接关系。<strong>栈区</strong>的自动变量会在其作用域之后自动进行销毁；<strong>堆区</strong>的中由用户动态的创建的内存，需要手动调用<code>free</code>函数来释放（否则会造成内存泄漏）； <strong>全局区／静态区</strong>中的变量由系统创建和销毁，它们在程序开始运行之前就创建好，静态区的变量在程序运行过程中我们不能去修改； <strong>常量区</strong>程序结束后由系统释放。</p>
+<blockquote>
+<p>关于堆的一点儿说明：<br>如果我们在使用<code>malloc</code>和<code>free</code>时是无序的话，最终会产生堆碎片。<br>而且被分配的内存是经过对齐的，一般为2的乘方。</p>
+</blockquote>
+<p>堆的末端由一个称为<strong>break</strong>的指针来标识，当堆管理器需要更多内存时，它可以通过系统调用<code>brk</code>和<code>sbrk</code>来移动break指针。</p>
+<hr>
+<h2 id="OC与C的交互-bridge"><a href="#OC与C的交互-bridge" class="headerlink" title="OC与C的交互(__bridge)"></a>OC与C的交互(__bridge)</h2><p><img src="http://upload-images.jianshu.io/upload_images/619906-d75d32dc36154952.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p>当oc在和c相关的函数（CoreFoundataion、Runtime）进行交互时，我们需要将OC的类型传递到C中，也需要将C中的数据返回给OC使用。这其中就需要使用它们类型之间的转换。在<code>id</code>类型或者对象变量赋值给<code>void *</code>或者逆向赋值时都需要进行特定的转换，单纯的赋值我们可以使用 <code>__bridge</code> 。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">NSObject *obj = [[NSObject alloc] init];</div><div class="line">void *p_obj = (__bridge void *)(obj);</div><div class="line">NSObject * r_obj = (__bridge NSObject *)(p_obj);</div></pre></td></tr></table></figure>
+<p>相对于<code>__bridge</code>，我们可以使用<strong>``</strong>bridge_retained<code>修饰符，它即可以进行转换，也能持有被转换的对象__（上例中的</code>obj ``），因此该对象不会被废弃。其语法形式如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">__bridge_retained &lt;#CF type#&gt;)&lt;#expression#&gt;</div></pre></td></tr></table></figure>
+<p><strong>bridge中还有个``</strong>bridge_transfer <code>，它的作用和__bridge_retained相反，被转换的变量（上例中的</code>p_obj <code>）所持有的对象（上例中的</code>obj <code>）会在</code>r_obj ``被赋值之后释放掉，其语法形式如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">__bridge_transfer &lt;#Objective-C type#&gt;)&lt;#expression#&gt;</div></pre></td></tr></table></figure>
+<p>把上诉例子进行修改：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">NSObject *obj = [[NSObject alloc] init];</div><div class="line">void *p_obj = (__bridge_retained void *)(obj);</div><div class="line">NSObject * r_obj = (__bridge_transfer NSObject *)(p_obj);</div></pre></td></tr></table></figure>
+<p>当我们在C语言的结构中，需要使用OC的类型作为结构成员，除了将OC的类型转换为<code>void *</code>之外，我们可以使用<code>__unsafe_unretained</code>修饰符（这个修饰符会在后面介绍）。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">/// 在C中使用OC的对象方式</div><div class="line">typedef struct rls_temp_ctx&#123;</div><div class="line">    NSObject __unsafe_unretained *obj;</div><div class="line">    void *target;</div><div class="line">&#125; rls_temp_context;</div><div class="line">/// 在C中传入OC对象</div><div class="line">rls_temp_context tmp_ctxs = &#123;</div><div class="line">    .obj = [NSObject new],</div><div class="line">    .target = (__bridge void *)(self)</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<p>但是在使用<code>obj</code>时，由于<code>__unsafe_unretained</code>存在悬浮指针的问题，必须要判断该值是否存在。</p>
+<hr>
+<h2 id="OC内存管理"><a href="#OC内存管理" class="headerlink" title="OC内存管理"></a>OC内存管理</h2><p>前面看了C的内存管理，还看了C和OC的交互，最后就来看看在OC中内存管理应该注意的事项。<br>  现在我们讨论OC的内存管理是基于ARC的，其中对象变量的创建和释放问题和C的内存管理有点儿相似。大多数情况下系统会帮我们进行内存管理，我们只需要明确自己所声明的对象或者变量存在于什么区域（上面提到的内存区域），给它们添加合适的修饰符等等。<br>  大部分情况下，对于栈区、堆区、全局静态区的变量对象和C是相同的，我们可以类比来分析OC中对象或者变量的创建和释放时机。ARC中栈区用autoreleasepool管理的变量和C中的自动变量的内存管理时机很相似。<br>  在OC中使用基于C的函数时，通过<code>malloc</code>等函数声明的变量，都需要我们明确地调用<code>free</code>函数进行释放！抑或在使用CoreFondation、Runtime时，基本上如果遇到了包含有Copy， Create等关键字函数，在使用完成之后都需要手动释放内存。</p>
+<h4 id="内存管理关键字"><a href="#内存管理关键字" class="headerlink" title="内存管理关键字"></a>内存管理关键字</h4><p>下面来介绍一下，在Objective-C的ARC中所涉及到的关键字。</p>
+<ul>
+<li><p>1、<code>__strong</code>为默认值，在声明成员变量和方法参数时也可以使用！</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">__strong id obj_var = [[NSObject alloc] init];</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><strong>作用：默认的行为。</strong></p>
+<ul>
+<li><p>2、<code>__weak</code>是不会持有对象实例，__weak修饰符可以避免循环引用</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">__weak id obj2 = nil;</div><div class="line">&#123;</div><div class="line">        __strong id obj_var = [[NSObject alloc] init];/// 自己生成对象并持有</div><div class="line">        obj2 = obj_var;/// obj2持有对象的弱引用</div><div class="line">        NSLog(@&quot;__weak %@&quot;,obj2);/// 此时由于在obj_var变量可用域中，obj2此时有值</div><div class="line">&#125;</div><div class="line">NSLog(@&quot;__weak %@&quot;,obj2);/// 由于不在obj_var作用域之外，obj_var被释放。而且obj2是弱引用于obj_var的，所以此时obj2值为空</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p><strong>作用：避免循环引用，不持有对象实例</strong></p>
+<ul>
+<li><p>3、<code>__unsafe_unretained</code>修饰符的变量不属于编译器的内存管理对象。它和__weak类似，不会持有对象实例；</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">__unsafe_unretained id obj1 = nil;</div><div class="line">&#123;</div><div class="line">/// 在obj_var作用域内，__unsafe_unretained和__weak是一样的</div><div class="line">        __strong id obj_var = [[NSObject alloc] init];</div><div class="line">        obj1 = obj_var;</div><div class="line">        NSLog(@&quot;__unsafe_unretained %@&quot;,obj1);</div><div class="line">&#125;</div><div class="line">NSLog(@&quot;__unsafe_unretained %@&quot;,obj1);/// 此时变量已经被遗弃，成为悬浮指针</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<blockquote>
+<p>在使用<code>__unsafe_unretained</code>修饰符时，赋值给<strong>strong修饰符的变量时，需要检查被赋值的对象是否存在（也就是被</strong>unsafe_unretained修饰的变量）</p>
+</blockquote>
+<pre><code>__作用：在iOS4之前\_\_weak的替代品，但是在将其赋值给其他时，最好做非空判断__
+</code></pre><ul>
+<li><p>4、<code>__autoreleasing</code>修饰符的变量替代调用MRC时代的<code>autorelease</code>方法，该对象会被注册到autoreleasepool中。以下是__autoreleasing修饰符的使用场景：</p>
+<p>  1）、在生成对象时，编译器会检查方法名是否是以alloc/new/copy/mutablcopy开始（自己生成自由持有）。如果不是自己生成的则自动将返回值注册到autoreleasepool中。<br>2）、对象作为返回值时，编译器会自动将其注册到autoreleasing中。<br>3）、在使用<strong>weak修饰符的变量时就必定要使用注册到autoreleasepool中的对象。<br>4）、</strong>id的指针或者对象的指针(NSObject <strong>/NSError </strong>)在没有显示指定时会被附加上<code>__autoreleasing</code>修饰符__。</p>
+  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">NSError *error = nil;</div><div class="line">BOOL result = [self performOperationWithError:&amp;error];</div></pre></td></tr></table></figure>
+</li>
+</ul>
+<p>最后还是去看看<a href="http://blog.parse.com/learn/engineering/objective-c-blocks-quiz/" target="_blank" rel="external">这套题</a>，它的解释对于理解内存的释放很有益处。对于这套题我已经推荐了几次了，哈哈哈。</p>
+<h4 id="相关引用"><a href="#相关引用" class="headerlink" title="相关引用"></a>相关引用</h4><ul>
+<li><a href="https://developer.apple.com/library/content/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html" target="_blank" rel="external">ARC</a></li>
+</ul>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-9ef7407a879ddf09.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  首先我们从最基本的C中三种链接属性，分别是：外部(external)、内部(internal)、无(none)。我们可以通过关键字&lt;code&gt;extern、static&lt;/code&gt;来修改变量的链接属性。&lt;br&gt;
+    
+    </summary>
+    
+      <category term="C、OC" scheme="http://yoursite.com/categories/C%E3%80%81OC/"/>
+    
+    
+      <category term="内存管理" scheme="http://yoursite.com/tags/%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86/"/>
+    
+  </entry>
   
   <entry>
     <title>从头认识GCD——相关函数的使用</title>
