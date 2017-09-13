@@ -178,7 +178,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
     <link href="http://yoursite.com/2017/08/01/oc_bridge_c_memory/"/>
     <id>http://yoursite.com/2017/08/01/oc_bridge_c_memory/</id>
     <published>2017-08-01T14:44:07.000Z</published>
-    <updated>2017-09-13T14:10:24.000Z</updated>
+    <updated>2017-09-13T14:15:24.000Z</updated>
     
     <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-9ef7407a879ddf09.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  首先我们从最基本的C中三种链接属性，分别是：外部(external)、内部(internal)、无(none)。我们可以通过关键字<code>extern、static</code>来修改变量的链接属性。<br>  <a id="more"></a><br>  <strong>extern</strong>关键将一个变量声明为外部的链接属性之后，便可以去访问其他文件中同名该变量。<strong>static</strong>关键字在用于代码块外部的变量时是将其设置为内部链接属性，如果是在代码块内部则将该变量声明为静态变量。<br>  然后再来看看C中变量的存储类型。存储类型决定了变量的创建、销毁时机。存储变量的位置一共三个地方：<strong>普通内存、运行时堆栈、硬件寄存器</strong>。结合C中的三种链接属性，具体可以分为：</p>
 <ul>
