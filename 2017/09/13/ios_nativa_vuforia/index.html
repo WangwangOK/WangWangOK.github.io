@@ -7,11 +7,13 @@
 </li>
 <li><p>3、在vuforia的开发者官网上的License Manager和Target Manager，添加License-key和database<br><img src="http://upload-images.jianshu.io/upload_images/619906-8b73f5d04a424fe9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="License-Key"></p>
 </li>
-<li><p>4、将上一步添加的License-key，放在ios-sample中的代码文件<strong>SampleApplicationSession.mm</strong>中的方法<code>Vuforia::setInitParameters(mVuforiaInitFlags,&quot;&quot;);</code>中。具体步骤见<a href="https://library.vuforia.com/articles/Solution/How-To-add-a-License-Key-to-your-Vuforia-App" target="_blank" rel="external">官网</a>。<br>zzzzz</p>
+<li>4、将上一步添加的License-key，放在ios-sample中的代码文件<strong>SampleApplicationSession.mm</strong>中的方法<code>Vuforia::setInitParameters(mVuforiaInitFlags,&quot;&quot;);</code>中。具体步骤见<a href="https://library.vuforia.com/articles/Solution/How-To-add-a-License-Key-to-your-Vuforia-App" target="_blank" rel="external">官网</a>。</li>
+</ul>
 <pre>
 Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz5zXWs8+y5JjeF/NJRcjgVDoCSvsrSt+lWzFMcIVBbQ2YSFRF+6J0GceHoaz8NctXib3cndJEacXmR+1FyO5FhalO7sC4hE9d1/x72qTNDhkPs4rF04JulMYT876Grsnmg9C61oyaDVwBfSpzNZ7gx3NADkkV5q4NQs4ghZwVCdMhj6LVt1YTJcwiuULtDTEgpFZZeW/nC8yiC53hpUFOVxhH++ILx1T65jpY8yDn6ct++3mgVeVotg/5tWXYb5FYqBtJiwU/LJJxhJYqUWyy4pd9dHUJBQojuAE8FoW1DmjokrpDWgjOMMp3am4GjNT04hCg+o0Z3SByYx6VIqfSR9fsXw");
 </pre> 
-</li>
+
+<ul>
 <li><p>5、将第3步中Target Manager创建的database，传入相关的图片文件。也可以不传，这步可选；<a href="https://library.vuforia.com/articles/Solution/How-To-Work-with-Device-Databases.html" target="_blank" rel="external">怎样使用设备数据</a>。我们在<a href="https://developer.vuforia.com/targetmanager/project/checkDeviceProjectsCreated?dataRequestedForUserId=" target="_blank" rel="external">官方Developer</a>创建，下载对应的Database，在添加图片时，对应的星星数越高表明识别度越高<br><img src="http://upload-images.jianshu.io/upload_images/619906-9a71472177725481.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/540" alt="Target-Manager"><br>解压并将其引入到工程中：<br><img src="http://upload-images.jianshu.io/upload_images/619906-d8ea91265da85cc3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="引入工程"><br>这一步可以不做，因为这只是在给后面打基础而已，如果只是运行demo的话是不需要做这一步的。如果做了这一步，在扫描你对应的图片的时候是没有任何效果的，具体的操作后面。</p>
 </li>
 <li><p>6、编译运行，由于需要使用到传感器，所以必须使用真机来运行。关于真机运行的相关事项查看apple developer</p>
@@ -132,7 +134,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <li><a href="http://www.songho.ca/opengl/gl_transform.html" target="_blank" rel="external">OpenGL Transformation</a></li>
 <li><a href="https://developer.vuforia.com/forum/faq/android-how-do-i-replace-teapot" target="_blank" rel="external">How do I replace the Teapot</a></li>
 </ul>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/08/01/oc_bridge_c_memory/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/08/01/oc_bridge_c_memory/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/09/13/ios_nativa_vuforia/';
 var disqus_title = 'iOS中Native的方式集成Vuforia、其源码解读以及自定义模型';
 var disqus_url = 'http://yoursite.com/2017/09/13/ios_nativa_vuforia/';
