@@ -178,7 +178,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
     <link href="http://yoursite.com/2017/08/01/oc_bridge_c_memory/"/>
     <id>http://yoursite.com/2017/08/01/oc_bridge_c_memory/</id>
     <published>2017-08-01T14:44:07.000Z</published>
-    <updated>2017-08-01T16:35:25.000Z</updated>
+    <updated>2017-09-13T14:10:24.000Z</updated>
     
     <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-9ef7407a879ddf09.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  首先我们从最基本的C中三种链接属性，分别是：外部(external)、内部(internal)、无(none)。我们可以通过关键字<code>extern、static</code>来修改变量的链接属性。<br>  <a id="more"></a><br>  <strong>extern</strong>关键将一个变量声明为外部的链接属性之后，便可以去访问其他文件中同名该变量。<strong>static</strong>关键字在用于代码块外部的变量时是将其设置为内部链接属性，如果是在代码块内部则将该变量声明为静态变量。<br>  然后再来看看C中变量的存储类型。存储类型决定了变量的创建、销毁时机。存储变量的位置一共三个地方：<strong>普通内存、运行时堆栈、硬件寄存器</strong>。结合C中的三种链接属性，具体可以分为：</p>
 <ul>
@@ -213,6 +213,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <p>但是在使用<code>obj</code>时，由于<code>__unsafe_unretained</code>存在悬浮指针的问题，必须要判断该值是否存在。</p>
 <hr>
 <h2 id="OC内存管理"><a href="#OC内存管理" class="headerlink" title="OC内存管理"></a>OC内存管理</h2><p>前面看了C的内存管理，还看了C和OC的交互，最后就来看看在OC中内存管理应该注意的事项。<br>  现在我们讨论OC的内存管理是基于ARC的，其中对象变量的创建和释放问题和C的内存管理有点儿相似。大多数情况下系统会帮我们进行内存管理，我们只需要明确自己所声明的对象或者变量存在于什么区域（上面提到的内存区域），给它们添加合适的修饰符等等。<br>  大部分情况下，对于栈区、堆区、全局静态区的变量对象和C是相同的，我们可以类比来分析OC中对象或者变量的创建和释放时机。ARC中栈区用autoreleasepool管理的变量和C中的自动变量的内存管理时机很相似。<br>  在OC中使用基于C的函数时，通过<code>malloc</code>等函数声明的变量，都需要我们明确地调用<code>free</code>函数进行释放！抑或在使用CoreFondation、Runtime时，基本上如果遇到了包含有Copy， Create等关键字函数，在使用完成之后都需要手动释放内存。</p>
+<h2 id=""><a href="#" class="headerlink" title="  "></a>  </h2><p>2017-09-13更新：<br>当我们使用Runtime时，运用下面的方法来动态创建一个对象时，被创建的对象不会被释放，但是对应的<code>release</code>方法又是MRC时代的。所以我们可以使用如下方法来解决：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">/// 创建对象</div><div class="line">id obj = ((id(*)(id,SEL))objc_msgSend)(((id(*)(id,SEL))objc_msgSend)([self class],@selector(alloc)),@selector(init));</div><div class="line">...</div><div class="line">...</div><div class="line">...</div><div class="line">/// 释放对象</div><div class="line">((id(*)(id,SEL))objc_msgSend)(obj,NSSelectorFromString(@&quot;release&quot;));</div></pre></td></tr></table></figure></p>
 <h4 id="内存管理关键字"><a href="#内存管理关键字" class="headerlink" title="内存管理关键字"></a>内存管理关键字</h4><p>下面来介绍一下，在Objective-C的ARC中所涉及到的关键字。</p>
 <ul>
 <li><p>1、<code>__strong</code>为默认值，在声明成员变量和方法参数时也可以使用！</p>
