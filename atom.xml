@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-09-13T12:51:48.000Z</updated>
+  <updated>2017-09-20T13:18:02.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2017/09/13/ios_nativa_vuforia/"/>
     <id>http://yoursite.com/2017/09/13/ios_nativa_vuforia/</id>
     <published>2017-09-13T12:33:36.000Z</published>
-    <updated>2017-09-13T12:51:48.000Z</updated>
+    <updated>2017-09-20T13:18:02.000Z</updated>
     
     <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-e5bbef9f60e5ee49.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/240" alt=""><br>  随着前有Apple在iOS11中提供了ARKit，后有Google推出的ARCore，显然掀起了一股AR热潮（都是一堆废话，说白了就是公司要求做）。<br>  <a id="more"></a><br>  由于Vuforia已经存在较长时间了，相对于EasyAR或者百度AR更为成熟一点儿，所以它成了第一个技术选择。EasyAR和百度的AR——DuMix AR后面再依次去学习。好吧，先开始来学习Vuforia吧！<br>该文章同步发布在<a href="https://wangwangok.github.io" target="_blank" rel="external">我的博客</a>.</p>
 <h2 id="集成步骤"><a href="#集成步骤" class="headerlink" title="集成步骤"></a>集成步骤</h2><p>由于这些步骤相对来说比较基础，我就直接罗列出来。</p>
@@ -149,7 +149,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </li>
 </ul>
 <p>上述的修改灵感大多是来自头文件<strong>Teapot.h</strong>，但是我们使用obj2opengl时生成的文件中并没有Teapot.h中<strong>teapotIndices</strong>对应的数组。相反多了一个无符号的整形变量<code>xxxNumVerts</code>，所以除了上诉的方法以外还有另外一种方法，具体的代码修改如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">/// ImageTargetsEAGLView.mm -&gt; renderFrameWithState方法中</div><div class="line">glVertexPointer(3, GL_FLOAT, 0, XY_PikachuMVerts);</div><div class="line">glNormalPointer(GL_FLOAT, 0, XY_PikachuMNormals);</div><div class="line">glTexCoordPointer(2, GL_FLOAT, 0, XY_PikachuMTexCoords);</div><div class="line"></div><div class="line">glDrawArrays(GL_TRIANGLES, 0, XY_PikachuMNumVerts);</div></pre></td></tr></table></figure></p>
-<p>在使用这个方法时其（用obj2opengl生成的头文件的数组中的）数值比例是需要修改的，而且还需要对模型进行翻转。这个方法具体见<a href="https://developer.vuforia.com/forum/faq/android-how-do-i-replace-teapot" target="_blank" rel="external">How do I replace the Teapot</a>和<a href="https://library.vuforia.com/articles/Solution/Working-with-Vuforia-and-OpenGL-ES" target="_blank" rel="external">Replace the teapot model</a>。<br>在修改源码时主要就是在修改方法<code>renderFrameWithState</code>，它在介绍ImageTargetsEAGLView类时在文件的最开头就有提到，它是在每捕捉到一次tracker之后就会运行一次。<br>到这里一个很基本的Vuforia集成，源码的解读以及自定义tracker和模型就算完成了，最后附上Demo<a href="">地址</a>。</p>
+<p>在使用这个方法时其（用obj2opengl生成的头文件的数组中的）数值比例是需要修改的，而且还需要对模型进行翻转。这个方法具体见<a href="https://developer.vuforia.com/forum/faq/android-how-do-i-replace-teapot" target="_blank" rel="external">How do I replace the Teapot</a>和<a href="https://library.vuforia.com/articles/Solution/Working-with-Vuforia-and-OpenGL-ES" target="_blank" rel="external">Replace the teapot model</a>。<br>在修改源码时主要就是在修改方法<code>renderFrameWithState</code>，它在介绍ImageTargetsEAGLView类时在文件的最开头就有提到，它是在每捕捉到一次tracker之后就会运行一次。<br>到这里一个很基本的Vuforia集成，源码的解读以及自定义tracker和模型就算完成了，最后附上Demo<a href="https://github.com/wangwangok/VuforiaSampleOBJC" target="_blank" rel="external">地址</a>。</p>
 <h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
 <li><a href="http://heikobehrens.net/2009/08/27/obj2opengl/" target="_blank" rel="external">obj2opengl</a></li>
 <li><a href="https://github.com/HBehrens/obj2opengl" target="_blank" rel="external">obj2opengl Github</a></li>

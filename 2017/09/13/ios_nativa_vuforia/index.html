@@ -125,14 +125,14 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </li>
 </ul>
 <p>上述的修改灵感大多是来自头文件<strong>Teapot.h</strong>，但是我们使用obj2opengl时生成的文件中并没有Teapot.h中<strong>teapotIndices</strong>对应的数组。相反多了一个无符号的整形变量<code>xxxNumVerts</code>，所以除了上诉的方法以外还有另外一种方法，具体的代码修改如下：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">/// ImageTargetsEAGLView.mm -&gt; renderFrameWithState方法中</div><div class="line">glVertexPointer(3, GL_FLOAT, 0, XY_PikachuMVerts);</div><div class="line">glNormalPointer(GL_FLOAT, 0, XY_PikachuMNormals);</div><div class="line">glTexCoordPointer(2, GL_FLOAT, 0, XY_PikachuMTexCoords);</div><div class="line"></div><div class="line">glDrawArrays(GL_TRIANGLES, 0, XY_PikachuMNumVerts);</div></pre></td></tr></table></figure></p>
-<p>在使用这个方法时其（用obj2opengl生成的头文件的数组中的）数值比例是需要修改的，而且还需要对模型进行翻转。这个方法具体见<a href="https://developer.vuforia.com/forum/faq/android-how-do-i-replace-teapot" target="_blank" rel="external">How do I replace the Teapot</a>和<a href="https://library.vuforia.com/articles/Solution/Working-with-Vuforia-and-OpenGL-ES" target="_blank" rel="external">Replace the teapot model</a>。<br>在修改源码时主要就是在修改方法<code>renderFrameWithState</code>，它在介绍ImageTargetsEAGLView类时在文件的最开头就有提到，它是在每捕捉到一次tracker之后就会运行一次。<br>到这里一个很基本的Vuforia集成，源码的解读以及自定义tracker和模型就算完成了，最后附上Demo<a href="">地址</a>。</p>
+<p>在使用这个方法时其（用obj2opengl生成的头文件的数组中的）数值比例是需要修改的，而且还需要对模型进行翻转。这个方法具体见<a href="https://developer.vuforia.com/forum/faq/android-how-do-i-replace-teapot" target="_blank" rel="external">How do I replace the Teapot</a>和<a href="https://library.vuforia.com/articles/Solution/Working-with-Vuforia-and-OpenGL-ES" target="_blank" rel="external">Replace the teapot model</a>。<br>在修改源码时主要就是在修改方法<code>renderFrameWithState</code>，它在介绍ImageTargetsEAGLView类时在文件的最开头就有提到，它是在每捕捉到一次tracker之后就会运行一次。<br>到这里一个很基本的Vuforia集成，源码的解读以及自定义tracker和模型就算完成了，最后附上Demo<a href="https://github.com/wangwangok/VuforiaSampleOBJC" target="_blank" rel="external">地址</a>。</p>
 <h2 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h2><ul>
 <li><a href="http://heikobehrens.net/2009/08/27/obj2opengl/" target="_blank" rel="external">obj2opengl</a></li>
 <li><a href="https://github.com/HBehrens/obj2opengl" target="_blank" rel="external">obj2opengl Github</a></li>
 <li><a href="http://www.songho.ca/opengl/gl_transform.html" target="_blank" rel="external">OpenGL Transformation</a></li>
 <li><a href="https://developer.vuforia.com/forum/faq/android-how-do-i-replace-teapot" target="_blank" rel="external">How do I replace the Teapot</a></li>
 </ul>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/08/01/oc_bridge_c_memory/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/08/01/oc_bridge_c_memory/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/09/13/ios_nativa_vuforia/';
 var disqus_title = 'iOS中Native的方式集成Vuforia、其源码解读以及自定义模型';
 var disqus_url = 'http://yoursite.com/2017/09/13/ios_nativa_vuforia/';
