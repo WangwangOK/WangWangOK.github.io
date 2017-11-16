@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2017-11-16T14:07:17.000Z</updated>
+  <updated>2017-11-16T14:27:56.000Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>栈（Stack）和堆（Heap）</title>
+    <title>来唠嗑一下线程中的一些事儿</title>
     <link href="http://yoursite.com/2017/11/16/talk_about_thread/"/>
     <id>http://yoursite.com/2017/11/16/talk_about_thread/</id>
     <published>2017-11-16T13:55:18.000Z</published>
-    <updated>2017-11-16T14:07:17.000Z</updated>
+    <updated>2017-11-16T14:27:56.000Z</updated>
     
     <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-b76f26ef4b53a80a.jpg?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>由于前段时间的工作中，在一个并发编程题中栽了跟头,也因此增加了我对这一方面的理解。下面我会结合例子的方式来阐述一下我的一点儿小理解。<br><a id="more"></a> </p>
 <h2 id="线程"><a href="#线程" class="headerlink" title="线程"></a>线程</h2><p>  对于并发编程可能首先想到的便是和多线程有关，这又需要涉及到线程的概念。维基百科上关于<a href="https://zh.wikipedia.org/wiki/%E7%BA%BF%E7%A8%8B" target="_blank" rel="external">线程</a>的解释，我提取一个我认为比较关键的概念：</p>
@@ -69,7 +69,7 @@
     
     </summary>
     
-      <category term="C" scheme="http://yoursite.com/categories/C/"/>
+      <category term="线程" scheme="http://yoursite.com/categories/%E7%BA%BF%E7%A8%8B/"/>
     
     
       <category term="基础知识" scheme="http://yoursite.com/tags/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"/>
