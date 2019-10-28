@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T03:44:29.161Z</updated>
+  <updated>2019-10-28T03:51:36.600Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/compiler_token_regular/"/>
     <id>http://yoursite.com/2019/10/28/compiler_token_regular/</id>
     <published>2019-10-28T03:09:25.132Z</published>
-    <updated>2019-10-28T03:44:29.161Z</updated>
+    <updated>2019-10-28T03:51:36.600Z</updated>
     
     <content type="html"><![CDATA[<p>本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：<br>1）、首先解释什么是词法单元；<br>2）、如何手动识别词法单元；<br>3）、最后是词法分析器如何自动机自动识别词法单元；<br>本文主要是看一下词分析器的词法单元部分。包括一些基本概念，以及词法单元的识别。</p>
 <p>首先我们先大体上看一下词法分析器的作用。它的主要任务是读入源程序的输入字符、将它们组成词素，生成并输出一个词法单元的序列。每个词法单元对应一个词素。</p>
@@ -116,19 +116,19 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">letter_ -&gt; [A-Za-z_]</div><div class="line">digit  -&gt; [0-9]</div><div class="line">id -&gt; letter_ (letter_ | digit  ) *</div></pre></td></tr></table></figure>
 <p>现在通过正则表达式，我们可以写出对应词法单元对应的模式来。因此下一步要做的就是读取源代码里面的字符流，搭配对应的词法单元的模式，生成对应的词法单元。</p>
 <h2 id="三、输入缓冲"><a href="#三、输入缓冲" class="headerlink" title="三、输入缓冲"></a>三、输入缓冲</h2><p>很多情况下，我们需要至少向前看一个字符。比如在c语言中，像-、=或者&lt; 这样单字符运算符也有可能是 -&gt; 、== 或者&lt;= 这样的双字符。<br>在编译原理中会引入一个哨兵标记的双缓冲区方案来处理向前看运算符的问题。</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/619906-6ec31e45740ca97f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="使用一对输入缓冲区（两个连续的*是Fortran中的指数运算）"><br>上图中出现的lexemeBegin和forward指针作用分别是：<br>1）、<code>lexemeBegin</code>：该指针指向当前词素的开始处。当前我们正在匹配某一正则表达式对应模式的词素；<br>2）、<code>forward</code>：该指针一直向前扫描，直到发现某个模式被匹配为止。</p>
+<p><img src="https://images.xiaozhuanlan.com/photo/2019/1d850c00280d8de9ea211898983c3e50.png" alt=""><br>上图中出现的lexemeBegin和forward指针作用分别是：<br>1）、<code>lexemeBegin</code>：该指针指向当前词素的开始处。当前我们正在匹配某一正则表达式对应模式的词素；<br>2）、<code>forward</code>：该指针一直向前扫描，直到发现某个模式被匹配为止。</p>
 <ul>
 <li><p>第一步、读取内容到缓冲区中：每次读取缓冲区长度的字符到缓冲区中；<br>每个输入缓冲区的容量通常是一个磁盘块的大小，比如4096字节。我们在读取的时候就是一次性读取一个缓冲区长度的字符到缓冲区中，以避免频繁的使用读取函数。<br>当输入文件中的剩余字符不足缓冲区长度的时候，文件的默认会有一个eof（end of file）来表示文件结束。</p>
 </li>
 <li><p>第二步、lexemeBegin和forward指针的移动：使用lexemeBegin指针和forward指针读取指定模式的词素。<br>一旦确定了下一个词素（下图中的左括号）forward指针将指向该词素 <strong>结尾的字符</strong> 。词法分析器将这个词素作为某个返回给语法分析器的词法单元的属性值记录下来（在前面我们提过的词法单元分为词法单元名和可选的属性）。<br>然后lexemeBegin指针移动到 <strong>刚刚找到词素之后的第一个字符</strong> 。如下图所示：</p>
 </li>
 </ul>
-<p><img src="https://upload-images.jianshu.io/upload_images/619906-da9b7057e178325e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p><img src="https://images.xiaozhuanlan.com/photo/2019/f38cb361abc1acc4d90fe24357c9d88e.png" alt=""></p>
 <ul>
 <li>第三步、缓冲区的替换：我们在移动forward指针前需要判断当前是否已经到达某个缓冲区的末尾。<br>如果是，我们需要将新字符读入到另外一个缓冲区中（前面提到的双缓冲区），且将forward指针指向新缓冲区的头部。</li>
 </ul>
 <h4 id="哨兵标记"><a href="#哨兵标记" class="headerlink" title="哨兵标记"></a>哨兵标记</h4><p>如前面所说，我们在每次移动forward指针时，我们都需要检查是否到达了缓冲区的末尾。如果是的话，我们就需要加载另一个缓冲区。因此在这里我们需要做两次测试：<br>1）、检查是否到达缓冲区的末尾；<br>2）、确定读入的字符是什么；<br>解决这两个问题，我们可以在缓冲区的末尾增加一个“哨兵”，比如<code>eof</code>：</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/619906-48a1b711bf76bbfd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p><img src="https://images.xiaozhuanlan.com/photo/2019/632ec991b874e291d70cecf5039ebc90.png" alt=""></p>
 <p>从这儿我们可以知道，对于编译器而言在进行词法分析的时候，需要通过lexemeBegin和forward来扫描缓冲区。如果匹配某一个词素时，比如很长的字符串（比如将一片短篇小说作为常量字符串放到一个变量中）时，那就会出现缓冲区长度不足的情况，因此在日常编码中将长字符串拆分成多个短的字符串。</p>
 <p>这其实也算是学习编译原理，有助于提供编程效率的一个例子了。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在前面我们用正则表达式来表示一个模式，现在我们需要通过制定模式来识别对应的词法单元。下面是大部分词法单元，以及对应的模式：</p>
