@@ -1,0 +1,104 @@
+# Hexo Configuration
+## Docs: https://hexo.io/docs/configuration.html
+## Source: https://github.com/hexojs/hexo/
+
+# Site
+title: 凌云壮志幾多愁
+subtitle: 
+description: 男儿不展风云志，空负天生八尺躯。
+author: 王望
+language: zh-Hans
+timezone:
+
+# URL
+## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
+url: http://yoursite.com
+root: /
+permalink: :year/:month/:day/:title/
+permalink_defaults:
+
+# Directory
+source_dir: source
+public_dir: public
+tag_dir: tags
+archive_dir: archives
+category_dir: categories
+code_dir: downloads/code
+i18n_dir: :lang
+skip_render:
+
+# Writing
+new_post_name: :title.md # File name of new posts
+default_layout: post
+titlecase: false # Transform title into titlecase
+external_link: true # Open external links in new tab
+filename_case: 0
+render_drafts: false
+post_asset_folder: false
+relative_link: false
+future: true
+highlight:
+  enable: true
+  line_number: true
+  auto_detect: false
+  tab_replace:
+
+# Category & Tag
+default_category: uncategorized
+category_map:
+tag_map:
+
+# Date / Time format
+## Hexo uses Moment.js to parse and display date
+## You can customize the date format as defined in
+## http://momentjs.com/docs/#/displaying/format/
+date_format: YYYY-MM-DD
+time_format: HH:mm:ss
+
+# Pagination
+## Set per_page to 0 to disable pagination
+per_page: 10
+pagination_dir: page
+
+# Extensions
+## Plugins: https://hexo.io/plugins/
+## Themes: https://hexo.io/themes/
+theme: apollo
+
+archive_generator:
+    per_page: 0
+    yearly: false
+    monthly: false
+    daily: false
+
+# 站点内容搜索功能
+search:
+  path: search.xml
+  field: post
+  format: html
+  limit: 10000
+
+# 添加网页计数器-不蒜子
+# Show PV/UV of the website/page with busuanzi.
+# Get more information on http://ibruce.info/2015/04/04/busuanzi/
+busuanzi_count:
+  # count values only if the other configs are false
+  enable: true
+  # custom uv span for the whole site
+  site_uv: true
+  site_uv_header: 访客数
+  site_uv_footer: 人次
+  # custom pv span for the whole site
+  site_pv: true
+  site_pv_header: 总访问量
+  site_pv_footer: 次
+  # custom pv span for one page only
+  page_pv: true
+  page_pv_header: 总阅读量
+  page_pv_footer: 次
+
+# Deployment
+## Docs: https://hexo.io/docs/deployment.html
+deploy:
+  type: git
+  repo: https://github.com/wangwangok/wangwangok.github.io
