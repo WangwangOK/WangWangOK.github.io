@@ -27,6 +27,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">aa;/// 第一个a来自于位置1，第二个a来自于位置1。闭包运算循环了两次；</div><div class="line">ab;/// a来自于位置1，b来自于位置2。闭包运算循环了2次；</div><div class="line">aa;///第一个a来自于位置1，第二个a来自于位置3。闭包运算循环了1次；</div></pre></td></tr></table></figure>
 <p>因此得到 followpos(1) = {1,2,3};</p>
 <p>下表整理了计算nullable、firstpos、lastpos的计算规则：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -75,6 +76,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>由于md格式问题，上表第3行的逗号“,”替换为正则表达式中的”|”符号。</p>
 <ul>
 <li>1、每个叶子结点的firstpos和lastpos只包含它自身。上表中第2点；</li>
@@ -98,6 +100,7 @@
 </ul>
 <p><img src="/uploads/compiler_regular2nfa/3.png" alt=""></p>
 <p>需要注意一点的是并不是看的当前结点本身的lastpos和firstpos，而是看的其左子结点的lastpos和右子结点的firstpos。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -116,9 +119,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>2、同理我们将剩下的“连接”结点运用规则1，得到如下结果（这里太简单了我就不画图了）：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -141,10 +146,12 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>3、现在是时候运用上面的规则2了，查找抽象语法树中的“闭包”结点。它和“连接”结点不同的是：“连接”结点看的是其左右子树的lastpos和firstpos，而“闭包”结点看的是其本身的lastpos和firstpos。</li>
 </ul>
 <p><img src="/uploads/compiler_regular2nfa/4.png" alt=""></p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -163,10 +170,12 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>4、现在我们将前面三步得到的数据进行合并之后的结果为：</li>
 </ul>
 <p>很明显位置6作为增广正则表达式中存在的终结符标识，因此其followpos为空集。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -201,6 +210,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>回过头来看一下正则表表达式 <code>(a|b)*abb</code>匹配子串中，位置1对应的结点a其后可能存在字符为a（位置1）、b（位置2）、a（位置3）。位置2和位置1同理。</p>
 <p>现在我们将每个位置，已经对应的followpos用一个有向图来表示如下：</p>
 <p><img src="/uploads/compiler_regular2nfa/5.png" alt=""></p>
@@ -242,6 +252,7 @@
 <p><img src="/uploads/compiler_regular2nfa/10.png" alt=""></p>
 <p>由于组5中各个状态，无论是针对转换a，还是转换b而言，得到的状态均相同。因此我们不能讲组5进行更细粒度的划分。那么上图就是最终的划分结果。</p>
 <p>现在我们根据上面的信息画出对应的状态转换表，由于状态A和状态C经过转换得到的状态是一样的，因此集合{A,C}这里以状态A表示：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -273,6 +284,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们画出对应的DFA，并将其与上面我们用抽象语法树构造得到的DFA进行对比：</p>
 <p><img src="/uploads/compiler_regular2nfa/11.png" alt=""></p>
 <p>很明显能够对比出来，上面两个DFA除了赋予各个状态的名称不一样之外，各个转换以及转换后的状态都是一样的。我们称这两个状态机是同构的。<strong>同构</strong>是指对于两个不同的自动机，如果某个自动只是通过更改状态的名字就可以转换为另一个自动机。</p>

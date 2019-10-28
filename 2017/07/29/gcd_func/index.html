@@ -6,6 +6,7 @@
 <p><code>dispatch_time()</code>函数第二个参数接受的是<strong> 基于纳秒级别的数值 </strong>。</p>
 </blockquote>
 <p>这时候就需要将具体的数字乘以一个常数，在<a href="https://developer.apple.com/documentation/dispatch/dispatch_time_multiplier_constants?language=objc" target="_blank" rel="external">官方文档</a>中列出了相关的常数。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -32,6 +33,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">/// 使用相对时间，相对于现在延迟五秒</div><div class="line">dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC);</div><div class="line">dispatch_after(time_t, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Run&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
 <p>如果我们想要该代码块延迟到某一指定时刻去执行，我们只需要去修改<code>dispatch_after</code>中的<code>dispatch_time_t</code>类型中值，在这里我们使用函数<code>dispatch_walltime</code>来获取绝对的时间戳值。<code>dispatch_walltime()</code>函数的一个参数是<code>struct timespec</code>类型的一个变量，它是一个结构：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">_STRUCT_TIMESPEC</div><div class="line">&#123;</div><div class="line">	__darwin_time_t  tv_sec;</div><div class="line">	long  tv_nsec;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>

@@ -99,12 +99,12 @@
 <p>从语法分析的结构，我们不难看出来该文法是二义性文法。</p>
 <h3 id="3、上下文无关文法和正则表达式"><a href="#3、上下文无关文法和正则表达式" class="headerlink" title="3、上下文无关文法和正则表达式"></a>3、上下文无关文法和正则表达式</h3><p>文法是比正则表达式表达能力更强的表示方法。即每个可以使用正则表达式描述的构造都可以使用文法来描述，但反之则不成立。我们可以根据正则表达式构造出对应的文法，下面则是从正则表达式构造对应文法的大致步骤。如下：</p>
 <p>1）、对于NFA的每个状态i，创建一个非终结符 $A_{i}$ ；</p>
-<p>2）、如果状态i有一个在输入a上到达状态j的转换，则加入产生式 $A<em>{i} \rightarrow a A</em>{j}$。如果状态i在输入 ε 上到达状态j，则加入产生式 $A<em>{i} \rightarrow A</em>{j}$；</p>
+<p>2）、如果状态i有一个在输入a上到达状态j的转换，则加入产生式 $A_{i} \rightarrow a A_{j}$。如果状态i在输入 ε 上到达状态j，则加入产生式 $A_{i} \rightarrow A_{j}$；</p>
 <p>3）、如果i是一个接受状态，则加入产生式 $A_{i} \rightarrow ε$；</p>
 <p>4）、如果i是自动机的开始状态，令 $A_{i}$为所得文法的开始符号；</p>
 <p>比如正则表达式 <strong>$(a|b)^{*}abb$</strong> ，它对应的DFA为：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/9.png" alt=""></p>
-<p>从上面步骤我们可以得到一共有4个状态，因此对于对应文法则有4个非终结符，分别为 $A<em>{0},A</em>{1},A<em>{2},A</em>{3}$ 。根据上图的转换我们得到文法为：</p>
+<p>从上面步骤我们可以得到一共有4个状态，因此对于对应文法则有4个非终结符，分别为 $A_{0},A_{1},A_{2},A_{3}$ 。根据上图的转换我们得到文法为：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/12.png" alt=""></p>
 <hr>
 <h2 id="二、设计文法"><a href="#二、设计文法" class="headerlink" title="二、设计文法"></a>二、设计文法</h2><p>如果前面看到的，任何能够使用正则表达式描述的东西都可以使用文法来描述。因此在这儿来列举4点关于正则表达式和文法的异同：</p>
@@ -140,8 +140,8 @@
 <li><p>1）、首先将文法的所有非终结符，从开始符号按出现顺序，依次对它们进行编号为A<sub>1</sub>, A<sub>2</sub>, A<sub>3</sub>, …,A<sub>n</sub>；</p>
 </li>
 <li><p>2）、从A<sub>1</sub>开始依次读取每一个非终结符到A<sub>n</sub>，我们称作A<sub>i</sub>；</p>
-<p>同时又从A<sub>1</sub>开始读取非终结符号到A<sub>i-1</sub>，我们称作A<sub>j</sub> 。如果存在形如$A<em>{i} \rightarrow A</em>{j}\gamma$，那我们就将其替换为产生式组：</p>
-<p>$<br>Ⅰ、A<em>{i} \rightarrow \sigma </em>{1} \gamma\ |\ \sigma <em>{2} \gamma\ |\ …\ |\ \sigma </em>{k} \gamma \<br>Ⅱ、A<em>{j} \rightarrow \sigma </em>{1} \ |\ \sigma <em>{2} \ |\ …\ |\ \sigma </em>{k}<br>$<br>这样我们就可以尽最大的可能构造立即左递归了。</p>
+<p>同时又从A<sub>1</sub>开始读取非终结符号到A<sub>i-1</sub>，我们称作A<sub>j</sub> 。如果存在形如$A_{i} \rightarrow A_{j}\gamma$，那我们就将其替换为产生式组：</p>
+<p>$<br>Ⅰ、A_{i} \rightarrow \sigma _{1} \gamma\ |\ \sigma _{2} \gamma\ |\ …\ |\ \sigma _{k} \gamma \\<br>Ⅱ、A_{j} \rightarrow \sigma _{1} \ |\ \sigma _{2} \ |\ …\ |\ \sigma _{k}<br>$<br>这样我们就可以尽最大的可能构造立即左递归了。</p>
 </li>
 <li><p>3）、如果此时存在立即左递归，则使用上面提到的消除立即左递归的方式来消除；</p>
 </li>
@@ -149,7 +149,7 @@
 <p>下面我用C++写了一个简单地消除左递归的例子：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div><div class="line">86</div><div class="line">87</div><div class="line">88</div><div class="line">89</div><div class="line">90</div><div class="line">91</div><div class="line">92</div><div class="line">93</div><div class="line">94</div><div class="line">95</div><div class="line">96</div><div class="line">97</div><div class="line">98</div><div class="line">99</div><div class="line">100</div><div class="line">101</div><div class="line">102</div><div class="line">103</div><div class="line">104</div><div class="line">105</div><div class="line">106</div><div class="line">107</div><div class="line">108</div><div class="line">109</div><div class="line">110</div><div class="line">111</div><div class="line">112</div><div class="line">113</div><div class="line">114</div><div class="line">115</div><div class="line">116</div><div class="line">117</div><div class="line">118</div><div class="line">119</div><div class="line">120</div></pre></td><td class="code"><pre><div class="line">#include &lt;string&gt;</div><div class="line">#include &lt;vector&gt;</div><div class="line">#include &lt;iostream&gt;</div><div class="line"></div><div class="line">using namespace std;</div><div class="line"></div><div class="line">struct GrammerProduction &#123;</div><div class="line">	string header;</div><div class="line">    vector&lt;string&gt; bodies   ;</div><div class="line">    GrammerProduction() &#123;&#125;</div><div class="line">    //GrammerProduction(const GrammerProduction&amp; lhs) &#123;&#125;</div><div class="line">    //GrammerProduction&amp; operator=(const GrammerProduction&amp; lhs) &#123;&#125;</div><div class="line">    GrammerProduction(string hdr)&#123;</div><div class="line">        header = hdr;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    bool isEmpty() &#123;</div><div class="line">        return bodies.empty();</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    void add_body(string bdy) &#123;</div><div class="line">        bodies.push_back(bdy);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    private:</div><div class="line">    string recursive_nonterminal; /// 发生立即左递归时，需要引入的非终结符</div><div class="line">    public:</div><div class="line">    void set_recursive_nonterminal(string nt) &#123;</div><div class="line">        recursive_nonterminal = nt;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    void replace_body(GrammerProduction* prd) &#123;</div><div class="line">        if (prd==nullptr) &#123;</div><div class="line">            return;</div><div class="line">        &#125;</div><div class="line">        vector&lt;string&gt; new_bodies;</div><div class="line">        for (vector&lt;string&gt;::iterator itr_body = bodies.begin(); itr_body != bodies.end(); itr_body++) &#123; /// 遍历当前所有的产生式</div><div class="line">            if (itr_body-&gt;empty()) &#123;</div><div class="line">                continue;</div><div class="line">            &#125;</div><div class="line">            string char_body(1,(*itr_body)[0]);</div><div class="line">            string prd_header = prd-&gt;header;</div><div class="line">            if (char_body != prd_header) &#123; </div><div class="line">                new_bodies.push_back(*itr_body);</div><div class="line">                continue;</div><div class="line">            &#125;</div><div class="line">            /// 如果当前产生式最左边是非终结符，并且该非终结符和Aj相等。即Ai -&gt; Aj γ</div><div class="line">            for (vector&lt;string&gt;::iterator pitr_body = prd-&gt;bodies.begin(); pitr_body != prd-&gt;bodies.end(); ++pitr_body) &#123;</div><div class="line">                string tmp_body = *itr_body;</div><div class="line">                tmp_body = tmp_body.replace(0,1,*pitr_body);</div><div class="line">                new_bodies.push_back(tmp_body);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        bodies = new_bodies;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    GrammerProduction* remove_immediately_left_recursive() &#123;</div><div class="line">        vector&lt;string&gt; new_bodies;</div><div class="line">        GrammerProduction* new_production = new GrammerProduction(recursive_nonterminal);</div><div class="line">        if (!new_production) &#123;</div><div class="line">            return nullptr;</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">        for (vector&lt;string&gt;::iterator itr_body = bodies.begin(); itr_body != bodies.end(); ++itr_body) &#123; /// 遍历当前所有的产生式</div><div class="line">            string tmp_body = *itr_body;</div><div class="line">            string first_char_body(1,(*itr_body)[0]);</div><div class="line">            if (first_char_body == header) &#123; /// 立即左递归</div><div class="line">                tmp_body = tmp_body.erase(0,1);</div><div class="line">                tmp_body = tmp_body+recursive_nonterminal;</div><div class="line">                new_production-&gt;add_body(tmp_body);</div><div class="line">            &#125;else&#123;</div><div class="line">                tmp_body = tmp_body+recursive_nonterminal;</div><div class="line">                new_bodies.push_back(tmp_body);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        if (new_production-&gt;isEmpty()) &#123;</div><div class="line">            return nullptr;</div><div class="line">        &#125;</div><div class="line">        new_production-&gt;add_body(&quot;#&quot;);</div><div class="line">        bodies = new_bodies;</div><div class="line">        return new_production;</div><div class="line">    &#125;</div><div class="line">&#125;;</div><div class="line"></div><div class="line">struct Grammer &#123;</div><div class="line">    vector&lt;GrammerProduction*&gt; productions;</div><div class="line">    Grammer() = default;</div><div class="line">    void printProductions()&#123;</div><div class="line">        cout&lt;&lt;&quot;-------------------------------------&quot;&lt;&lt;endl;</div><div class="line">        for (vector&lt;GrammerProduction*&gt;::iterator itr = productions.begin(); itr != productions.end(); ++itr) &#123; /// 外层循环从第一个开始符号开始 姑且叫作Ai</div><div class="line">            GrammerProduction* p = *itr; /// 获取Ai所有的产生式体</div><div class="line">            cout&lt;&lt;p-&gt;header&lt;&lt;endl;</div><div class="line">            for (vector&lt;string&gt;::iterator body_itr = p-&gt;bodies.begin(); body_itr != p-&gt;bodies.end(); ++body_itr) &#123;</div><div class="line">                cout&lt;&lt;&quot;          &quot;&lt;&lt;*body_itr&lt;&lt;endl;</div><div class="line">            &#125;</div><div class="line">            cout&lt;&lt;&quot;-------------------------------------&quot;&lt;&lt;endl;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    void add_prodction(GrammerProduction* pro) &#123;</div><div class="line">        if (pro==nullptr) return;</div><div class="line">        this-&gt;productions.push_back(pro);</div><div class="line">    &#125;</div><div class="line">    void remove_left_recursive() &#123;</div><div class="line">        vector&lt;GrammerProduction*&gt; new_productions;</div><div class="line">        for (vector&lt;GrammerProduction*&gt;::iterator itr = productions.begin(); itr != productions.end(); ++itr) &#123; /// 外层循环从第一个开始符号开始 姑且叫作Ai</div><div class="line">            GrammerProduction* p = *itr; /// 获取Ai所有的产生式体</div><div class="line">            for (vector&lt;GrammerProduction*&gt;::iterator itr_j = productions.begin(); itr_j != itr; ++itr_j) &#123; /// 内层循环获取当前非终结符之前的其他非终结符，姑且叫作Aj    </div><div class="line">                GrammerProduction* jp = *itr_j; /// 获取Aj所有的产生式体</div><div class="line">                p-&gt;replace_body(jp);</div><div class="line">            &#125;</div><div class="line">            GrammerProduction *ptr = p-&gt;remove_immediately_left_recursive(); /// 消除可能存在的立即左递归</div><div class="line">            if (ptr==nullptr) continue;</div><div class="line">            new_productions.push_back(ptr);</div><div class="line">        &#125;</div><div class="line">        if (new_productions.size() &lt;= 0) &#123;</div><div class="line">            return;</div><div class="line">        &#125;</div><div class="line">        productions.insert(productions.end(),new_productions.begin(),new_productions.end());</div><div class="line">    &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
 <p>比如我们有带左递归的产生式集合：</p>
-<p>$<br>S \rightarrow Aa\ |\ b\<br>A \rightarrow Ac\ |\ Sd\ |\ ϵ<br>$</p>
+<p>$<br>S \rightarrow Aa\ |\ b\\<br>A \rightarrow Ac\ |\ Sd\ |\ ϵ<br>$</p>
 <p>现在我们可以使用上诉的C++代码来帮我们消除左递归：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div></pre></td><td class="code"><pre><div class="line">int main() &#123;</div><div class="line">    GrammerProduction *s_productions = new GrammerProduction(&quot;S&quot;); /// S -&gt; Aa | b</div><div class="line">    s_productions-&gt;set_recursive_nonterminal(&quot;T&quot;);</div><div class="line">    s_productions-&gt;add_body(&quot;Aa&quot;);</div><div class="line">    s_productions-&gt;add_body(&quot;b&quot;);</div><div class="line"></div><div class="line">    GrammerProduction *a_productions = new GrammerProduction(&quot;A&quot;); /// A -&gt; Ac | Sd | ε</div><div class="line">    a_productions-&gt;set_recursive_nonterminal(&quot;B&quot;);</div><div class="line">    a_productions-&gt;add_body(&quot;Ac&quot;);</div><div class="line">    a_productions-&gt;add_body(&quot;Sd&quot;);</div><div class="line">    a_productions-&gt;add_body(&quot;#&quot;);</div><div class="line"></div><div class="line">    Grammer grammer;</div><div class="line">    grammer.add_prodction(s_productions);</div><div class="line">    grammer.add_prodction(a_productions);</div><div class="line">    cout&lt;&lt;&quot;带有左递归的产生式：&quot;&lt;&lt;endl;</div><div class="line">    grammer.printProductions();</div><div class="line">    grammer.remove_left_recursive();</div><div class="line">    cout&lt;&lt;&quot;消除左递归之后的产生式：&quot;&lt;&lt;endl;</div><div class="line">    grammer.printProductions();</div><div class="line"></div><div class="line">    cout&lt;&lt;&quot;Done&quot;&lt;&lt;endl;</div><div class="line">	return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>最后的输出结果如下：</p>
@@ -157,13 +157,13 @@
 <p>解释一下，这里的非终结符号B是A的产生式出现左递归之后，引入的非终结符。</p>
 <hr>
 <h3 id="2、提取左公因子"><a href="#2、提取左公因子" class="headerlink" title="2、提取左公因子"></a>2、提取左公因子</h3><p>提取左公因子可以适用于预测分析技术或自顶向下分析技术的文法。当我们不清楚应该在两个产生中如何选择的时候，我们可以通过改写产生式来推后这个决定，当我们有足够的信息时再做出正确地决定。</p>
-<p>比如有产生式 $A \rightarrow \alpha \beta<em>{1}\ |\ \alpha \beta</em>{2}$，是A的两个产生式，并且产生式体开头都是从 α 推导得到的一个非空串。那么这时候我们就不清楚是产生式 $A \rightarrow \alpha \beta<em>{1}$ 还是以产生式 $A \rightarrow \alpha \beta</em>{2}$ 进行展开。</p>
+<p>比如有产生式 $A \rightarrow \alpha \beta_{1}\ |\ \alpha \beta_{2}$，是A的两个产生式，并且产生式体开头都是从 α 推导得到的一个非空串。那么这时候我们就不清楚是产生式 $A \rightarrow \alpha \beta_{1}$ 还是以产生式 $A \rightarrow \alpha \beta_{2}$ 进行展开。</p>
 <p>然后我们可以将A展开为 $\alpha A^{‘}$，从而延迟要做出决定的时刻，原来的产生式就变为了：</p>
-<p>$<br>A \rightarrow \alpha A^{‘}\<br>A^{‘} \rightarrow \beta<em>{1}\ |\ \beta</em>{2}<br>$</p>
+<p>$<br>A \rightarrow \alpha A^{‘}\\<br>A^{‘} \rightarrow \beta_{1}\ |\ \beta_{2}<br>$</p>
 <p>总结一下上面提到的内容：对于每个非终结符号A，找出他的两个或多个选项之间的最长公共前缀 α。如果 α 不为空，即存在一个非平凡的公共前缀，那么将所有A的产生式</p>
-<p>$A \rightarrow \alpha\beta<em>{1}\ |\ \alpha\beta</em>{2}\ |\ …\ |\ \alpha\beta_{n}\ |\ \gamma$</p>
+<p>$A \rightarrow \alpha\beta_{1}\ |\ \alpha\beta_{2}\ |\ …\ |\ \alpha\beta_{n}\ |\ \gamma$</p>
 <p>替换为</p>
-<p>$<br>A \rightarrow \alpha A^{‘}\ |\ \gamma\<br>A^{‘} \rightarrow \beta<em>{1}\ |\ \beta</em>{2}\ |\ …\ |\ \beta_{n}<br>$</p>
+<p>$<br>A \rightarrow \alpha A^{‘}\ |\ \gamma\\<br>A^{‘} \rightarrow \beta_{1}\ |\ \beta_{2}\ |\ …\ |\ \beta_{n}<br>$</p>
 <p>其中 γ 表示所有不以 α 开头的产生式； $A^{‘}$ 是一个新的非终结符号。不断地应用这个转换，直到每个非终结符号的任意两个产生式体都没有公共前缀为止。</p>
 <hr>
 <h3 id="3、非上下文无关语言的构造"><a href="#3、非上下文无关语言的构造" class="headerlink" title="3、非上下文无关语言的构造"></a>3、非上下文无关语言的构造</h3><p>在常见的程序设计语言中，存在少量无法文法描述的语法构造。在C或者Java的文法不区分由不同字符串组成的标识符。所有的标识符在文法中都被表示为像 <strong>id</strong> 这样的词法单元。在这些语言的编译器中，<strong>标识符是否先声明后使用是在语义分析阶段检查的</strong> 。</p>
@@ -222,6 +222,7 @@
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">aa;/// 第一个a来自于位置1，第二个a来自于位置1。闭包运算循环了两次；</div><div class="line">ab;/// a来自于位置1，b来自于位置2。闭包运算循环了2次；</div><div class="line">aa;///第一个a来自于位置1，第二个a来自于位置3。闭包运算循环了1次；</div></pre></td></tr></table></figure>
 <p>因此得到 followpos(1) = {1,2,3};</p>
 <p>下表整理了计算nullable、firstpos、lastpos的计算规则：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -270,6 +271,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>由于md格式问题，上表第3行的逗号“,”替换为正则表达式中的”|”符号。</p>
 <ul>
 <li>1、每个叶子结点的firstpos和lastpos只包含它自身。上表中第2点；</li>
@@ -293,6 +295,7 @@
 </ul>
 <p><img src="/uploads/compiler_regular2nfa/3.png" alt=""></p>
 <p>需要注意一点的是并不是看的当前结点本身的lastpos和firstpos，而是看的其左子结点的lastpos和右子结点的firstpos。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -311,9 +314,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>2、同理我们将剩下的“连接”结点运用规则1，得到如下结果（这里太简单了我就不画图了）：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -336,10 +341,12 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>3、现在是时候运用上面的规则2了，查找抽象语法树中的“闭包”结点。它和“连接”结点不同的是：“连接”结点看的是其左右子树的lastpos和firstpos，而“闭包”结点看的是其本身的lastpos和firstpos。</li>
 </ul>
 <p><img src="/uploads/compiler_regular2nfa/4.png" alt=""></p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -358,10 +365,12 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>4、现在我们将前面三步得到的数据进行合并之后的结果为：</li>
 </ul>
 <p>很明显位置6作为增广正则表达式中存在的终结符标识，因此其followpos为空集。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -396,6 +405,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>回过头来看一下正则表表达式 <code>(a|b)*abb</code>匹配子串中，位置1对应的结点a其后可能存在字符为a（位置1）、b（位置2）、a（位置3）。位置2和位置1同理。</p>
 <p>现在我们将每个位置，已经对应的followpos用一个有向图来表示如下：</p>
 <p><img src="/uploads/compiler_regular2nfa/5.png" alt=""></p>
@@ -437,6 +447,7 @@
 <p><img src="/uploads/compiler_regular2nfa/10.png" alt=""></p>
 <p>由于组5中各个状态，无论是针对转换a，还是转换b而言，得到的状态均相同。因此我们不能讲组5进行更细粒度的划分。那么上图就是最终的划分结果。</p>
 <p>现在我们根据上面的信息画出对应的状态转换表，由于状态A和状态C经过转换得到的状态是一样的，因此集合{A,C}这里以状态A表示：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -468,6 +479,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们画出对应的DFA，并将其与上面我们用抽象语法树构造得到的DFA进行对比：</p>
 <p><img src="/uploads/compiler_regular2nfa/11.png" alt=""></p>
 <p>很明显能够对比出来，上面两个DFA除了赋予各个状态的名称不一样之外，各个转换以及转换后的状态都是一样的。我们称这两个状态机是同构的。<strong>同构</strong>是指对于两个不同的自动机，如果某个自动只是通过更改状态的名字就可以转换为另一个自动机。</p>
@@ -513,6 +525,7 @@
 <p><img src="/uploads/compiler_regular_fa/1.png" alt=""></p>
 <p>上图是一个能够识别正则表达式 <code>(a|b)*abb</code>的NFA转换图。</p>
 <h4 id="转换表和接收串"><a href="#转换表和接收串" class="headerlink" title="转换表和接收串"></a>转换表和接收串</h4><p>我们可以将一个NFA表示为一张转换表。表的每一行表示一个状态，表的每一列对应于输入符号和空串。先将上图的NFA转换图转换成为对应的转换表，然后根据转换表再具体说明其中的含义：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -549,6 +562,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>对于一个给定的状态和给定的转换，其得到的值是NFA转换图中应用对应转换之后得到的状态集合。如果对应的转换没有后续状态，则用符号∅表示。</p>
 <p>而自动机在判断是否接收字符串的依据是：存在某条字符序列组成符号串的路径，该路径能够从开始状态到达某个接收状态。我们就说NFA接收这个符号串。比如：</p>
 <p><img src="/uploads/compiler_regular_fa/2.png" alt=""></p>
@@ -599,6 +613,7 @@
 </blockquote>
 <p>DFA的状态是一个集合，该集合里面包含的是对应NFA的状态。</p>
 <p>我们在上面看到在将正则表达式构造成NFA时，NFA里面存在很多空转换。所以当务之急是如果正确地处理NFA上面的空转换。下面展示了NFA的状态集合上的相关操作：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -625,17 +640,19 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>假设s<sub>0</sub>是NFA的开始状态，那么对应DFA的开始状态就是 <strong>ε-closure(s<sub>0</sub>)</strong> 。而DFA的接受状态是至少包含NFA接受状态的集合。</p>
 <p>我们在上一节得到的NFA，现在我们将该NFA转换为DFA：</p>
 <p>1、对于开始状态0，我们使用操作1（上表中序号为1的操作，下文类似），即状态0通过ε空转换可以得到的状态集合为： <code>{0, 1, 2, 3, 7}</code>。<br>这里有一点需要注意的是：因为路径可以不包含边，所以状态0也是可以从它自身出发经过标号ε到达的状态。</p>
 <p><img src="/uploads/compiler_regular_fa/15.png" alt=""></p>
 <p>2、我们对第一步得到的集合求转换a的集合。现在我们看状态集合<code>{0, 1, 2, 3, 7}</code>通过转换a（即应用操作3）可以得到的状态集合<code>{3,8}</code>。此时我们对集合<code>{3,8}</code>应用操作2得到的集合为<code>{1, 2, 4, 6, 7}</code>：</p>
 <p><img src="/uploads/compiler_regular_fa/16.png" alt=""></p>
-<p>在集合{0, 1, 2, 3, 7}里面，只有状态2和状态7可以通过a转换得到的集合是{3, 8}。此时查看状态3通过空转换得到集合为：<br>a、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>7</sub>;<br>b、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>1</sub> –<code>ε</code>–&gt; s<sub>2</sub>;<br>c、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>1</sub> –<code>ε</code>–&gt; s<sub>4</sub>;<br>因此最终的集合为 <strong>{1,2,3,4,6,7,8}</strong>。</p>
+<p>在集合{0, 1, 2, 3, 7}里面，只有状态2和状态7可以通过a转换得到的集合是{3, 8}。此时查看状态3通过空转换得到集合为：<br>a、s<sub>3</sub> —<code>ε</code>—&gt; s<sub>6</sub> —<code>ε</code>—&gt; s<sub>7</sub>;<br>b、s<sub>3</sub> —<code>ε</code>—&gt; s<sub>6</sub> —<code>ε</code>—&gt; s<sub>1</sub> —<code>ε</code>—&gt; s<sub>2</sub>;<br>c、s<sub>3</sub> —<code>ε</code>—&gt; s<sub>6</sub> —<code>ε</code>—&gt; s<sub>1</sub> —<code>ε</code>—&gt; s<sub>4</sub>;<br>因此最终的集合为 <strong>{1,2,3,4,6,7,8}</strong>。</p>
 <p>3、同样的，我们对第一步得到的集合求转换b的集合。现在我们看状态集合<code>{0, 1, 2, 3, 7}</code>通过转换b可以得到的状态集合<code>{5}</code>。然后集合{5}通过空转换可以得到的集合为{1, 2, 4, 6, 7}</p>
 <p><img src="/uploads/compiler_regular_fa/17.png" alt=""></p>
 <p>具体的分析和第2步类似。</p>
 <p>这样我们对后续出现的每一个状态都执行对应的转换a、转换b。我们可以得到一个状态转换表：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -678,6 +695,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们前面说过NFA开始状态通过ε转换得到集合为开始状态，因此上表中对应DFA对应的状态为A。而NFA状态集合中包含有接受状态对应DFA的状态E，因此E为DFA的接受状态。对应的DFA如下：</p>
 <p><img src="/uploads/compiler_regular_fa/18.png" alt=""></p>
 <p>下面是对应算法的伪代码描述。模拟一个NFA的执行（即NFA转换为DFA）</p>
@@ -687,6 +705,7 @@
 <p><img src="/uploads/compiler_regular_fa/19.png" alt=""></p>
 <p>这里提到了前面介绍的几个概念，这儿简要说明一下。输入缓冲区可以让我们依次读入多个字符到缓冲区中（这个大致为4096字节），而不是每读入一个字符就调用一次系统读取命令；词素作为匹配了某个模式词法单元的字符串，比如词素为<code>name</code>词法单元<strong>id</strong>；指针lexemeBegin指向当前词素的开始位置处；指针forward的作用是一直向前扫描，直到匹配某个模式为止。</p>
 <p>下表中有三个模式，已经对应模式的动作。这个表指明了词法分析器需要的模式，已经匹配到对应模式之后的动作：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -713,6 +732,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>这里的动作是指匹配到对应模式之后需要做的相关操作，比如匹配到词法单元id之后的动作是生成对应的标识符，获取对应词法单元并返回给语法分析器；匹配到空白符之后我们将输入回退到非空白符的开头，而且不向语法分析器返回任何词法单元。等等。</p>
 <p>上表中满足模式P<sub>2</sub>和也同时满足模式P<sub>3</sub>，当出现这种冲突时我们首先选择P<sub>2</sub>。这是因为在解决冲突时 </p>
 <blockquote>
@@ -723,6 +743,7 @@
 <p>以及将上面三个合并之后得到的NFA：</p>
 <p><img src="/uploads/compiler_regular_fa/21.png" alt=""></p>
 <p>现在如果词法分析器模拟了上图的NFA，那么该分析器必须从它的输入中<code>lexemeBegin</code>指向的位置开始读取输入，并移动forward指针。然后根据子集构造法来获取当前的状态集合。<br>需要注意的是：这里并不是使用子集构造法将NFA转换为DFA，而只是简单地想知道某一状态集合通过子集构造法之后得到的新的状态集合（不过在下面的“词法分析器使用的DFA”一节会使用该表，该表的第二列就是对应DFA的状态）。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -771,6 +792,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>在上表中，最终会达到一个没有后续状态的输入点。此时不可能有任何更长的输入前缀使得这个NFA到达某个接受状态，此后的状态将一直为空。比如上表中状态编号为C、E、F之后再继续输入a，那么此时就没有任何的后续状态。</p>
 <p><img src="/uploads/compiler_regular_fa/22.png" alt=""></p>
 <p>上图中我们的输入字符串以 <code>aaba</code> 开头。当我们在读入第四个符号 a 之后，此时我们处于一个空状态集合中（也可以从上表中第三行得出）。</p>
@@ -819,6 +841,7 @@
 </blockquote>
 <p>5）、<strong>回退🌟号</strong>：上图中接受状态右上角的*号，表示我们识别到的词素并不包含使我们到达接受状态的符号（也就是上图中的no let/dig边）。此时我们需要回退forward指针到倒数第二个状态。这其中可能会回退多步，所以这里用*号来表示需要回退；</p>
 <h3 id="relop状态转换图"><a href="#relop状态转换图" class="headerlink" title="relop状态转换图"></a>relop状态转换图</h3><p>我们根据上一节的relop词法单元，已经对应的属性来构造一个relop的状态转换图</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -850,9 +873,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p><img src="/uploads/compiler_stateGraph_kmp/2.png" alt=""></p>
 <p>其实对于这个状态转换图来说，我只画了其中的比较运算符和逻辑运算符。对于位运算符（&lt;&lt;左移, &gt;&gt;右移）并没画出来。这里主要是想表达各个接收状态，和forward指针回退的操作。</p>
-<h3 id="id（标识符）和关键字的状态转换图"><a href="#id（标识符）和关键字的状态转换图" class="headerlink" title="id（标识符）和关键字的状态转换图"></a>id（标识符）和关键字的状态转换图</h3><table>
+<h3 id="id（标识符）和关键字的状态转换图"><a href="#id（标识符）和关键字的状态转换图" class="headerlink" title="id（标识符）和关键字的状态转换图"></a>id（标识符）和关键字的状态转换图</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:left">词法单元</th>
@@ -870,6 +895,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>注：上表中的正则表达式将逗号“,”更改为”|”。<br>对于关键字来说，它们看起来和标识符是很像的。但它们并不是标识符。</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/3.png" alt=""></p>
 <p>对于关键字<code>if/else/for</code>等等关键字，标识符<code>forearm</code>同样也是满足上诉转换图的。</p>
@@ -890,7 +916,8 @@
 <blockquote>
 <p>识别到对应词法单元时，如果该标识符尚未加入符号表。此时词法分析器会将该 <strong>标识符</strong> (也可以理解为词素) 放入符号表中。</p>
 </blockquote>
-<h3 id="词法单元number状态转换图"><a href="#词法单元number状态转换图" class="headerlink" title="词法单元number状态转换图"></a>词法单元number状态转换图</h3><table>
+<h3 id="词法单元number状态转换图"><a href="#词法单元number状态转换图" class="headerlink" title="词法单元number状态转换图"></a>词法单元number状态转换图</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:left">词法单元</th>
@@ -912,11 +939,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>下图是一个识别整数和浮点数的状态转换图：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/4.png" alt=""></p>
 <p>从上图中我们可以看到，接收状态22既匹配到了科学计数法表示的浮点数（包含小数部分，也包含指数部分），也匹配到了科学计数法表示的整数。<br>接收状态23是匹配到的整数词素；接收状态24为不带科学计数法的的整数。</p>
 <p>当我们在接收状态时，返回词法单元 <strong>number</strong> 以及一个指向 <strong>常量表</strong> 条目的指针，上面找到的词素就放在这个常量表条目中。</p>
-<h3 id="ws（空白符）状态转换图"><a href="#ws（空白符）状态转换图" class="headerlink" title="ws（空白符）状态转换图"></a>ws（空白符）状态转换图</h3><table>
+<h3 id="ws（空白符）状态转换图"><a href="#ws（空白符）状态转换图" class="headerlink" title="ws（空白符）状态转换图"></a>ws（空白符）状态转换图</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:left">词法单元</th>
@@ -932,6 +961,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们用转换delim替换上表中的blank、tab、newline：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/5.png" alt=""></p>
 <p>空白符后面需要跟一个非空白符才能确定当前已经完成了对连续空白符的扫描。</p>
@@ -963,6 +993,7 @@
 <li>1）、由于前面提到过真前缀的前提，因此我们从s=1开始计算。首先我们将f(1)设置为0，既状态1对应的失效函数值为0。并且这里我们新增一个辅助游标t用于对照状态s：</li>
 </ul>
 <p><img src="/uploads/compiler_stateGraph_kmp/8.png" alt=""></p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -989,9 +1020,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>2）、此时我们比较一下状态t的转换（a）和状态s的转换（b），发现字符a并不等于字符b。此时我们将f(s+1)，即f(2)的值设置为0：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1018,11 +1051,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>并且将s移动到状态2：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/9.png" alt=""></p>
 <ul>
 <li>3）、继续比较状态t的转换（a）和状态s的转换（a）此时他们相等。因此 <strong>先将t的自增1，然后将f(s+1)，即f(2)的值设置为t的值（此时为1）</strong>：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1049,11 +1084,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>同样的，此时将s移动到状态3：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/10.png" alt=""></p>
 <ul>
 <li>4）、依次比较后续的s=3，和s=4的情况。它们的情形和第三步类似：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1080,6 +1117,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>此时t=3，s=5。对应的状态转换图为：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/11.png" alt=""></p>
 <ul>
@@ -1093,6 +1131,7 @@
 <ul>
 <li>7）、对于后续状态的失效函数值确定，可以仿照第2、3和5步进行求解。最终完整失效函数为：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1119,11 +1158,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>下面是对应的代码：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">#include &lt;iostream&gt;</div><div class="line">#include &lt;string&gt;</div><div class="line">#include &lt;vector&gt;</div><div class="line"></div><div class="line">using namespace std;</div><div class="line">void trie_func(string pattern, vector&lt;int&gt; &amp;f) &#123;</div><div class="line">	const string::size_type length = pattern.size()+1;</div><div class="line">	int t = 0;</div><div class="line">	f[0]=t;// f[0] store t</div><div class="line">	f[1]=0;</div><div class="line">	for(int s = 1; s&lt; length-1; s++)	</div><div class="line">	&#123;</div><div class="line">		while(t&gt;0 &amp;&amp; pattern[t] != pattern[s])&#123; t=f[t]; f[0]=t;  &#125;	</div><div class="line">		if(pattern[s]==pattern[t])&#123; t=t+1; f[s+1]=t; f[0]=t; &#125;</div><div class="line">		else &#123;f[s+1]=0;&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">int main(int argc, const char * argv[])&#123;</div><div class="line">	string pattern(&quot;ababaca&quot;);</div><div class="line">	vector &lt;int&gt; trie(pattern.size()+1);</div><div class="line">	trie_func(pattern,trie);</div><div class="line">	for (vector&lt;int&gt;::iterator itr = trie.begin(); itr != trie.end(); itr++) &#123;</div><div class="line">		cout&lt;&lt;*itr&lt;&lt;endl;</div><div class="line">	&#125;</div><div class="line">	return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <h3 id="子串与主串的比较"><a href="#子串与主串的比较" class="headerlink" title="子串与主串的比较"></a>子串与主串的比较</h3><p>现在我们以主串<code>bcbababaababacacd</code> 和子串 <code>ababaca</code> 作为例子，来看主串是否包含子串。</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/14.png" alt=""></p>
 <p>我们从前面知道子串失效函数为：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1150,6 +1191,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>这里我将上一节的字符s替换为state，是因为这一节我会用字符s用作当前子串相对于主串的偏移量。而真正原因是我太懒了，发现图中和失效函数都用了同一个字符s。为了避免混淆，但又不想重新画图🤣。</p>
 <ul>
 <li>1）、主串的第一个字符和子串的第一个字符不相等。此时我们将子串向右滑动一位，此时偏移值<code>s = 1</code> ：</li>
@@ -1230,6 +1272,7 @@
 <p>这儿我大致地解释一下这三个概念之间的关系：词法单元指定的是某一类型的事物，用面向对象来说就是，词法单元类（class）；词素就是指的是该类的具体实例；而模式就是该类的一个属性，它描述了词素所具有的具体特征。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">class Tokens&#123;</div><div class="line">  string pattern;</div><div class="line">&#125;;</div><div class="line">Tokens lexeme;</div></pre></td></tr></table></figure>
 <p>并不是说实际就是这个代码，我只是为了便于理解，而进行的类比。下表给出了一些常见的词法单元：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1271,6 +1314,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <h4 id="词法单元的大致分类"><a href="#词法单元的大致分类" class="headerlink" title="词法单元的大致分类"></a>词法单元的大致分类</h4><p>1）、<strong>关键字</strong>：每个关键字有一个词法单元；<br>2）、<strong>标识符</strong>：一个表示所有标识符的词法单元；<br>3）、<strong>常量</strong>：常量词法单元包含的数字和字符串；<br>4）、<strong>运算符</strong>：运算法也是一个词法单元，可以是比较运算符，也可以是算术运算符；<br>5）、<strong>标点符号</strong>：每一个标点符号有一个词法单元。比如括号等等；</p>
 <h4 id="词法单元的属性值"><a href="#词法单元的属性值" class="headerlink" title="词法单元的属性值"></a>词法单元的属性值</h4><p>从这里我们可以看出来词法单元表示了一类事物，但是我们如何去区分具体的词素？ <strong>词法分析器不仅向语法分析器返回一个词法单元的名字，还会返回一个描述该词法单元的词素属性值</strong>。</p>
 <p>比如我们声明的一个变量、或者函数时，它作为标识符一类的词法单元。它们更加详细的信息（词素、类型、第一次在源代码中出现的位置）都会保存在符号表中。<br>因此：</p>
@@ -1285,7 +1329,7 @@
 <li>连接(LM)：得到的串s即属于L，也属于M；</li>
 <li>闭包：闭包分Kleene闭包和正闭包。Kleene闭包是指某一集合的符号重复 0～∞ 多次，可能是空串。正必报不包含重复0次，即不包含空串；</li>
 </ul>
-<p><code>letter_ (letter_ | digit_) *</code>这是一个c语言中标识符的正则表达式。其中用letter<em>来表示任一字母或者下划线，用digit</em>表示数位。c语言中标识符必须是必须是以字符开头，包含数字、字符来表示。</p>
+<p><code>letter_ (letter_ | digit_) *</code>这是一个c语言中标识符的正则表达式。其中用letter_来表示任一字母或者下划线，用digit_表示数位。c语言中标识符必须是必须是以字符开头，包含数字、字符来表示。</p>
 <h4 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h4><p>正则表达式中，括号的优先级最高，优先级依次降低：<br>1）、一元运算符 <code>*</code>；<br>2）、连接（左结合）；<br>3）、并运算符优先级最低（左结合）；</p>
 <p>比如正则表达式 <code>(a|b)*</code>，可以表示多个串：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">空集;//闭包次数为0;　</div><div class="line">a;//闭包次数为1,取并的左边;</div><div class="line">aa;//闭包次数为2,一直取并的左边;</div><div class="line">aa...a;//闭包次数为n,一直取并的左边;</div><div class="line">b;//闭包次数为1,取并的右边;</div><div class="line">bb;//闭包次数为2,取并的右边;</div><div class="line">bb...b;//闭包次数为n,取并的右边;</div><div class="line">ab;//闭包次数为2,先取左边再取右边;</div><div class="line">ba;//闭包次数为2,先取右边再取左边;</div><div class="line">...</div></pre></td></tr></table></figure>
@@ -1319,6 +1363,7 @@
 <p>从这儿我们可以知道，对于编译器而言在进行词法分析的时候，需要通过lexemeBegin和forward来扫描缓冲区。如果匹配某一个词素时，比如很长的字符串（比如将一片短篇小说作为常量字符串放到一个变量中）时，那就会出现缓冲区长度不足的情况，因此在日常编码中将长字符串拆分成多个短的字符串。</p>
 <p>这其实也算是学习编译原理，有助于提供编程效率的一个例子了。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在前面我们用正则表达式来表示一个模式，现在我们需要通过制定模式来识别对应的词法单元。下面是大部分词法单元，以及对应的模式：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1369,12 +1414,14 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>由于这块儿markdown解析的问题（加了转义字符之后依然显示有点问题），我将”|”替换为”,”。在理解的时候只需要将”,”更改为”|”即可。</p>
 <p>上表中的词法单元<code>ws</code>和其他词法单元不同。当我们识别到ws时，</p>
 <blockquote>
 <p><strong>我们并不将它返回给语法分析器，而是从这个空白符之后的字符开始继续进行词法分析。返回给语法分析器的是下一个词法单元</strong> 。</p>
 </blockquote>
 <p>我们从前面的知识了解到，词法分析器通过对应模式识别到词法单元之后，会将词法单元名返回给语法分析器（空白符除外），以及对应词法单元的属性来确定某一特定实例。下表展示了对应词法单元，和对应属性：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1431,6 +1478,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>表格里面的relop词法单元，区分其具体实例是通过对应词法单元属性值进行。</p>
 <p>这一节主要是了解了词法单元相关知识其中，包括有词法单元、词素和模式。为了能够了解模式，我们又学习了一下正则表达式。下一节则主要是讲解词法单元的识别。</p>
 ]]></content>
@@ -1510,7 +1558,7 @@
 <p><img src="https://images.xiaozhuanlan.com/photo/2019/39336c86a48c286012ed683927a75edb.png" alt=""></p>
 <p>同样运用上面的，先除以4，然后乘以4，最后再加上4：  </p>
 <p><img src="https://images.xiaozhuanlan.com/photo/2019/e34ae3f9de26312a6bb52d04f979aef2.png" alt=""></p>
-<p>因此，公式 <strong><em>(x-1)/4 * 4 + 4</em></strong> 的结果是最接近并且大于或者等于4的倍数。</p>
+<p>因此，公式 <strong>_(x-1)/4 * 4 + 4_</strong> 的结果是最接近并且大于或者等于4的倍数。</p>
 <p>那么我们在C里面该怎么做呢？首先，注意到除法和乘法我们可以使用右移和左移移位操作符来解决（&gt;&gt;和&lt;&lt;），它们相对于简单乘法要快很多。因此我们的公式在C里面可以写成这样 <code>((x-1)&gt;&gt;2)&lt;&lt;2+4</code>，但是在宏里面需要使用额外的括号：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">#define align4(x) (((((x)-1)&gt;&gt;2)&lt;&lt;2)+4)</div></pre></td></tr></table></figure>
 <h3 id="寻找块：首次适配算法"><a href="#寻找块：首次适配算法" class="headerlink" title="寻找块：首次适配算法"></a>寻找块：首次适配算法</h3><p>找到一个足够长度的块非常简单：从堆的起始点开始（以某种方式会保存在代码，后续会看到）测试当前块，如果该块成功适配则返回该块的头部，否则继续向下一块寻找，直到最后一个块的头部。<br>这里唯一的技巧是需要保存上一次遍历过的块，所以当没有找到合适的块的时候，malloc函数可以很轻松地去扩展堆的尾部（长度）。代码逻辑很直接，<code>base</code>是一个全局指针变量，指向堆的开始位置：</p>
@@ -1899,6 +1947,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <p>如果不想看源码相关可直接跳过这部分，直接跟着“收尾”做自定义的tracker和模型（替换Teapot茶壶模型为自己的）</p>
 </blockquote>
 <p>为何要阅读源码？因为在<strong>Voforia</strong>的官方文档中我没有找到我自己想要的信息。所以我们需要通过阅读源码，来找到怎样才能去修改贴在目标图像中虚拟模型。以sample中<code>ImageTargetsViewController</code>为例来解读！<br>首先查看<code>ImageTargetsViewController.h</code>文件，我们先不看成员变量。先来看属性</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1930,11 +1979,13 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>从上表中出现的属性，我们先来分析一下属性<code>eaglView</code>和<code>vapp</code>。</p>
 <h4 id="SampleApplicationSession类"><a href="#SampleApplicationSession类" class="headerlink" title="SampleApplicationSession类"></a>SampleApplicationSession类</h4><p>在<code>ImageTargetsViewController</code>控制器类中，和下面会讲到的<code>ImageTargetsEAGLView</code>都有<code>SampleApplicationSession</code>类型的属性，所以我们有必要先来看看该类。同样的先看头文件，因为头文件能够让我们对于该类有大体的认识，而不拘于类具体的实现细节。<br>  粗略来看，提供了一个初始化方法；一个初始化AR的方法；四个对AR的操作方法（它们不是我们需要的重点，等到需要的时候再来仔细阅读）；以及一个对Camera的方法：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">- (id)initWithDelegate:(id&lt;SampleApplicationControl&gt;) delegate;</div><div class="line">- (void) initAR:(int) VuforiaInitFlags orientation:(UIInterfaceOrientation) ARViewOrientation;</div><div class="line">- (bool) startAR:(Vuforia::CameraDevice::CAMERA_DIRECTION) camera error:(NSError **)error;</div><div class="line">- (bool) pauseAR:(NSError **)error;</div><div class="line">- (bool) resumeAR:(NSError **)error;</div><div class="line">- (bool) stopAR:(NSError **)error;</div><div class="line">- (bool) stopCamera:(NSError **)error;</div></pre></td></tr></table></figure></p>
 <p>上述的initAR方法是通过异步实现的，当其AR初始化完成之后会调用方法下面会提到的代理方法<code>onInitARDone</code>。顺藤摸瓜，我们来看看该代理，那么该代理所需要处理的事务有哪些呢？这里先将<code>SampleApplicationControl</code>的所有方法先列出来：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">@required</div><div class="line">- (void) onInitARDone:(NSError *)error;</div><div class="line">- (bool) doInitTrackers;</div><div class="line">- (bool) doLoadTrackersData;</div><div class="line">- (bool) doStartTrackers;</div><div class="line">- (bool) doStopTrackers;</div><div class="line">- (bool) doUnloadTrackersData;</div><div class="line">- (bool) doDeinitTrackers;</div><div class="line">- (void)configureVideoBackgroundWithViewWidth:(float)viewWidth andHeight:(float)viewHeight;</div><div class="line"></div><div class="line">@optional</div><div class="line">- (void) onVuforiaUpdate: (Vuforia::State *) state;</div></pre></td></tr></table></figure></p>
 <p>该代理方法中大多是涉及到的是tracker。通过从初始化方法开始查看方法调用，得出了一个程序执行流程图，<br><img src="http://upload-images.jianshu.io/upload_images/619906-ae15fadf72afc1f8.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图-1"><br>我们主动调用<code>initAR</code>方法，其结果会由回调方法<code>onInitARDone</code>反应给开发者。开发者可以用通过调用<code>doInitTrackers</code>来控制是否需要去加载tracker数据，如果可以加载数据则通过调用回调方法<code>doLoadTrackersData</code>来获取数据。关于该类中其他几个方法<code>startAR , pauseAR, resumeAR, stopAR</code>由调用人员主动调用，调用这些方法会触发对应的方法回调。<br>现在我们需要把目光转向<code>ImageTargetsEAGLView</code>类，并去具体的看一下里面的相关细节。</p>
 <h4 id="SampleAppRenderer类"><a href="#SampleAppRenderer类" class="headerlink" title="SampleAppRenderer类"></a>SampleAppRenderer类</h4><p>这个类主要是做渲染相关的工作，其源码大多数为OpenGL。所以对于该类我只做具体的作用分析，而不去解释具体的源代码（因为我也不懂），如有需要的话，自行深究吧，哈哈哈😄。这里先将各个方法的作用罗列出来：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -1973,6 +2024,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>下面具体分析：老规矩，同样先看头文件，我们根据头文件暴露出来的方法一层一层往里剥。该类存在一个协议<code>SampleAppRendererControl</code>，和一个初始化方法<code>initWithSampleAppRendererControl</code>。使用这个方法需要传入一个遵守<code>SampleAppRendererControl</code>协议的类实例，第二个参数来决定<strong>VR/AR</strong>的模式，以及三个用于决定投影矩阵的参数。除了在初始化方法设置投影矩阵的参数，该类提供了一个public方法<code>setNearPlane:farPlane:</code>。进入到.mm文件中查看该初始化方法可以看出，只是对类内部私有属性进行相关的赋值操作以及对硬件设备进行相关的设置吧。<br>  现在来看看方法<code>initRendering</code>，这个方法里面主要是做了一些OpenGLES的东西，我们只需要知道里面做了一些和具体业务逻辑无关的东西就行了。<br>  接下来看<code>renderFrameVuforia</code>的作用是什么？源代码中说的很清楚：使用OpenGL绘制当前帧，<strong>当需要将当前帧渲染到屏幕上时</strong>，Vuforia会定期的在后台线程调用该方法。同样和业务逻辑无关，源码不细看。同样方法<code>renderVideoBackground</code>也是使用OpenGL来做，我们只需要从该方法的名字得知其用途（后台渲染视频）即可。<br>  <code>configureVideoBackgroundWithViewWidth:andHeight:</code>方法从名字就可以知道其作用。<code>updateRenderingPrimitives</code>方法的作用是：当屏幕尺寸发生改变或者是设备朝向改变之后，调用该方法来更新渲染原始数据。<br>  最后需要介绍一下该类很重要的的一个协议方法：<code>renderFrameWithState</code>，该方法被用于获取渲染相关的数据。通过对.mm文件可知，每渲染一次都会调用该方法一次。</p>
 <h4 id="ImageTargetsEAGLView类"><a href="#ImageTargetsEAGLView类" class="headerlink" title="ImageTargetsEAGLView类"></a>ImageTargetsEAGLView类</h4><p>该类的头文件所暴露出来的初始化方法<code>- (id)initWithFrame:(CGRect)frame appSession:(SampleApplicationSession *) app</code>，我们以该方法入手来分析。第一个参数为当前视图的大小设置，第二个参数为前面我们讲到过的一个类实例。头文件中余下的方法还有：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">- (void)finishOpenGLESCommands;</div><div class="line">- (void)freeOpenGLESResources;</div><div class="line"></div><div class="line">- (void) setOffTargetTrackingMode:(BOOL) enabled;</div><div class="line">- (void) configureVideoBackgroundWithViewWidth:(float)viewWidth andHeight:(float)viewHeight;</div><div class="line">- (void) updateRenderingPrimitives;</div></pre></td></tr></table></figure></p>
 <p>方法<code>finishOpenGLESCommands , freeOpenGLESResources</code>分别对应着结束OpenGL和释放OpenGL的资源。configureVideoBackgroundWithViewWidth:andHeight: , updateRenderingPrimitives和类SampleAppRenderer公开的方法名一样，这里我猜测它们作用是一样的。<code>setOffTargetTrackingMode:</code>方法作用目前还不是很清晰，需要去.mm文件中详查。<br>  现在进入实现文件中，源码中提到了关于OpenGL线程安全的问题。iOS上的OpenGL ES是线程不安全的，在程序中Vuforia使用下面的方法来保证线程（OpenGL 上下文）安全：</p>
@@ -2128,6 +2180,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <p><code>dispatch_time()</code>函数第二个参数接受的是<strong> 基于纳秒级别的数值 </strong>。</p>
 </blockquote>
 <p>这时候就需要将具体的数字乘以一个常数，在<a href="https://developer.apple.com/documentation/dispatch/dispatch_time_multiplier_constants?language=objc" target="_blank" rel="external">官方文档</a>中列出了相关的常数。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2154,6 +2207,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">/// 使用相对时间，相对于现在延迟五秒</div><div class="line">dispatch_time_t time_t = dispatch_time(DISPATCH_TIME_NOW, 5 * NSEC_PER_SEC);</div><div class="line">dispatch_after(time_t, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Run&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
 <p>如果我们想要该代码块延迟到某一指定时刻去执行，我们只需要去修改<code>dispatch_after</code>中的<code>dispatch_time_t</code>类型中值，在这里我们使用函数<code>dispatch_walltime</code>来获取绝对的时间戳值。<code>dispatch_walltime()</code>函数的一个参数是<code>struct timespec</code>类型的一个变量，它是一个结构：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">_STRUCT_TIMESPEC</div><div class="line">&#123;</div><div class="line">	__darwin_time_t  tv_sec;</div><div class="line">	long  tv_nsec;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
@@ -2232,7 +2286,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
     <published>2017-07-29T10:33:29.000Z</published>
     <updated>2017-07-29T11:55:28.000Z</updated>
     
-    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。（建议在PC端浏览）<br>  <a id="more"></a><br>  包括使用较少的<code>dispatch_qos_class_t 、dispatch_block_t</code>等等知识点。<br>  GCD任务队列能够让开发者能够更加专注于同步或者异步任务task，而不用把重点放在创建线程和具体同步和加锁等相关操作。但是如果我们想异步做更加灵活的任务的话（比如后台任务之类的），那选择线程肯定是更好的选择。毕竟操作简单带来就是灵活性的确实嘛！首先先来看看派发队列。<br>  当用户向某一线程提交一个task时，<strong>_dispatch_queue<em>t</em></strong>作为任务队列以用户期望的方式来管理这些task。 管理的任务的方式有两种类型，分别是串行队列(<code>DISPATCH_QUEUE_SERIAL</code>)和并行队列(<code>DISPATCH_QUEUE_CONCURRENT</code>)，它们两个是由宏定义的。 <br></p>
+    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。（建议在PC端浏览）<br>  <a id="more"></a><br>  包括使用较少的<code>dispatch_qos_class_t 、dispatch_block_t</code>等等知识点。<br>  GCD任务队列能够让开发者能够更加专注于同步或者异步任务task，而不用把重点放在创建线程和具体同步和加锁等相关操作。但是如果我们想异步做更加灵活的任务的话（比如后台任务之类的），那选择线程肯定是更好的选择。毕竟操作简单带来就是灵活性的确实嘛！首先先来看看派发队列。<br>  当用户向某一线程提交一个task时，<strong>_dispatch_queue_t_</strong>作为任务队列以用户期望的方式来管理这些task。 管理的任务的方式有两种类型，分别是串行队列(<code>DISPATCH_QUEUE_SERIAL</code>)和并行队列(<code>DISPATCH_QUEUE_CONCURRENT</code>)，它们两个是由宏定义的。 <br></p>
 <hr>
 <h4 id="一、获取任务队列"><a href="#一、获取任务队列" class="headerlink" title="一、获取任务队列"></a>一、获取任务队列</h4><p>现在问题来了，我们既然知道有这么一个类型了，那我们总要有方式来得到它啊是吧。就目前而言，Apple给我们提供获取该类型变量的方式有三种，分别是：</p>
 <ul>
@@ -2257,6 +2311,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <blockquote>
 <p>在官方文档中也说，关于QOS的只能在iOS8以后使用</p>
 </blockquote>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2298,7 +2353,9 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>上诉QOS对应OC参数如下：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2325,11 +2382,13 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>在dispatch_queue中，如果我们想要指定QOS的等级的话，我们可以使用函数<a href="https://developer.apple.com/documentation/dispatch/1453028-dispatch_queue_attr_make_with_qo" target="_blank" rel="external">dispatch_queue_attr_make_with_qos_class</a>。在创建任务队列时使用方法如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_attr_t attr_qos = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INTERACTIVE, 0);</div><div class="line">dispatch_queue_t queue = dispatch_queue_create(&quot;com.example.gcd&quot;, attr_qos);</div></pre></td></tr></table></figure>
 <p>因为 <strong>QOS对于<code>dispatch_queue</code>来说是无法变更的属性</strong>，以致于我们无法去更改已存在任务队列的QOS属性。但是我们可以使用<code>dispatch_queue_get_qos_class</code>函数来获取任务队列的QOS：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">dispatch_qos_class_t qos_class = dispatch_queue_get_qos_class(the_queue, 0);</div><div class="line">/// 一般用于 根据已知队列来获取同qos等级的全局任务队列</div><div class="line">dispatch_get_global_queue(dispatch_queue_get_qos_class(the_queue, nil), 0);</div><div class="line">/// 或者是 根据已知的全局任务队列来创建与其qos相等的任务队列</div><div class="line">dispatch_queue_t the_global = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);</div><div class="line">dispatch_queue_t the_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, dispatch_queue_get_qos_class(the_global, 0), 0));</div></pre></td></tr></table></figure>
 <p>当我们要获取全局队列时，在此之前可以使用<code>DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND</code>。现在我们可以使用QOS来获取一个全局的并发任务队列，因此我们有必要来了解一下它们之间的差异和共性：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2360,11 +2419,12 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>具体使用方法如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);</div></pre></td></tr></table></figure>
 <p> 除此之外，我们还可以在<code>dispatch_block</code>中对每一个人任务块来设置Qos等级，这里我先将<code>dispatch_block</code>提出来，后面我会对其进行较为详细的解释。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t the_block = dispatch_block_create_with_qos_class(0, QOS_CLASS_UTILITY, -8, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div><div class="line">dispatch_async(the_queue, the_block);///dispatch_sync, dispatch_after等等需要用到dispatch_block的地方</div></pre></td></tr></table></figure>
-<h4 id="三、创建任务"><a href="#三、创建任务" class="headerlink" title="三、创建任务"></a>三、创建任务</h4><p>  前面两点说了任务的执行地点和怎样来创建和配置任务的执行地点，但是我们必须得知道任务是什么？怎么创建任务？在GCD中使用block来作为任务提交给特定的任务队列，例如<strong>_dispatch_block<em>t</em></strong>或者直接是一个简单的block。<br>对于<code>dispatch_block_t</code>类型的变量，首先我们得要知道怎么去创建它。首先根据我们的尝试（下面的例子出自<a href="https://developer.apple.com/documentation/dispatch/dispatch_block_t" target="_blank" rel="external">Apple官方</a>），对block进行直接赋值：</p>
+<h4 id="三、创建任务"><a href="#三、创建任务" class="headerlink" title="三、创建任务"></a>三、创建任务</h4><p>  前面两点说了任务的执行地点和怎样来创建和配置任务的执行地点，但是我们必须得知道任务是什么？怎么创建任务？在GCD中使用block来作为任务提交给特定的任务队列，例如<strong>_dispatch_block_t_</strong>或者直接是一个简单的block。<br>对于<code>dispatch_block_t</code>类型的变量，首先我们得要知道怎么去创建它。首先根据我们的尝试（下面的例子出自<a href="https://developer.apple.com/documentation/dispatch/dispatch_block_t" target="_blank" rel="external">Apple官方</a>），对block进行直接赋值：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t error_block;</div><div class="line">NSInteger x = 0;</div><div class="line">if (x) &#123;</div><div class="line">        error_block = ^void(void)&#123;</div><div class="line">            NSLog(@&quot;TRUE&quot;);</div><div class="line">        &#125;;</div><div class="line">&#125;else&#123;</div><div class="line">        error_block = ^void(void)&#123;</div><div class="line">            NSLog(@&quot;FALSE&quot;);</div><div class="line">        &#125;;</div><div class="line">&#125;</div><div class="line">error_block();/// unsafe</div></pre></td></tr></table></figure>
 <p>  官网中解释到：“ 由于该<code>dispatch_block_t</code>变量是在栈内存上声明的，如果执行过该变量作用域之后就有可能导致该变量被释放 ”。到这里我们还是不得不提一下<code>block</code>在MRC和ARC下的区别，我们先看一篇<a href="http://blog.parse.com/learn/engineering/objective-c-blocks-quiz/" target="_blank" rel="external">测试</a>，在这篇测试中很明显的一个点便是：“ MRC中有NSStackBlock类型，NSMallocBlock类型，NSGlobalBlock类型同时存在。但是在ARC中不再存在NSStackBlock类型，而是直接声明为NSMallocBlock类型” 。也就是说在ARC中就算是在函数方法中声明的block变量也是被声明为NSMallocBlock类型。<br>  NSMallocBlock类型就不存在上诉官网中提到的变量被提前释放的问题，这一步我并没有去实践，所以上诉结论是否为真，既然官方不建议这么做，那便放弃使用该方法。使用一下两种方式来创建<code>dispatch_block_t</code>变量：</p>
 <ul>
@@ -2372,6 +2432,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <li><strong><em>dispatch_block_create_with_qos_class</em></strong></li>
 </ul>
 <p>当我们在使用上诉两种方法来创建<code>dispatch_block_t</code>变量时，遇到的第一个便是<code>dispatch_block_flags_t</code>参数。它是一个枚举类型：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2406,6 +2467,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>来创建<code>dispatch_block</code>变量：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">/// 第一种使用QOS的方式来创建dispatch_block</div><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);</div><div class="line">&#125;);</div><div class="line">/// 直接创建dispatch_block</div><div class="line">dispatch_block_create(DISPATCH_BLOCK_NO_QOS_CLASS, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
 <p>对于<code>dispatch_block_create_with_qos_class</code>方法中relative_priority的参数的规则是：<code>relative_priority</code>的值需要在0到<code>QOS_MIN_RELATIVE_PRIORITY</code>（-15）之间。<br>  我们<strong>创建的block会被拷贝到堆上，并由<code>dispatch_block_t</code>类型的变量所持有</strong>。创建完成之后，我们可以将其提交到对应的任务队列中（下一节提到的dispatch_async等等函数…），也可以直接去执行（比如：task_block()）。<br>  既然可以直接去输入一个block块，那为什么我们还需要去使用<code>dispatch_block_t</code>？存在即有价值，那么最明显的优势便是：我们可以对该任务块执行<strong>取消操作</strong>！例如：</p>
@@ -2420,7 +2482,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_async(dispatch_get_main_queue(), task_block);</div><div class="line">NSLog(@&quot;Before Wait&quot;);</div><div class="line">dispatch_block_wait(task_block, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;After Wait&quot;);</div></pre></td></tr></table></figure>
 <p>此时运行并不会得到<code>Start</code>。由于<code>dispatch_block_wait</code>函数是使用的同步的方式，只要是在该线程的执行流中，它不管你是同步提交还是异步提交（这两种提交方式在下面一节马上会讲）的方式，<code>dispatch_block_wait</code>函数如果是在被执行的block之前执行，后续的代码都会被挂起，并不仅仅是<code>dispatch_block_wait</code>函数后的代码，也包括block中的代码。因此也就导致了在同一个任务队列中（都处于main_queue中）的<code>dispatch_block_t</code>永远不会执行。解决办法也很简单，第一种我们先让block执行起来；第二种我们让它们处在不同队列中即可：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_queue_t block_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_async(block_queue, task_block);</div><div class="line">NSLog(@&quot;Before Wait&quot;);</div><div class="line">dispatch_block_wait(task_block, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;After Wait&quot;);</div></pre></td></tr></table></figure>
-<p>我们可以利用这个方法来做由异步转同步的需求（后面还会介绍<code>dispatch_semaphore_t</code>，它同样可以达到这个效果）。<br>  最后来看一下函数<strong>_dispatch_block<em>notify</em></strong>，它的作用是当指定的<code>dispatch_block_t</code>变量执行完了之后，通知到给特定的任务队列。在上面的例子中，我们在<code>block_queue</code>中去执行了我们的任务块，但是我们想要在它执行完了以后在<code>main_queue</code>中来执行相关的操作，比如我们需要在<code>main_queue</code>中更新UI界面之类的：</p>
+<p>我们可以利用这个方法来做由异步转同步的需求（后面还会介绍<code>dispatch_semaphore_t</code>，它同样可以达到这个效果）。<br>  最后来看一下函数<strong>_dispatch_block_notify_</strong>，它的作用是当指定的<code>dispatch_block_t</code>变量执行完了之后，通知到给特定的任务队列。在上面的例子中，我们在<code>block_queue</code>中去执行了我们的任务块，但是我们想要在它执行完了以后在<code>main_queue</code>中来执行相关的操作，比如我们需要在<code>main_queue</code>中更新UI界面之类的：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_queue_t block_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_async(block_queue, task_block);</div><div class="line">dispatch_block_notify(task_block, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Notify&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
 <h4 id="四、将任务提交到队列"><a href="#四、将任务提交到队列" class="headerlink" title="四、将任务提交到队列"></a>四、将任务提交到队列</h4><p>  在文章的最后，我们来看看怎样把已经创建好的任务提交到特定的任务队列中去！对于提交操作主要涉及到的函数有：<strong>dispatch_async、dispatch_sync、dispatch_block_perform、dispatch_group_async、dispatch_barrier_async、dispatch_barrier_sync</strong>。在这篇文章中先讲前面三个。再后面文章中详解dispatch_group_t、dispatch_barrier时在进行对应的学习。<br>  <code>dispatch_async</code>使用异步地方式去提交任务块，何为异步？异步方法调用它通过使用一种立即返回的异步的变体并提供额外的方法来支持接受完成通知以及完成等待改进长期运行的(同步)方法（出自<a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E6%AD%A5%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8" target="_blank" rel="external">维基百科</a>）。<code>dispatch_sync</code>使用同步的方式取提交任务块。下图是根据我自己的理解来解释了一下异步和同步的差异性。<br></p>
 <p><img src="http://upload-images.jianshu.io/upload_images/619906-601bf2002a932ad4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="异步和同步的对比"><br>上诉函数分别有对应的版本，分别是<code>dispatch_async_f、dispatch_sync_f</code>。它们两个和前面的区别在于，这两个函数不使用block的方式，而是使用C函数指针的方式来执行任务。它们中的<strong>context</strong>是以<code>void *</code>类型的变量作为参数，传递给函数指针指向的具体函数。</p>
@@ -2460,57 +2522,57 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
     <published>2017-05-09T14:20:26.000Z</published>
     <updated>2018-05-18T15:51:34.000Z</updated>
     
-    <content type="html"><![CDATA[<p>  什么是最大堆和最小堆？最大（小）堆是指在树中，存在一个结点而且该结点有儿子结点，该结点的data域值都不小于（大于）其儿子结点的data域值，并且它是一个完全二叉树（不是满二叉树）。<br><a id="more"></a><br>  注意区分选择树，因为<strong><em>选择树（selection tree）</em></strong>概念和最小堆有些类似，他们都有一个特点是<strong><em>“树中的根结点都表示树中的最小元素结点”</em></strong>。同理最大堆的根结点是树中元素最大的。那么来看具体的看一下它长什么样？（最小堆这里省略）<br><img src="http://upload-images.jianshu.io/upload_images/619906-6866218c0158cfdc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图-1"></p>
+    <content type="html"><![CDATA[<p>  什么是最大堆和最小堆？最大（小）堆是指在树中，存在一个结点而且该结点有儿子结点，该结点的data域值都不小于（大于）其儿子结点的data域值，并且它是一个完全二叉树（不是满二叉树）。<br><a id="more"></a><br>  注意区分选择树，因为<strong>_选择树（selection tree）_</strong>概念和最小堆有些类似，他们都有一个特点是<strong>_“树中的根结点都表示树中的最小元素结点”_</strong>。同理最大堆的根结点是树中元素最大的。那么来看具体的看一下它长什么样？（最小堆这里省略）<br><img src="http://upload-images.jianshu.io/upload_images/619906-6866218c0158cfdc.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="图-1"></p>
 <blockquote>
 <p>这里需要注意的是：在多个子树中，并不是说其中一个子树的父结点一定大于另一个子树的儿子结点。最大堆是树结构，而且一定要是完全二叉树。</p>
 </blockquote>
 <h4 id="最大堆ADT"><a href="#最大堆ADT" class="headerlink" title="最大堆ADT"></a>最大堆ADT</h4><p>那么我们在做最大堆的抽象数据类型（ADT）时就需要考虑三个操作：<br>（1）、创建一个最大堆；<br>（2）、最大堆的插入操作；<br>（3）、最大堆的删除操作；<br>最大堆ADT如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">struct Max_Heap &#123;</div><div class="line">  object: 由多个元素组成的完全二叉树，其每个结点都不小于该结点的子结点关键字值</div><div class="line">  functions:</div><div class="line">    其中heap∈Max_Heap,n,max_size∈int,Element为堆中的元素类型，item∈ Element</div><div class="line">    Max_Heap createHeap(max_size)       := 创建一个总容量不大于max_size的空堆</div><div class="line">    void max_heap_insert(heap, item ,n) := 插入一个元素到heap中</div><div class="line">    Element max_heap_delete(heap,n)     := if(heap不为空) &#123;return 被删除的元素 &#125;else&#123;return NULL&#125;</div><div class="line">&#125;</div><div class="line">///其中:=符号组读作“定义为”</div></pre></td></tr></table></figure>
-<h4 id="最大堆内存表现形式"><a href="#最大堆内存表现形式" class="headerlink" title="最大堆内存表现形式"></a>最大堆内存表现形式</h4><p>  我们只是简单的定义了最大堆的ADT，为了能够用代码实现它就必须要考虑最大堆的内存表现形式。从最大堆的定义中，我们知道不管是对最大堆做插入还是删除操作，<strong>我们必须要保证插入或者删除完成之后，该二叉树仍然是一个完全二叉树</strong>。基于此，我们就必须要去操作某一个结点的父结点。<br>  第一种方式，我们使用链表的方式来实现，那么我们需要添加一个额外的指针来指向该结点的父结点。此时就包括了左子结点指针、右子结点指针和父结点指针，那么空链的数目有可能是很大的，比如叶子结点的左右子结点指针和根结点的父结点指针，所以不选择这种实现方式（关于用链表实现一般二叉树时处理左右子结点指针的问题在线索二叉树中有提及）。<br>  第二种方式，使用数组实现，在二叉树进行遍历的方法分为：先序遍历、中序遍历、后序遍历和层序遍历。我们可以通过层序遍历的方式将二叉树结点存储在数组中，由于最大堆是完全二叉树不会存在数组的空间浪费。那么来看看层序遍历是怎么做的？对下图的最大堆进行层序遍历：<br><img src="http://upload-images.jianshu.io/upload_images/619906-f1c0ab6c89bc68d7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br><img src="http://upload-images.jianshu.io/upload_images/619906-4ef737815fce2175.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="层序遍历流程变化">从这里可以看出最后得到的顺序和上面图中所标的顺序是一样的。<br>  那么对于数组我们怎么操作父结点和左右子结点呢？对于完全二叉树采用顺序存储表示，那么对于任意一个下标为i(1 ≤ i ≤ n)的结点：<br>（1）、父结点为：<strong><em>i / 2（i ≠ 1）</em></strong>，若i = 1，则i是根节点。<br>（2）、左子结点：<strong><em>2i（2i ≤ n）</em></strong>， 若不满足则无左子结点。<br>（3）、右子结点：<strong><em>2i + 1(2i + 1 ≤ n)</em></strong>，若不满足则无右子结点。<img src="http://upload-images.jianshu.io/upload_images/619906-4fc0e1d7aa95f1de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<h4 id="最大堆内存表现形式"><a href="#最大堆内存表现形式" class="headerlink" title="最大堆内存表现形式"></a>最大堆内存表现形式</h4><p>  我们只是简单的定义了最大堆的ADT，为了能够用代码实现它就必须要考虑最大堆的内存表现形式。从最大堆的定义中，我们知道不管是对最大堆做插入还是删除操作，<strong>我们必须要保证插入或者删除完成之后，该二叉树仍然是一个完全二叉树</strong>。基于此，我们就必须要去操作某一个结点的父结点。<br>  第一种方式，我们使用链表的方式来实现，那么我们需要添加一个额外的指针来指向该结点的父结点。此时就包括了左子结点指针、右子结点指针和父结点指针，那么空链的数目有可能是很大的，比如叶子结点的左右子结点指针和根结点的父结点指针，所以不选择这种实现方式（关于用链表实现一般二叉树时处理左右子结点指针的问题在线索二叉树中有提及）。<br>  第二种方式，使用数组实现，在二叉树进行遍历的方法分为：先序遍历、中序遍历、后序遍历和层序遍历。我们可以通过层序遍历的方式将二叉树结点存储在数组中，由于最大堆是完全二叉树不会存在数组的空间浪费。那么来看看层序遍历是怎么做的？对下图的最大堆进行层序遍历：<br><img src="http://upload-images.jianshu.io/upload_images/619906-f1c0ab6c89bc68d7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br><img src="http://upload-images.jianshu.io/upload_images/619906-4ef737815fce2175.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="层序遍历流程变化">从这里可以看出最后得到的顺序和上面图中所标的顺序是一样的。<br>  那么对于数组我们怎么操作父结点和左右子结点呢？对于完全二叉树采用顺序存储表示，那么对于任意一个下标为i(1 ≤ i ≤ n)的结点：<br>（1）、父结点为：<strong>_i / 2（i ≠ 1）_</strong>，若i = 1，则i是根节点。<br>（2）、左子结点：<strong>_2i（2i ≤ n）_</strong>， 若不满足则无左子结点。<br>（3）、右子结点：<strong>_2i + 1(2i + 1 ≤ n)_</strong>，若不满足则无右子结点。<img src="http://upload-images.jianshu.io/upload_images/619906-4fc0e1d7aa95f1de.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
 <blockquote>
-<p>最终我们选择<strong><em>数组</em></strong>作为最大堆的内存表现形式。</p>
+<p>最终我们选择<strong>_数组_</strong>作为最大堆的内存表现形式。</p>
 </blockquote>
 <p>基本定义:</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">#define MAX_ELEMENTS 20</div><div class="line">#define HEAP_FULL(n) (MAX_ELEMENTS - 1 == n)</div><div class="line">#define HEAP_EMPTY(n) (!n)</div><div class="line">typedef struct &#123;</div><div class="line">    int key;</div><div class="line">&#125;element;</div><div class="line">element heap[MAX_ELEMENTS];</div></pre></td></tr></table></figure>
 <p>下面来看看最大堆的插入、删除和创建这三个最基本的操作。</p>
 <h3 id="最大堆的插入"><a href="#最大堆的插入" class="headerlink" title="最大堆的插入"></a>最大堆的插入</h3><p>最大堆的插入操作可以简单看成是<strong>“结点上浮”</strong>。当我们在向最大堆中插入一个结点我们必须满足完全二叉树的标准，那么被插入结点的位置的是固定的。而且要满足父结点关键字值不小于子结点关键字值，那么我们就需要去移动父结点和子结点的相互位置关系。具体的位置变化，可以看看下面我画的一个简单的图。</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">void insert_max_heap(element item ,int *n)&#123;</div><div class="line">    if(HEAP_FULL(*n))&#123;</div><div class="line">      return;</div><div class="line">    &#125;</div><div class="line">    int i = ++(*n);</div><div class="line">    for(;(i != 1) &amp;&amp; (item.key &gt; heap[i/2].key);i = i / 2)&#123;/// i ≠ 1是因为数组的第一个元素并没有保存堆结点</div><div class="line">      heap[i] = heap[i/2];/// 这里其实和递归操作类似，就是去找父结点</div><div class="line">    &#125;</div><div class="line">    heap[i] = item;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p><img src="http://upload-images.jianshu.io/upload_images/619906-5ee33c128001bd5f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>由于堆是一棵完全二叉树，存在n个元素，那么他的高度为:<strong><em>log2(n+1)</em></strong>，这就说明代码中的for循环会执行<strong><em>O(log2(n))</em></strong>次。因此插入函数的时间复杂度为：<strong><em>O(log2(n))</em></strong>。</p>
-<h3 id="最大堆的删除"><a href="#最大堆的删除" class="headerlink" title="最大堆的删除"></a>最大堆的删除</h3><p><strong>最大堆的删除操作，总是从堆的根结点删除元素</strong>。同样根元素被删除之后为了能够保证该树还是一个完全二叉树，我们需要来移动完全二叉树的最后一个结点，让其继续符合完全二叉树的定义，从这里可以看作是<strong><em>最大堆最后一个结点的下沉</em></strong>操作。例如在下面的最大堆中执行删除操作：<br><img src="http://upload-images.jianshu.io/upload_images/619906-2b9aae16dedbf7fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p><img src="http://upload-images.jianshu.io/upload_images/619906-5ee33c128001bd5f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>由于堆是一棵完全二叉树，存在n个元素，那么他的高度为:<strong>_log2(n+1)_</strong>，这就说明代码中的for循环会执行<strong>_O(log2(n))_</strong>次。因此插入函数的时间复杂度为：<strong>_O(log2(n))_</strong>。</p>
+<h3 id="最大堆的删除"><a href="#最大堆的删除" class="headerlink" title="最大堆的删除"></a>最大堆的删除</h3><p><strong>最大堆的删除操作，总是从堆的根结点删除元素</strong>。同样根元素被删除之后为了能够保证该树还是一个完全二叉树，我们需要来移动完全二叉树的最后一个结点，让其继续符合完全二叉树的定义，从这里可以看作是<strong>_最大堆最后一个结点的下沉_</strong>操作。例如在下面的最大堆中执行删除操作：<br><img src="http://upload-images.jianshu.io/upload_images/619906-2b9aae16dedbf7fe.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">解答：</div><div class="line">1）、对于最大堆的删除，我们不能自己进行选择删除某一个结点，我们只能删除堆的根结点。因此在图a中，我们删除根结点20；</div><div class="line">2）、当删除根结点20之后明显不是一个完全二叉树，更确切地说被分成了两棵树。</div><div class="line">3）、我们需要移动子树的某一个结点来充当该树的根节点，那么在(15,2,14,10,1)这些结点中移动哪一个呢？显然是移动结点1，如果移动了其他结点（比如14，10）就不再是一个完全二叉树了。</div><div class="line">4）、此时在结点（15，2）中选择较大的一个和1做比较，即15 &gt; 1的，所以15上浮到之前的20的结点处。</div><div class="line">5）、同第4步类似，找出（14，10）之间较大的和1做比较，即14&gt;1的，所以14上浮到原来15所处的结点。</div><div class="line">6）、因为原来14的结点是叶子结点，所以将1放在原来14所处的结点处。</div></pre></td></tr></table></figure>
 <p><img src="http://upload-images.jianshu.io/upload_images/619906-cd7ca08102c205b7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>这图中是用<code>temp</code>分别和图中的<code>max</code>做比较，来看<code>temp</code>是否会下沉</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">element delete_max_heap(int *n)&#123;</div><div class="line">  int parent, child;</div><div class="line">  element temp, item;</div><div class="line">  temp = heap[(*n)--];</div><div class="line">  item = heap[1];</div><div class="line">  parent = 1,child=2;</div><div class="line">  for(;child &lt;= *n; child = child * 2)&#123;</div><div class="line">   if( (child &lt; *n) &amp;&amp; heap[child].key &lt; heap[child+1].key)&#123;/// 这一步是为了看当前结点是左子结点大还是右子结点大，然后选择较大的那个子结点</div><div class="line">        child++;</div><div class="line">      &#125;</div><div class="line">      if(temp.key &gt;= heap[child].key)&#123;</div><div class="line">        break;</div><div class="line">      &#125;</div><div class="line">      heap[parent] = heap[child];///这就是上图中第二步和第三步中黄色部分操作</div><div class="line">      parent = child;/// 这其实就是一个递归操作，让parent指向当前子树的根结点</div><div class="line">   &#125;</div><div class="line">  heap[parent] = temp;</div><div class="line">  return item;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>同最大堆的插入操作类似，同样包含n个元素的最大堆，其高度为:<strong><em>log2(n+1)</em></strong>，其时间复杂度为：<strong><em>O(log2(n))</em></strong>。</p>
+<p>同最大堆的插入操作类似，同样包含n个元素的最大堆，其高度为:<strong>_log2(n+1)_</strong>，其时间复杂度为：<strong>_O(log2(n))_</strong>。</p>
 <blockquote>
 <p>总结：由此可以看出，在已经确定的最大堆中做删除操作，被删除的元素是固定的，需要被移动的结点也是固定的，这里我说的被移动的元素是指最初的移动，即最大堆的最后一个元素。移动方式为从最大的结点开始比较。</p>
 </blockquote>
-<h3 id="最大堆的创建"><a href="#最大堆的创建" class="headerlink" title="最大堆的创建"></a>最大堆的创建</h3><p>为什么要把最大堆的创建放在最后来讲？因为在堆的创建过程中，有两个方法。会分别用到最大堆的插入和最大堆的删除原理。创建最大堆有两种方法：<br>（1）、先创建一个空堆，然后根据元素一个一个去插入结点。由于插入操作的时间复杂度为<strong><em>O(log2(n))</em></strong>，那么n个元素插入进去，总的时间复杂度为<strong><em>O(n * log2(n))</em></strong>。<br>（2）、将这n个元素先顺序放入一个二叉树中形成一个完全二叉树，然后来调整各个结点的位置来满足最大堆的特性。<br>现在我们就来试一试第二种方法来创建一个最大堆：假如我们有12个元素分别为：</p>
+<h3 id="最大堆的创建"><a href="#最大堆的创建" class="headerlink" title="最大堆的创建"></a>最大堆的创建</h3><p>为什么要把最大堆的创建放在最后来讲？因为在堆的创建过程中，有两个方法。会分别用到最大堆的插入和最大堆的删除原理。创建最大堆有两种方法：<br>（1）、先创建一个空堆，然后根据元素一个一个去插入结点。由于插入操作的时间复杂度为<strong>_O(log2(n))_</strong>，那么n个元素插入进去，总的时间复杂度为<strong>_O(n * log2(n))_</strong>。<br>（2）、将这n个元素先顺序放入一个二叉树中形成一个完全二叉树，然后来调整各个结点的位置来满足最大堆的特性。<br>现在我们就来试一试第二种方法来创建一个最大堆：假如我们有12个元素分别为：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">&#123;79,66,43,83,30,87,38,55,91,72,49,9&#125;</div></pre></td></tr></table></figure>
 <p>将上诉15个数字放入一个二叉树中，确切地说是放入一个完全二叉树中，如下：<br><img src="http://upload-images.jianshu.io/upload_images/619906-f14895940e2c1ded.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>但是这明显不符合最大堆的定义，所以我们需要让该完全二叉树转换成最大堆！怎么转换成一个最大堆呢？<br>  最大堆有一个特点就是<strong>其各个子树都是一个最大堆</strong>，那么我们就可以从把最小子树转换成一个最大堆，然后依次转换它的父节点对应的子树，直到最后的根节点所在的整个完全二叉树变成最大堆。那么从哪一个子树开始调整？</p>
 <blockquote>
 <p>我们从该完全二叉树中的最后一个非叶子节点为根节点的子树进行调整，然后依次去找倒数第二个倒数第三个非叶子节点…</p>
 </blockquote>
-<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>在做最大堆的创建具体步骤中，我们会用到最大堆删除操作中结点位置互换的原理，<strong><em>即关键字值较小的结点会做下沉操作</em></strong>。</p>
+<h4 id="具体步骤"><a href="#具体步骤" class="headerlink" title="具体步骤"></a>具体步骤</h4><p>在做最大堆的创建具体步骤中，我们会用到最大堆删除操作中结点位置互换的原理，<strong>_即关键字值较小的结点会做下沉操作_</strong>。</p>
 <ul>
-<li>1）、就如同上面所说找到二叉树中倒数第一个非叶子结点<code>87</code>，然后看以该非叶子结点为根结点的子树。查看该子树是否满足最大堆要求，很明显目前该子树满足最大堆，所以我们不需要移动结点。<strong><em>该子树最大移动次数为1</em></strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-dfabe32d4e8d1df1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
-<li>2）、现在来到结点<code>30</code>，明显该子树不满足最大堆。在该结点的子结点较大的为<code>72</code>，所以结点72和结点30进行位置互换。<strong><em>该子树最大移动次数为1</em></strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-15d2b9fc8dde0ddf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
-<li>3）、同样对结点<code>83</code>做类似的操作。<strong><em>该子树最大移动次数为1</em></strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-7405036f2377c8b2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
-<li>4）、现在来到结点<code>43</code>，该结点的子结点有<code>{87,38,9}</code>，对该子树做同样操作。由于结点43可能是其子树结点中最小的，所以<strong><em>该子树最大移动次数为2</em></strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-ceeb433a5b997243.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
-<li>5）、结点<code>66</code>同样操作，<strong><em>该子树最大移动次数为2</em></strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-0a942422c933d117.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
-<li>6）、最后来到根结点<code>79</code>，该二叉树最高深度为4，所以<strong><em>该子树最大移动次数为3</em></strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-59de31f16ee7c2ba.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
+<li>1）、就如同上面所说找到二叉树中倒数第一个非叶子结点<code>87</code>，然后看以该非叶子结点为根结点的子树。查看该子树是否满足最大堆要求，很明显目前该子树满足最大堆，所以我们不需要移动结点。<strong>_该子树最大移动次数为1_</strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-dfabe32d4e8d1df1.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
+<li>2）、现在来到结点<code>30</code>，明显该子树不满足最大堆。在该结点的子结点较大的为<code>72</code>，所以结点72和结点30进行位置互换。<strong>_该子树最大移动次数为1_</strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-15d2b9fc8dde0ddf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
+<li>3）、同样对结点<code>83</code>做类似的操作。<strong>_该子树最大移动次数为1_</strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-7405036f2377c8b2.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
+<li>4）、现在来到结点<code>43</code>，该结点的子结点有<code>{87,38,9}</code>，对该子树做同样操作。由于结点43可能是其子树结点中最小的，所以<strong>_该子树最大移动次数为2_</strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-ceeb433a5b997243.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
+<li>5）、结点<code>66</code>同样操作，<strong>_该子树最大移动次数为2_</strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-0a942422c933d117.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
+<li>6）、最后来到根结点<code>79</code>，该二叉树最高深度为4，所以<strong>_该子树最大移动次数为3_</strong>。<br><img src="http://upload-images.jianshu.io/upload_images/619906-59de31f16ee7c2ba.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></li>
 </ul>
 <p>自此通过上诉步骤创建的最大堆为:<br><img src="http://upload-images.jianshu.io/upload_images/619906-c7887558467cf8c7.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
 <blockquote>
 <p>所以从上面可以看出，该二叉树总的需要移动结点次数最大为：<strong>10</strong>。</p>
 </blockquote>
 <h4 id="代码实现"><a href="#代码实现" class="headerlink" title="代码实现"></a>代码实现</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div></pre></td><td class="code"><pre><div class="line">void create_max_heap(void)&#123;</div><div class="line">    int total = (*heap).key;</div><div class="line">    /// 求倒数第一个非叶子结点</div><div class="line">    int child = 2,parent = 1;</div><div class="line">    for (int node = total/2;node &gt; 0; node--) &#123;</div><div class="line">        parent = node;</div><div class="line">        child = 2*node;</div><div class="line">        int max_node = 2*parent+1;</div><div class="line">        element temp = *(heap + parent);</div><div class="line">        for(;child &lt;= max_node &amp;&amp; max_node &lt;= total; child = child * 2,max_node = 2*parent+1)&#123;</div><div class="line">            if ((*(heap + child)).key &lt; (*(heap + child + 1)).key) &#123;/// 取右子结点</div><div class="line">                child++;</div><div class="line">            &#125;</div><div class="line">            if (temp.key &gt; (*(heap + child)).key) &#123;</div><div class="line">                break;</div><div class="line">            &#125;</div><div class="line">            *(heap + parent) = *(heap + child);</div><div class="line">            parent = child;</div><div class="line">        &#125;</div><div class="line">        *(heap + parent) = temp;</div><div class="line">    &#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">/**</div><div class="line"> *</div><div class="line"> * @param heap  最大堆；</div><div class="line"> * @param items 输入的数据源</div><div class="line"> * @return 1成功，0失败</div><div class="line"> */</div><div class="line">int create_binary_tree(element *heap,int items[MAX_ELEMENTS])&#123;</div><div class="line">    int total;</div><div class="line">    if (!items) &#123;</div><div class="line">        return 0;</div><div class="line">    &#125;</div><div class="line">    element *temp = heap;</div><div class="line">    heap++;</div><div class="line">    for (total = 1; *items;total++,(heap)++,items = items + 1) &#123;</div><div class="line">        element ele = &#123;*items&#125;;</div><div class="line">        element temp_key = &#123;total&#125;;</div><div class="line">        *temp = temp_key;</div><div class="line">        *heap = ele;</div><div class="line">    &#125;</div><div class="line">    return 1;</div><div class="line">&#125;</div><div class="line">///函数调用</div><div class="line">int items[MAX_ELEMENTS] = &#123;79,66,43,83,30,87,38,55,91,72,49,9&#125;;</div><div class="line">element *position = heap;</div><div class="line">create_binary_tree(position, items);</div><div class="line">for (int i = 0; (*(heap+i)).key &gt; 0; i++) &#123;</div><div class="line">  printf(&quot;binary tree element is %d\n&quot;,(*(heap + i)).key);</div><div class="line">&#125;</div><div class="line">create_max_heap();</div><div class="line">for (int i = 0; (*(heap+i)).key &gt; 0; i++) &#123;</div><div class="line">  printf(&quot;heap element is %d\n&quot;,(*(heap + i)).key);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>上诉代码在我机器上能够成功的构建一个最大堆。由于该完全二叉树存在n个元素，那么他的高度为:<strong><em>log2(n+1)</em></strong>，这就说明代码中的for循环会执行<strong><em>O(log2(n))</em></strong>次。因此其时间复杂度为：<strong><em>O(log2(n))</em></strong>。</p>
-<h3 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a>堆排序</h3><p>  堆排序要比空间复杂度为<strong><em>O(n)</em></strong>的归并排序要慢一些，但是要比空间复杂度为<strong><em>O(1)</em></strong>的归并排序要快！<br>  通过上面<strong>最大堆创建</strong>一节中我们能够创建一个最大堆。出于该最大堆太大，我将其进行缩小以便进行画图演示。<br><img src="http://upload-images.jianshu.io/upload_images/619906-8b1f79e817875e10.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>最大堆的排序过程其实是和最大堆的删除操作类似，由于最大堆的删除只能在根结点进行，当将根结点删除完成之后，就是将剩下的结点进行整理让其符合最大堆的标准。</p>
+<p>上诉代码在我机器上能够成功的构建一个最大堆。由于该完全二叉树存在n个元素，那么他的高度为:<strong>_log2(n+1)_</strong>，这就说明代码中的for循环会执行<strong>_O(log2(n))_</strong>次。因此其时间复杂度为：<strong>_O(log2(n))_</strong>。</p>
+<h3 id="堆排序"><a href="#堆排序" class="headerlink" title="堆排序"></a>堆排序</h3><p>  堆排序要比空间复杂度为<strong>_O(n)_</strong>的归并排序要慢一些，但是要比空间复杂度为<strong>_O(1)_</strong>的归并排序要快！<br>  通过上面<strong>最大堆创建</strong>一节中我们能够创建一个最大堆。出于该最大堆太大，我将其进行缩小以便进行画图演示。<br><img src="http://upload-images.jianshu.io/upload_images/619906-8b1f79e817875e10.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>最大堆的排序过程其实是和最大堆的删除操作类似，由于最大堆的删除只能在根结点进行，当将根结点删除完成之后，就是将剩下的结点进行整理让其符合最大堆的标准。</p>
 <ul>
 <li>1）、把最大堆根结点<code>91</code>“删除”，第一次排序图示：<br><img src="http://upload-images.jianshu.io/upload_images/619906-35b9c48c809f231b.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>进过这一次排序之后，<code>91</code>就处在最终的正确位置上，所以我们只需要对余下的最大堆进行操作！这里需要注意一点：</li>
 </ul>
 <blockquote>
-<p>⚠️⚠️⚠️注意，关于对余下进行最大堆操作时：<br>并不需要像创建最大堆时，从倒数第一个非叶子结点开始。因为在我们只是对第一个和最后一个结点进行了交换，所以<strong><em>只有根结点的顺序不满足最大堆的约束，我们只需要对第一个元素进行处理即可</em></strong></p>
+<p>⚠️⚠️⚠️注意，关于对余下进行最大堆操作时：<br>并不需要像创建最大堆时，从倒数第一个非叶子结点开始。因为在我们只是对第一个和最后一个结点进行了交换，所以<strong>_只有根结点的顺序不满足最大堆的约束，我们只需要对第一个元素进行处理即可_</strong></p>
 </blockquote>
 <ul>
 <li><p>2）、继续对结点<code>87</code>进行相同的操作：<br><img src="http://upload-images.jianshu.io/upload_images/619906-b14307ce0d5322e9.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>同样，<code>87</code>的位置确定。</p>
@@ -2604,6 +2666,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </blockquote>
 <p>当你在实现这个方法的时候，需要检查key的参数列表，并且返回一个合适的value值，下面提供了一个例子，layer提供了<code>defaultValueForKey:</code>方法，为<code>maskToBounds</code>属性设置默认值：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">+ (id)defaultValueForKey:(NSString *)key&#123;</div><div class="line">   if ([key isEqualToString:@&quot;masksToBounds&quot;])</div><div class="line">      return [NSNumber numberWithBool:YES];</div><div class="line">      return [super defaultValueForKey:key];</div><div class="line">&#125;</div></pre></td></tr></table></figure></p>
 <h2 id="3-封装"><a href="#3-封装" class="headerlink" title="3.封装"></a>3.封装</h2><p>当一个key的数据是由一个标量值或者一个C的数据结构时，<strong>你必须要在其被分配到layer之前对其进行封装</strong>。同样的，当要访问这些Type时，也必须检查对象，然后使用合适的方法来打开合适的值。下表显示了Objective-c和c类型封装</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2634,9 +2697,11 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>不同类型封装的类</p>
 <h2 id="4-为KeyPath的提供的结构"><a href="#4-为KeyPath的提供的结构" class="headerlink" title="4.为KeyPath的提供的结构"></a>4.为KeyPath的提供的结构</h2><p>CAAnimation和CALayer类使用KeyPath来访问指定的字段，这功能可以让你在做动画时为特定的KeyPath提供数据。使用<code>setValue:forKeyPath和valueForKeyPath:</code>方法设置，然后用<code>valueForKeyPath:</code>获取相应的值。</p>
 <h4 id="1-、CATransform3D-KeyPaths"><a href="#1-、CATransform3D-KeyPaths" class="headerlink" title="(1)、CATransform3D KeyPaths"></a>(1)、CATransform3D KeyPaths</h4><p>你可以使用更强大的KeyPath，查找包含了<code>CATransform3D</code>类型属性的值。在需要指定layer的<code>transforms</code>完整的KeyPath时，我们可以根据下表中提供的数据，使用<code>transform</code>和<code>sublayerTransform</code>的值。例如，我们需要制定绕着layer的z轴旋转时，我就需要指定KeyPath为<code>transform.rotation.z</code>。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2695,11 +2760,13 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <p>下面展示了怎样通过setValue:forKeyPath方法来修改一个layer，这个例子设置了layer在x轴上位移了10个像素点，来显示layer在x轴上的移动:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">[myLayer setValue:[NSNumber numberWithFloat:10.0] forKeyPath:@&quot;transform.translation.x&quot;];</div></pre></td></tr></table></figure></p>
 <blockquote>
 <p>⚠注意：通过keyPath来设置value值的时候不能像Objective-C里面对属性的赋值，必须配合KeyPath字符串使用setValue:forKeyPath方法来进行赋值。</p>
 </blockquote>
 <h4 id="2-、CGPoint-KeyPath"><a href="#2-、CGPoint-KeyPath" class="headerlink" title="(2)、CGPoint KeyPath"></a>(2)、CGPoint KeyPath</h4><p>如果当前给的是一个<code>CGPoint</code>类型，则可以根据下表进行设置。例如，当我们想要修改layer的<code>position</code>的x值时，可以在KeyPath中写<code>position.x</code>。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2718,7 +2785,9 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
-<h4 id="3-、CGSize-KeyPath"><a href="#3-、CGSize-KeyPath" class="headerlink" title="(3)、CGSize KeyPath"></a>(3)、CGSize KeyPath</h4><table>
+</div>
+<h4 id="3-、CGSize-KeyPath"><a href="#3-、CGSize-KeyPath" class="headerlink" title="(3)、CGSize KeyPath"></a>(3)、CGSize KeyPath</h4><div class="table-container">
+<table>
 <thead>
 <tr>
 <th>Structure Field</th>
@@ -2736,7 +2805,9 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <h4 id="4-、CGRect-KeyPath"><a href="#4-、CGRect-KeyPath" class="headerlink" title="(4)、CGRect KeyPath"></a>(4)、CGRect KeyPath</h4><p>例如，要更改layer的<code>bounds</code>属性的width值，可以写入关键路径<code>bounds.size.width</code></p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2771,6 +2842,7 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
 </tr>
 </tbody>
 </table>
+</div>
 <h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>翻译这篇文章的目的因为我在做动画中需要每次都差到对应的KeyPath，很麻烦，索性我就将其翻译出来。<br>到目前为止，这片文章大部分翻译算是完成了，看起来很粗糙，能看懂就最好了。</p>
 <p>原来地址：<a href="https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/CoreAnimation_guide/Key-ValueCodingExtensions/Key-ValueCodingExtensions.html" target="_blank" rel="external">Key-Value Coding Extensions</a></p>
 ]]></content>
@@ -2951,6 +3023,7 @@ let intPtr = rawPtr.assumingMemoryBound(to: Int.self)
 ///   memory is ever accessed as an unrelated type.
 </t></pre>
 
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -2977,6 +3050,7 @@ let intPtr = rawPtr.assumingMemoryBound(to: Int.self)
 </tr>
 </tbody>
 </table>
+</div>
 <p>从上面的表格结合文档里面对于<code>bindMemory</code>的说明来看，我对于<code>bindMemory</code>的理解就是，使用函数之前这块内存空间是没有被初始化的，使用<code>bindMemory</code>的目的是将<code>T</code>绑定到<code>self</code>后面<code>self</code> + <code>count</code> <em> <code>MemoryLayout&lt;T&gt;.stride</code>长度的的这块内存空间上来。但是绑定上来并不代表初始化了，此时这个内存空间仍然是没有初始化的，所以最后需要调用函数<code>initialize</code>的函数来初始化!<br><br>用这个函数同样可以把`void </em>`的C类型转换为Swift的类型。关于<a href="2">Custom memory allocation</a><br>这个函数的使用可能会有问题…先上一段我自己理解的代码吧</p>
 <pre>
 let a = 100
@@ -3064,7 +3138,7 @@ keybuffer.deallocate(capacity: keys.count)
 <p><img src="/uploads/light_controller/light_controller_1.png" alt="登录界面"></p>
 <h2 id="分析"><a href="#分析" class="headerlink" title="分析"></a>分析</h2><p>这个页面比较简单，一个简单的输入用户名称和密码，然后登录给出正确还是错误的结果！这里需要简单处理一下用户名密码的输入情况来绝对按钮的颜色的交互情况。<br>我将一个业务场景进行划分可以分为以下5个：</p>
 <blockquote>
-<p>1.控制器 ——-Controller<br>2.视图 ———ViewOperator<br>3.网络请求—–Request<br>4.数据处理—–DataManager<br>5.协议代理—–Delegate</p>
+<p>1.控制器 ———-Controller<br>2.视图 ————-ViewOperator<br>3.网络请求——-Request<br>4.数据处理——-DataManager<br>5.协议代理——-Delegate</p>
 </blockquote>
 <h3 id="职责划分"><a href="#职责划分" class="headerlink" title="职责划分"></a>职责划分</h3><h6 id="1-控制器-Controller"><a href="#1-控制器-Controller" class="headerlink" title="1.控制器(Controller)"></a>1.控制器(Controller)</h6><p>控制器的职责需要统调<code>视图(ViewOperator)</code>,<code>网络请求(Request)</code>,<code>数据处理(DataManager)</code>,<code>代理协议(Delegate)</code>以及不同控制器之间的联系。</p>
 <h6 id="2-视图-ViewOperator"><a href="#2-视图-ViewOperator" class="headerlink" title="2.视图(ViewOperator)"></a>2.视图(ViewOperator)</h6><p>ViewOperator的作用是将控制器里面与视图相关的操作剥离出来。同时也包括了按钮的点击。</p>
@@ -3073,17 +3147,69 @@ keybuffer.deallocate(capacity: keys.count)
 <h6 id="5-数据处理-DataManager"><a href="#5-数据处理-DataManager" class="headerlink" title="5.数据处理(DataManager)"></a>5.数据处理(DataManager)</h6><p>在网络请求完成的回调，回调回来的数据是不需要放在网络请求里面去做的，所以将网络请求数据回调放在<code>DataManager</code>中来。数据处理完成是需要给Controller一个数据回调的。</p>
 <h3 id="第一步来分离Controller中的视图"><a href="#第一步来分离Controller中的视图" class="headerlink" title="第一步来分离Controller中的视图"></a>第一步来分离Controller中的视图</h3><p>通常视图相关的操作如果都放在Controller会产生很多行的代码的，所以第一步我们需要将控制器和视图相关操作分离出来。<br>在使用StoryBoard来创建一个ViewController时，需要在控制器中拖一些<code>button</code>,<code>label</code>,<code>textfield</code>等等控件，这些控件的定制以及交互等等都要拖出代码进行处理。<br>所以这里我可以给当前控制器的Scene添加一个<code>object</code></p>
 <p><img src="/uploads/light_controller/light_controller_2.png" alt="object"><br>然后自定义个<code>LoginViewOperator</code>来继承自<code>NSObject</code>，将这个object的CustomClass改为<code>LoginViewOperator</code>。此时你可以将上诉的控件都拖到这个class里面，比如:</p>
-<p><pre><br>public class LoginViewOperator:NSObject{<br>    @IBOutlet var fields: [UITextField]!<br>    @IBOutlet weak var login<em>btn: UIButton!<br>    @IBOutlet weak var indicator: UIActivityIndicatorView!<br>    @IBAction func login(</em> sender: UIButton) {<br>    }<br>}<br></pre>同时我也可以直接将<code>LoginViewOperator</code>拖到Controller中，来让Controller来管理LoginViewOperator `。</p>
-<p><pre><br>class LoginViewController {<br>    @IBOutlet var view_operator: LoginViewOperator!<br>}<br></pre><br>如果有自定义视图的话，自定义视图的相关操作可以放在这个类中去做，或者可以给这个视图添加一个<code>helper</code>(<code>CustomViewHelper</code>)通过他来做自定义视图的相关操作</p>
+<p><pre>
+public class LoginViewOperator:NSObject{
+    @IBOutlet var fields: [UITextField]!
+    @IBOutlet weak var login_btn: UIButton!
+    @IBOutlet weak var indicator: UIActivityIndicatorView!
+    @IBAction func login(_ sender: UIButton) {
+    }
+}
+</pre>同时我也可以直接将<code>LoginViewOperator</code>拖到Controller中，来让Controller来管理LoginViewOperator `。</p>
+<p><pre>
+class LoginViewController {
+    @IBOutlet var view_operator: LoginViewOperator!
+}
+</pre><br>如果有自定义视图的话，自定义视图的相关操作可以放在这个类中去做，或者可以给这个视图添加一个<code>helper</code>(<code>CustomViewHelper</code>)通过他来做自定义视图的相关操作</p>
 <h3 id="第二步来分离Controller中的代理协议"><a href="#第二步来分离Controller中的代理协议" class="headerlink" title="第二步来分离Controller中的代理协议"></a>第二步来分离Controller中的代理协议</h3><p>加入在一个业务场景中有一个tableView，或者textfield，或者其他的系统的控件等等，和他们打交道肯定需要回调的，把这些放在控制器中也是很占位置的，必须将他们分离出来。<br>在当前场景主要是<code>UITextFieldDelegate</code>的分离，我们需要创建一个类继承自<code>NSObject</code>,并让他遵守<code>UITextFieldDelegate</code>。</p>
-<p><pre><br>public class EDLoginTextFieldDelegate:NSObject{<br>   public var textdidChange:((UITextField)-&gt;Void)?<br>}<br>extension EDLoginTextFieldDelegate:UITextFieldDelegate{<br>    public func textFieldDidChange(<em> textField: UITextField){<br>        textdidChange?(textField)<br>    }<br>    public func textFieldShouldReturn(</em> textField: UITextField) -&gt; Bool {<br>        return true<br>    }<br>    public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -&gt; Bool {<br>        return true<br>    }<br>}<br></pre>上面方法中<code>textFieldDidChange</code>是通过在<code>LoginViewOperator</code>中的UITextField添加的target-action的，这个会在接下来讲到。<br>此时在<code>LoginViewOperator</code>新建一个变量<code>delegate</code>:</p>
-<p><pre><br>lazy var delegate:EDLoginTextFieldDelegate = EDLoginTextFieldDelegate().then{<br>   //text did change<br>  $0.textdidChange = {[unowned self] in<br>    //在这里处理当textfield在发生变化时，视图需要做出的改变，也就是上面gif中通过判断输入框中是否有值来改变button的alpha和enable的操作<br>  }<br>  //text did end<br>  //text did begin<br>}<br></pre>同时将<code>delegate</code>赋值给UITextField的delegate，修改上面outlet出来的<code>fields</code>变量：</p>
-<p><pre><br>@IBOutlet var fields: [UITextField]!{<br>      didSet{<br>        fields.forEach{<br>          $0.delegate = delegate<br>          //给每一个field都添加一个target-action，这个action不要写在<code>LoginViewOperator</code>中，因为这个实际上和delegate是类似的，不是一个视图操作，所以我这里绕了一圈在delegate的textdidChange进行了回调。<br>          $0.addTarget(delegate, action: #selector(delegate.textFieldDidChange(_:)), for: .editingChanged)<br>      }<br>      if let username = User.mine.name{<br>         fields.first?.text = username<br>      }<br>    }<br>  }<br></pre>上面就是我在分离一个<code>UITextFieldDelegate</code>所做的操作。<br>在这里看来额外添加的这个<code>delegate</code>可能多此一举，因为操作相对比较少，但是如果是在tableView中的话，你需要在<code>numberOfSections</code>,<code>numberOfRowsInSection</code>,<code>cellForRowAt</code>以及<code>willDisplayCell</code>中需要写一大堆的逻辑，在这里就会体现出协议代理的分离带来的好处。</p>
+<p><pre>
+public class EDLoginTextFieldDelegate:NSObject{
+   public var textdidChange:((UITextField)->Void)?
+}
+extension EDLoginTextFieldDelegate:UITextFieldDelegate{
+    public func textFieldDidChange(_ textField: UITextField){
+        textdidChange?(textField)
+    }
+    public func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        return true
+    }
+    public func textField(_ textField: UITextField, shouldChangeCharactersIn range: NSRange, replacementString string: String) -> Bool {
+        return true
+    }
+}
+</pre>上面方法中<code>textFieldDidChange</code>是通过在<code>LoginViewOperator</code>中的UITextField添加的target-action的，这个会在接下来讲到。<br>此时在<code>LoginViewOperator</code>新建一个变量<code>delegate</code>:</p>
+<p><pre>
+lazy var delegate:EDLoginTextFieldDelegate = EDLoginTextFieldDelegate().then{
+   //text did change
+  $0.textdidChange = {[unowned self] in
+    //在这里处理当textfield在发生变化时，视图需要做出的改变，也就是上面gif中通过判断输入框中是否有值来改变button的alpha和enable的操作
+  }
+  //text did end
+  //text did begin
+}
+</pre>同时将<code>delegate</code>赋值给UITextField的delegate，修改上面outlet出来的<code>fields</code>变量：</p>
+<p><pre>
+@IBOutlet var fields: [UITextField]!{
+      didSet{
+        fields.forEach{
+          $0.delegate = delegate
+          //给每一个field都添加一个target-action，这个action不要写在`LoginViewOperator`中，因为这个实际上和delegate是类似的，不是一个视图操作，所以我这里绕了一圈在delegate的textdidChange进行了回调。
+          $0.addTarget(delegate, action: #selector(delegate.textFieldDidChange(_:)), for: .editingChanged)
+      }
+      if let username = User.mine.name{
+         fields.first?.text = username
+      }
+    }
+  }
+</pre>上面就是我在分离一个<code>UITextFieldDelegate</code>所做的操作。<br>在这里看来额外添加的这个<code>delegate</code>可能多此一举，因为操作相对比较少，但是如果是在tableView中的话，你需要在<code>numberOfSections</code>,<code>numberOfRowsInSection</code>,<code>cellForRowAt</code>以及<code>willDisplayCell</code>中需要写一大堆的逻辑，在这里就会体现出协议代理的分离带来的好处。</p>
 <blockquote>
 <p>在这里建议：如果在使用数据回调的时候可以使用delegate而不是block，这样就可以把放在controller中的block代码分离到CustomDelegate中来，后面在分离数据处理部分会用到delgate。</p>
 </blockquote>
 <h3 id="第三步来分离Controller中的网络请求"><a href="#第三步来分离Controller中的网络请求" class="headerlink" title="第三步来分离Controller中的网络请求"></a>第三步来分离Controller中的网络请求</h3><p>这一步我用objc的代码来进行讲解，因为在样例工程是没有涉及到网络请求的，所以我将我们公司项目的中的网络请求部分的分离代码贴出来。<br>同样我们需要创建一个类<code>DailyProhRequst</code>来继承于<code>NSObject</code>，该类分离控制器的网络请求。</p>
-<p><pre><br>@interface DailyProhRequst : NSObject<br>@end<br></pre><br>并为<code>DaulyProhRequst</code>添加三个方法:</p>
+<p><pre>
+@interface DailyProhRequst : NSObject
+@end
+</pre><br>并为<code>DaulyProhRequst</code>添加三个方法:</p>
 <blockquote>
 <p>下拉加载</p>
 </blockquote>
@@ -3097,9 +3223,20 @@ keybuffer.deallocate(capacity: keys.count)
 </blockquote>
 <p><code>+ (NSInteger)reloadData:(NSDictionary *)para currentPage:(NSInteger)page dataOperator:(DailyProhDataOperator *)operators;</code><br>如果需要上拉加载下拉刷新数据请求之类的，可以直接调用上面上个方法中的一个，在上面方法中还提到了<code>dataOperator</code>，它是用来整理数据的，这部分放到后面来讲。这三个方法只进行网络并把数据传给<code>dataOperator</code>，request对controller是没有回调的！<br><br>在上面的分离视图部分，我们将登录按钮的<code>@IBAction</code>放在了<code>LoginViewOperator</code>中，我们需要将这个按钮事件回调给控制器。<br>其实严谨来讲，我们是没有必要将按钮的<code>IBAction</code>放在视图中来的，这里是我的失误。<br>所以在控制器中点击按钮进行一个网络请求的操作就是<code>[DailyProhRequst headerRefresh:@{} currentPage:weakSelf.currentPage dataOperator:weakSelf.dataOperator]</code>，网络请求的分离相对来说比较简单。</p>
 <h3 id="第四步创建数据操作类来管理数据"><a href="#第四步创建数据操作类来管理数据" class="headerlink" title="第四步创建数据操作类来管理数据"></a>第四步创建数据操作类来管理数据</h3><p>同上面一样适用objc的代码进行讲解。这里数据可以分为网络请求返回的数据和抽取本地db的数据，我主要讲一下通过网络获取数据进行数据处理的数据管理类。<br>首先我们同样需要创建一个类来继承自<code>NSObject</code>，并添加一个方法从<code>Requst</code>中获取原始的网络数据:</p>
-<p><pre><br>@interface DailyProhDataOperator : NSObject<br>@end<br></pre>同时我们给DailyProhDataOperator类添加一个获取数据的方法<br><code>- (void)fetchData:(id)responseobject requstFailed:(NSError *)error;</code><br>而且我们的目的是必须要将处理好的数据（可能是你自己定一个数据模型）返回给Controller来更新View（由ViewOperator来更新操作）,所以需要创建一个delegate：</p>
-<p><pre><br>@protocol DailyProhDataOperatorHandler <nsobject><br>@end<br></nsobject></pre><br>并给协议添加两个回调方法<br><code>- (void)dataOperatorSuccess:(DailyProhDataModel *)dataSource;</code><br><code>- (void)dataOperatorFailed:(NSError *)error;</code><br>然后给<code>DailyProhDataOperator</code>类添加一个代理属性<br><code>@property (weak ) id&lt;DailyProhDataOperatorHandler&gt; handler;</code><br>并在网络请求分离中的方法中进行修改:</p>
-<p><pre> +(NSInteger)reloadData:(NSDictionary <em>)para currentPage:(NSInteger)page dataOperator:(DailyProhDataOperator </em>)operators{<br>      //在网络请求或者失败的回调中添加数据处理类的入口<br>      //[operators fetchData:responseObject requstFailed:nil];<br>      return 0;<br>}<br></pre>在DataOperator中进行数据处理完成的回调<br><code>[self.handler dataOperatorSuccess:data];</code><br>这个delegate可以通过上面已经讲过的协议代理分离放在CustomDelegate的类中，由CustomDelegate和ViewOperator进行通信来达到根据数据来修改视图的效果。<br><br></p>
+<p><pre>
+@interface DailyProhDataOperator : NSObject
+@end
+</pre>同时我们给DailyProhDataOperator类添加一个获取数据的方法<br><code>- (void)fetchData:(id)responseobject requstFailed:(NSError *)error;</code><br>而且我们的目的是必须要将处理好的数据（可能是你自己定一个数据模型）返回给Controller来更新View（由ViewOperator来更新操作）,所以需要创建一个delegate：</p>
+<p><pre>
+@protocol DailyProhDataOperatorHandler <nsobject>
+@end
+</nsobject></pre><br>并给协议添加两个回调方法<br><code>- (void)dataOperatorSuccess:(DailyProhDataModel *)dataSource;</code><br><code>- (void)dataOperatorFailed:(NSError *)error;</code><br>然后给<code>DailyProhDataOperator</code>类添加一个代理属性<br><code>@property (weak ) id&lt;DailyProhDataOperatorHandler&gt; handler;</code><br>并在网络请求分离中的方法中进行修改:</p>
+<p><pre> +(NSInteger)reloadData:(NSDictionary *)para currentPage:(NSInteger)page dataOperator:(DailyProhDataOperator *)operators{
+      //在网络请求或者失败的回调中添加数据处理类的入口
+      //[operators fetchData:responseObject requstFailed:nil];
+      return 0;
+}
+</pre>在DataOperator中进行数据处理完成的回调<br><code>[self.handler dataOperatorSuccess:data];</code><br>这个delegate可以通过上面已经讲过的协议代理分离放在CustomDelegate的类中，由CustomDelegate和ViewOperator进行通信来达到根据数据来修改视图的效果。<br><br></p>
 <h3 id="结果"><a href="#结果" class="headerlink" title="结果"></a>结果</h3><p>虽然在样例工程中没有网络请求的部分，但是实际上网络请求在控制器中所占的代码就仅仅一个跳转相关的逻辑的代码而已，所以经过上诉的方式对controller进行瘦身之后，一个完整的功能的登录界面代码量为：</p>
 <p><img src="/uploads/light_controller/light_controller_3.png" alt="瘦身的结果"><br>图中的request是我模拟的一个假的网络请求。</p>
 <h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>通过上诉的方式可以很大程度上将控制器代码进行缩减，而且指责划分也很明确。最后来说一下他们之间的关系：</p>
@@ -3135,7 +3272,9 @@ keybuffer.deallocate(capacity: keys.count)
     <updated>2017-03-01T16:26:10.000Z</updated>
     
     <content type="html"><![CDATA[<p><img src="/uploads/bluepill/bluepill_1.png" alt=""><br>  Bluepill借助于<a href="https://github.com/mmmulani/class-dump-o-tron/tree/master/Applications/Xcode.app/Contents/Developer/Library/PrivateFrameworks/CoreSimulator.framework/Versions/A/CoreSimulator" target="_blank" rel="external">CoreSimulator</a>解决稳定性和可扩展性问题。使用CoreSimulator实现了将Bluepill从Xcode模拟器中隔离出来，并使Bluepill可并行使用多种模拟器运行测试。这里Xcode模拟器是一种随每次Xcode的更新而不断进化的黑盒。（来自<a href="http://www.infoq.com/cn/news/2017/01/linkedin-bluepill-ios-testing" target="_blank" rel="external">InfoQ介绍bluepill</a>时的一段话）<br><a id="more"></a><br>  在bluepill的<a href="https://github.com/linkedin/bluepill/releases/" target="_blank" rel="external">Release</a>可以下载到的压缩包解压，然后在终端中敲入命令:</p>
-<p><pre><br>./bluepill -a ./Sample.app -s ./SampleAppTestScheme.xcscheme -o ./output/<br></pre><br>很简单，对于这最基本的命令，我们只需要有<code>.app</code>和<code>.xcscheme</code>这两个文件，然后将上面下载下来的压缩包解压之后的两个文件放在恰当的位置，应该就可以了。如果真的是这样，这篇文章也就没有存在的价值了，在这篇文章中将要做下面这几件事：</p>
+<p><pre>
+./bluepill -a ./Sample.app -s ./SampleAppTestScheme.xcscheme -o ./output/
+</pre><br>很简单，对于这最基本的命令，我们只需要有<code>.app</code>和<code>.xcscheme</code>这两个文件，然后将上面下载下来的压缩包解压之后的两个文件放在恰当的位置，应该就可以了。如果真的是这样，这篇文章也就没有存在的价值了，在这篇文章中将要做下面这几件事：</p>
 <ul>
 <li>Xcode工程项目结构体系；</li>
 <li>如何获取上面提到的两个文件并使用上面这个最简单命令跑起来（是否包含了Test，如果没有需要添加Test）；</li>
@@ -3158,16 +3297,28 @@ keybuffer.deallocate(capacity: keys.count)
 <h6 id="1-创建一个不包含Test和UITest的空项目"><a href="#1-创建一个不包含Test和UITest的空项目" class="headerlink" title="1.创建一个不包含Test和UITest的空项目"></a>1.创建一个不包含Test和UITest的空项目</h6><p>  创建一个文件夹用来保存工程项目和下载的blupill解压出来的两个文件：<strong>bluepill和bp</strong>；<br>  学过C语言的都知道，在使用<code>cc xxx.c</code>文件之后会生成一个<code>.o</code>文件，当然也可以使用<code>cc xxx.c -o selfpill</code>来重命名这个-o文件，使用selfpill文件的命令是：<code>./selfpill</code>（因为c的main的参数就是接收的终端命令），所以我猜测这其实c的一个-o文件，为了使用这两个文件，就需要将上述提到的bluepill和bp和工程项目放在同一个文件夹下。<br>  这一步中我们创建不包含Test和UITest的空项目即不要勾选那两个和test相关的Checkbox，你肯定会疑问为什么要这么做，当我在看<a href="https://github.com/linkedin/bluepill/blob/master/README.md" target="_blank" rel="external">BLUEPILL的README</a>的时候特别指出如果是使用终端进行build(使用xcodebuild，后面我会把这一步放在脚本中)的话需要使用<code>build-for-testing</code>，我猜测应该和test是有关的。所以我先测试一下没有test的情况是否会出错，如果出错，错误是什么？</p>
 <h6 id="2-编译这个空项目"><a href="#2-编译这个空项目" class="headerlink" title="2.编译这个空项目"></a>2.编译这个空项目</h6><p>  项目创建好之后编译一下之后第一目的就是在终端中输入上文提到的命令，但是这里有两个疑问：-a的参数<strong>.app</strong>的路径是什么？-s的<strong>.xcscheme</strong>的路径是什么？.app就是前面我们通过编译一次获得的一个文件夹，这个文件夹的地址是<code>/Users/xxxx/Library/Developer/Xcode/DerivedData/</code>在 DerivedData文件夹下找到刚刚创建的项目并点击进去，<strong>.app</strong>文件夹就在<code>Build/Products/Debug-iphonesimulator/</code>，如果你在创建好之后没有编译Products就是一个空文件夹；而<strong>.xcscheme</strong>在<code>工程项目所在文件夹/bluepill_sameple.xcodeproj/xcuserdata/xxx.xcuserdatad/xcschemes/bluepill_sameple.xcscheme</code>路径中提到的xxx是你在创建项目时的用户名。<br>好了，现在我们可以在终端中数据命令:</p>
 <p><pre><code>./bluepill -a /Users/xxx/Library/Developer/Xcode/DerivedData/bluepill_sameple-hdwawthuaefpnyecnudlxrpzozyq/Build/Products/Debug-iphonesimulator/bluepill_sameple.app -s /Users/xxx/Desktop/bluepill_new_build/bluepill_sameple/bluepill_sameple.xcodeproj/xcuserdata/xxx.xcuserdatad/xcschemes/bluepill_sameple.xcscheme -o output</code></pre><br>敲回车之后我这里出现如下报错：</p>
-<p><pre><br>ERROR: There is no ‘Plugins’ folder inside your app bundle at:<br>/Users/Wil/Library/Developer/Xcode/DerivedData/bluepill_sameple-hdwawthuaefpnyecnudlxrpzozyq/Build/Products/Debug-iphonesimulator/bluepill_sameple.app<br>Perhaps you forgot to ‘build-for-testing’? (Cmd + Shift + U) in Xcode.<br>Also, if you are using XCUITest, check <a href="https://github.com/linkedin/bluepill/issues/16" target="_blank" rel="external">https://github.com/linkedin/bluepill/issues/16</a><br></pre><br>出现这个问题的原因是在.app文件夹下面没有<strong>Plugins</strong>文件夹。就算是按照提示说使用<code>Cmd + Shift + U</code>或者使用<code>xcodebuild build-for-testing</code>仍然是行不通的。走到这里我们有两条路，可以删除当前工程重新建一个包含了Test和UITest的项目，也可以在现有的Project中添加Test和UITest的Targets。我选择第二条，因为在我实际项目在这之前也是没有包含相关Test的。</p>
+<p><pre>
+ERROR: There is no 'Plugins' folder inside your app bundle at:
+/Users/Wil/Library/Developer/Xcode/DerivedData/bluepill_sameple-hdwawthuaefpnyecnudlxrpzozyq/Build/Products/Debug-iphonesimulator/bluepill_sameple.app
+Perhaps you forgot to 'build-for-testing'? (Cmd + Shift + U) in Xcode.
+Also, if you are using XCUITest, check https://github.com/linkedin/bluepill/issues/16
+</pre><br>出现这个问题的原因是在.app文件夹下面没有<strong>Plugins</strong>文件夹。就算是按照提示说使用<code>Cmd + Shift + U</code>或者使用<code>xcodebuild build-for-testing</code>仍然是行不通的。走到这里我们有两条路，可以删除当前工程重新建一个包含了Test和UITest的项目，也可以在现有的Project中添加Test和UITest的Targets。我选择第二条，因为在我实际项目在这之前也是没有包含相关Test的。</p>
 <h6 id="3-在包含Test的Project中实践"><a href="#3-在包含Test的Project中实践" class="headerlink" title="3.在包含Test的Project中实践"></a>3.在包含Test的Project中实践</h6><p>  现在我们需要在既有Project中添加一个Targets，<code>File/New/Target.../iOS Unit Testing Bundle</code>创建并在<strong>Scheme Menu</strong>中选择<code>New Scheme</code>选中刚刚我们添加的Targets。编译一下（这里可以使用Cmd + Shift + U或者选择Test的scheme并build，也可以使用<code>build-for-testing</code>命令:</p>
 <p><pre><code>xcodebuild build-for-testing -project bluepill_sameple/bluepill_sameple.xcodeproj/ -scheme bluepill_sameple -sdk iphonesimulator10.2 -derivedDataPath build/</code></pre><br>进入.app文件夹下查看是否已经有了<code>PlugIns</code>文件夹，如果存在该文件夹则继续执行上一次出错的那个命令，运行成功，到这里已经能够使用最基础的命令。<br>  前面提到可以选择Test的scheme并build，可能会出现一点问题:<code>The scheme &#39;bluepill_samepleTests&#39; is not configured for Running</code>。因为添加了这个Test的Target之后需要编辑一下对应的Scheme使它能够进行Running操作！具体的操作如下所示：</p>
 <p><img src="/uploads/bluepill/bluepill_2.png" alt=""><br>设置之后Cmd + B成功运行！</p>
 <h3 id="完善阶段"><a href="#完善阶段" class="headerlink" title="完善阶段"></a>完善阶段</h3><h4 id="基本参数解释和使用"><a href="#基本参数解释和使用" class="headerlink" title="基本参数解释和使用"></a>基本参数解释和使用</h4><ul>
 <li><strong>-a/-s/-o</strong>:这是三个最基本的参数，在前面使用的时候应该知道如何使用，这里不再进行解释！</li>
 <li><strong>-c</strong>:读取一个自定义的<code>config.json</code>文件作为bluepill的运行参数，例如:<pre><code>./bluepill -c config.json</code></pre></li>
-<li><strong>-l</strong> :获取在当前project中存在的testcase，它的打印结果是存在于<code>.../bluepill_sameple.app/PlugIns</code>文件夹下面！现在我为了演示多建立了一个Test Target(添加Scheme)然后编译：<br><pre><code>./bluepill -a /Users/用户名/Library/Developer/Xcode/DerivedData/bluepill_sameple-hdwawthuaefpnyecnudlxrpzozyq/Build/Products/Debug-iphonesimulator/bluepill_sameple.app -s /Users/用户名/Desktop/bluepill_new_build/bluepill_sameple/bluepill_sameple.xcodeproj/xcuserdata/Wil.xcuserdatad/xcschemes/bluepill_sameple.xcscheme -l</code></pre>打印结果:<pre><br>bluepill_samepleTests.xctest<br>bluepill_samepleTests_target.xctest</pre>文件夹:<br><img src="/uploads/bluepill/bluepill_3.png" alt=""></li>
-<li><strong>-x/-i</strong>:<code>-x</code>在运行bluepill的时候不包含某一个testcase，<code>-i</code>和<code>-x</code>相反，它则是要包含某一个testcase，<code>-x</code>的优先级是大于<code>-i</code>的。<br><pre><br>./bluepill -a xxxx.app -s xxxx.xcscheme -x bluepill_samepleTests.xctest -r ‘iOS 10.2’;<br>./bluepill -a xxxx.app -s xxxx.xcscheme -i bluepill_samepleTests.xctest -r ‘iOS 10.2’;<br></pre>其中关于<code>-x</code>和<code>-i</code>的参数可使用<code>-l</code>命令来获取！</li>
-<li><strong>-d/-n</strong>:使用命令：<code>xcrun simctl list devices</code>来获取当前可用的模拟器设备，在得到这些设备之后可以使用<code>-d</code>来指定需要启动的设备！其中<code>-n</code>可以指定同时运行的模拟器数量。比如：<br><pre><br>./bluepill -a xxxx.app -s xxxx.xcscheme -r ‘iOS 10.2’  -d ‘iPhone 5s’;<br></pre>其中命令前面是一样的，这里先省略！<br>对于真机：在<a href="https://github.com/linkedin/bluepill/issues/61" target="_blank" rel="external">bluepill的Issue页面</a>指出blupill不支持真机！</li>
+<li><strong>-l</strong> :获取在当前project中存在的testcase，它的打印结果是存在于<code>.../bluepill_sameple.app/PlugIns</code>文件夹下面！现在我为了演示多建立了一个Test Target(添加Scheme)然后编译：<br><pre><code>./bluepill -a /Users/用户名/Library/Developer/Xcode/DerivedData/bluepill_sameple-hdwawthuaefpnyecnudlxrpzozyq/Build/Products/Debug-iphonesimulator/bluepill_sameple.app -s /Users/用户名/Desktop/bluepill_new_build/bluepill_sameple/bluepill_sameple.xcodeproj/xcuserdata/Wil.xcuserdatad/xcschemes/bluepill_sameple.xcscheme -l</code></pre>打印结果:<pre>
+bluepill_samepleTests.xctest
+bluepill_samepleTests_target.xctest</pre>文件夹:<br><img src="/uploads/bluepill/bluepill_3.png" alt=""></li>
+<li><strong>-x/-i</strong>:<code>-x</code>在运行bluepill的时候不包含某一个testcase，<code>-i</code>和<code>-x</code>相反，它则是要包含某一个testcase，<code>-x</code>的优先级是大于<code>-i</code>的。<br><pre>
+./bluepill -a xxxx.app -s xxxx.xcscheme -x bluepill_samepleTests.xctest -r 'iOS 10.2';
+./bluepill -a xxxx.app -s xxxx.xcscheme -i bluepill_samepleTests.xctest -r 'iOS 10.2';
+</pre>其中关于<code>-x</code>和<code>-i</code>的参数可使用<code>-l</code>命令来获取！</li>
+<li><strong>-d/-n</strong>:使用命令：<code>xcrun simctl list devices</code>来获取当前可用的模拟器设备，在得到这些设备之后可以使用<code>-d</code>来指定需要启动的设备！其中<code>-n</code>可以指定同时运行的模拟器数量。比如：<br><pre>
+./bluepill -a xxxx.app -s xxxx.xcscheme -r 'iOS 10.2'  -d 'iPhone 5s';
+</pre>其中命令前面是一样的，这里先省略！<br>对于真机：在<a href="https://github.com/linkedin/bluepill/issues/61" target="_blank" rel="external">bluepill的Issue页面</a>指出blupill不支持真机！</li>
 </ul>
 <p>目前对于bluepill的实践先到这里，后续还会继续更新遇到的相关问题！</p>
 <p><strong>相关链接:</strong></p>

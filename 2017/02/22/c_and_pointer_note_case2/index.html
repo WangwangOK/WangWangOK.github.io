@@ -7,16 +7,56 @@
 <p>假设在当前计算机中，int型占8位。比如要知道数字<code>-10</code>在计算机的表现形式，第一步：数字<code>10</code>的二进制值为00001010，第二步用100000000来减去00001010。得到的就是<code>-10</code>在二进制中的表现形式为:11110110。更多关于负数补码的介绍<a href="http://www.ruanyifeng.com/blog/2009/08/twos_complement.html" target="_blank" rel="external">阮一峰的网络日志－－关于2的补码</a></p>
 </blockquote>
 <p>这里我举例说明一下移位操作:</p>
-<p><pre><code><br>int uint = 10; //00001010<br>int sint = -10;//11110110<br>printf(“%d\n”,uint &gt;&gt; 2);//00000010<br>printf(“%d\n”,sint &gt;&gt; 2);//11111101<br></code></pre>在当前环境下：</p>
-<p><pre><code><br>Apple LLVM version 8.0.0 (clang-800.0.38)<br>Target: x86_64-apple-darwin15.6.0<br>Thread model: posix<br>InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin<br></code></pre>打印的结果分别为<code>2</code>和<code>-3</code>,所以从这里看出来编译器对于左移操作是<strong><em>算术移位</em></strong>。</p>
-<h3 id="和–操作符"><a href="#和–操作符" class="headerlink" title="++和–操作符"></a>++和–操作符</h3><p>对于这两个操作符的计算就很简单了，还是来举例说明一下:</p>
-<p><pre><br>int a,b,c,d;<br>a = b = 10;<br>c = ++a;<br>d = b++;<br></pre>但是需要来理解这其中的原理:</p>
+<p><pre><code>
+int uint = 10; //00001010
+int sint = -10;//11110110
+printf("%d\n",uint >> 2);//00000010
+printf("%d\n",sint >> 2);//11111101
+</code></pre>在当前环境下：</p>
+<p><pre><code>
+Apple LLVM version 8.0.0 (clang-800.0.38)
+Target: x86_64-apple-darwin15.6.0
+Thread model: posix
+InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
+</code></pre>打印的结果分别为<code>2</code>和<code>-3</code>,所以从这里看出来编译器对于左移操作是<strong><em>算术移位</em></strong>。</p>
+<h3 id="和—操作符"><a href="#和—操作符" class="headerlink" title="++和—操作符"></a>++和—操作符</h3><p>对于这两个操作符的计算就很简单了，还是来举例说明一下:</p>
+<p><pre>
+int a,b,c,d;
+a = b = 10;
+c = ++a;
+d = b++;
+</pre>但是需要来理解这其中的原理:</p>
 <blockquote>
-<p>++和–操作符原理<br>抽象的说，前缀和后缀形式的增值操作符都复制一份变量值的拷贝，这些操作符的结果不是被他们所修改的变量，而是变量值的拷贝。</p>
+<p>++和—操作符原理<br>抽象的说，前缀和后缀形式的增值操作符都复制一份变量值的拷贝，这些操作符的结果不是被他们所修改的变量，而是变量值的拷贝。</p>
 </blockquote>
 <h3 id="逗号操作符"><a href="#逗号操作符" class="headerlink" title="逗号操作符"></a>逗号操作符</h3><p>逗号操作符将多个表达式分隔开，这些表达式从左向右逐个进行求值，__整个逗号表达式的值就是最后那个表达式的值。</p>
-<p><pre><br>int (^f1)(int) = ^(int value){<br>  return value + 1;<br>};<br>int (^f2)(int) = ^(int value){<br>  return value + 2;<br>};<br>int (^f3)(int,int) = ^(int a,int b){<br>  return a + b;<br>};<br>int x,a,b,c;<br>x = 0;<br>//从这里开始<br>a = f1(x);<br>b = f2(x + a);<br>for (c = f3(a,b); c &lt; 10; c = f3(a,b)) {<br>  printf(“while statements c is:%d\n”,c);<br>  a = f1(++x);<br>  b = f2(x + a);<br>}<br>//到这里结束，这其中的代码将会被修改<br></pre>上面为原始的代码片段，现在我们需要使用逗号操作符来简化上面的代码，同时我选择用<code>while</code>循环来代替<code>for</code>循环。</p>
-<p><pre><br>while (a = f1(x),b = f2(x + a),c = f3(a,b),++x,c &lt; 10) {<br>  printf(“while statements c is:%d\n”,c);<br>}<br></pre>现在，循环中用于获得下一个值的语句只需要出现一次，逗号操作符使源码更易于维护。</p>
+<p><pre>
+int (^f1)(int) = ^(int value){
+  return value + 1;
+};
+int (^f2)(int) = ^(int value){
+  return value + 2;
+};
+int (^f3)(int,int) = ^(int a,int b){
+  return a + b;
+};
+int x,a,b,c;
+x = 0;
+//从这里开始
+a = f1(x);
+b = f2(x + a);
+for (c = f3(a,b); c < 10; c = f3(a,b)) {
+  printf("while statements c is:%d\n",c);
+  a = f1(++x);
+  b = f2(x + a);
+}
+//到这里结束，这其中的代码将会被修改
+</pre>上面为原始的代码片段，现在我们需要使用逗号操作符来简化上面的代码，同时我选择用<code>while</code>循环来代替<code>for</code>循环。</p>
+<p><pre>
+while (a = f1(x),b = f2(x + a),c = f3(a,b),++x,c < 10) {
+  printf("while statements c is:%d\n",c);
+}
+</pre>现在，循环中用于获得下一个值的语句只需要出现一次，逗号操作符使源码更易于维护。</p>
 </div></article></div></main><footer><div class="paginator"><a href="/2017/02/22/c_and_pointer_note_case3/" class="prev">PREV</a><a href="/2017/02/20/c_and_pointer_note_base/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/02/22/c_and_pointer_note_case2/';
 var disqus_title = '《C和指针Note》之操作符和表达式';

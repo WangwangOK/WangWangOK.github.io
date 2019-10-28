@@ -53,7 +53,7 @@
 <p><img src="https://images.xiaozhuanlan.com/photo/2019/39336c86a48c286012ed683927a75edb.png" alt=""></p>
 <p>同样运用上面的，先除以4，然后乘以4，最后再加上4：  </p>
 <p><img src="https://images.xiaozhuanlan.com/photo/2019/e34ae3f9de26312a6bb52d04f979aef2.png" alt=""></p>
-<p>因此，公式 <strong><em>(x-1)/4 * 4 + 4</em></strong> 的结果是最接近并且大于或者等于4的倍数。</p>
+<p>因此，公式 <strong>_(x-1)/4 * 4 + 4_</strong> 的结果是最接近并且大于或者等于4的倍数。</p>
 <p>那么我们在C里面该怎么做呢？首先，注意到除法和乘法我们可以使用右移和左移移位操作符来解决（&gt;&gt;和&lt;&lt;），它们相对于简单乘法要快很多。因此我们的公式在C里面可以写成这样 <code>((x-1)&gt;&gt;2)&lt;&lt;2+4</code>，但是在宏里面需要使用额外的括号：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">#define align4(x) (((((x)-1)&gt;&gt;2)&lt;&lt;2)+4)</div></pre></td></tr></table></figure>
 <h3 id="寻找块：首次适配算法"><a href="#寻找块：首次适配算法" class="headerlink" title="寻找块：首次适配算法"></a>寻找块：首次适配算法</h3><p>找到一个足够长度的块非常简单：从堆的起始点开始（以某种方式会保存在代码，后续会看到）测试当前块，如果该块成功适配则返回该块的头部，否则继续向下一块寻找，直到最后一个块的头部。<br>这里唯一的技巧是需要保存上一次遍历过的块，所以当没有找到合适的块的时候，malloc函数可以很轻松地去扩展堆的尾部（长度）。代码逻辑很直接，<code>base</code>是一个全局指针变量，指向堆的开始位置：</p>

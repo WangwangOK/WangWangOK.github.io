@@ -92,6 +92,7 @@ let intPtr = rawPtr.assumingMemoryBound(to: Int.self)
 ///   memory is ever accessed as an unrelated type.
 </t></pre>
 
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -118,6 +119,7 @@ let intPtr = rawPtr.assumingMemoryBound(to: Int.self)
 </tr>
 </tbody>
 </table>
+</div>
 <p>从上面的表格结合文档里面对于<code>bindMemory</code>的说明来看，我对于<code>bindMemory</code>的理解就是，使用函数之前这块内存空间是没有被初始化的，使用<code>bindMemory</code>的目的是将<code>T</code>绑定到<code>self</code>后面<code>self</code> + <code>count</code> <em> <code>MemoryLayout&lt;T&gt;.stride</code>长度的的这块内存空间上来。但是绑定上来并不代表初始化了，此时这个内存空间仍然是没有初始化的，所以最后需要调用函数<code>initialize</code>的函数来初始化!<br><br>用这个函数同样可以把`void </em>`的C类型转换为Swift的类型。关于<a href="2">Custom memory allocation</a><br>这个函数的使用可能会有问题…先上一段我自己理解的代码吧</p>
 <pre>
 let a = 100

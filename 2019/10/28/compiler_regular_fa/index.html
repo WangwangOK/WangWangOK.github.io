@@ -8,6 +8,7 @@
 <p><img src="/uploads/compiler_regular_fa/1.png" alt=""></p>
 <p>上图是一个能够识别正则表达式 <code>(a|b)*abb</code>的NFA转换图。</p>
 <h4 id="转换表和接收串"><a href="#转换表和接收串" class="headerlink" title="转换表和接收串"></a>转换表和接收串</h4><p>我们可以将一个NFA表示为一张转换表。表的每一行表示一个状态，表的每一列对应于输入符号和空串。先将上图的NFA转换图转换成为对应的转换表，然后根据转换表再具体说明其中的含义：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -44,6 +45,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>对于一个给定的状态和给定的转换，其得到的值是NFA转换图中应用对应转换之后得到的状态集合。如果对应的转换没有后续状态，则用符号∅表示。</p>
 <p>而自动机在判断是否接收字符串的依据是：存在某条字符序列组成符号串的路径，该路径能够从开始状态到达某个接收状态。我们就说NFA接收这个符号串。比如：</p>
 <p><img src="/uploads/compiler_regular_fa/2.png" alt=""></p>
@@ -94,6 +96,7 @@
 </blockquote>
 <p>DFA的状态是一个集合，该集合里面包含的是对应NFA的状态。</p>
 <p>我们在上面看到在将正则表达式构造成NFA时，NFA里面存在很多空转换。所以当务之急是如果正确地处理NFA上面的空转换。下面展示了NFA的状态集合上的相关操作：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -120,17 +123,19 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>假设s<sub>0</sub>是NFA的开始状态，那么对应DFA的开始状态就是 <strong>ε-closure(s<sub>0</sub>)</strong> 。而DFA的接受状态是至少包含NFA接受状态的集合。</p>
 <p>我们在上一节得到的NFA，现在我们将该NFA转换为DFA：</p>
 <p>1、对于开始状态0，我们使用操作1（上表中序号为1的操作，下文类似），即状态0通过ε空转换可以得到的状态集合为： <code>{0, 1, 2, 3, 7}</code>。<br>这里有一点需要注意的是：因为路径可以不包含边，所以状态0也是可以从它自身出发经过标号ε到达的状态。</p>
 <p><img src="/uploads/compiler_regular_fa/15.png" alt=""></p>
 <p>2、我们对第一步得到的集合求转换a的集合。现在我们看状态集合<code>{0, 1, 2, 3, 7}</code>通过转换a（即应用操作3）可以得到的状态集合<code>{3,8}</code>。此时我们对集合<code>{3,8}</code>应用操作2得到的集合为<code>{1, 2, 4, 6, 7}</code>：</p>
 <p><img src="/uploads/compiler_regular_fa/16.png" alt=""></p>
-<p>在集合{0, 1, 2, 3, 7}里面，只有状态2和状态7可以通过a转换得到的集合是{3, 8}。此时查看状态3通过空转换得到集合为：<br>a、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>7</sub>;<br>b、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>1</sub> –<code>ε</code>–&gt; s<sub>2</sub>;<br>c、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>1</sub> –<code>ε</code>–&gt; s<sub>4</sub>;<br>因此最终的集合为 <strong>{1,2,3,4,6,7,8}</strong>。</p>
+<p>在集合{0, 1, 2, 3, 7}里面，只有状态2和状态7可以通过a转换得到的集合是{3, 8}。此时查看状态3通过空转换得到集合为：<br>a、s<sub>3</sub> —<code>ε</code>—&gt; s<sub>6</sub> —<code>ε</code>—&gt; s<sub>7</sub>;<br>b、s<sub>3</sub> —<code>ε</code>—&gt; s<sub>6</sub> —<code>ε</code>—&gt; s<sub>1</sub> —<code>ε</code>—&gt; s<sub>2</sub>;<br>c、s<sub>3</sub> —<code>ε</code>—&gt; s<sub>6</sub> —<code>ε</code>—&gt; s<sub>1</sub> —<code>ε</code>—&gt; s<sub>4</sub>;<br>因此最终的集合为 <strong>{1,2,3,4,6,7,8}</strong>。</p>
 <p>3、同样的，我们对第一步得到的集合求转换b的集合。现在我们看状态集合<code>{0, 1, 2, 3, 7}</code>通过转换b可以得到的状态集合<code>{5}</code>。然后集合{5}通过空转换可以得到的集合为{1, 2, 4, 6, 7}</p>
 <p><img src="/uploads/compiler_regular_fa/17.png" alt=""></p>
 <p>具体的分析和第2步类似。</p>
 <p>这样我们对后续出现的每一个状态都执行对应的转换a、转换b。我们可以得到一个状态转换表：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -173,6 +178,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们前面说过NFA开始状态通过ε转换得到集合为开始状态，因此上表中对应DFA对应的状态为A。而NFA状态集合中包含有接受状态对应DFA的状态E，因此E为DFA的接受状态。对应的DFA如下：</p>
 <p><img src="/uploads/compiler_regular_fa/18.png" alt=""></p>
 <p>下面是对应算法的伪代码描述。模拟一个NFA的执行（即NFA转换为DFA）</p>
@@ -182,6 +188,7 @@
 <p><img src="/uploads/compiler_regular_fa/19.png" alt=""></p>
 <p>这里提到了前面介绍的几个概念，这儿简要说明一下。输入缓冲区可以让我们依次读入多个字符到缓冲区中（这个大致为4096字节），而不是每读入一个字符就调用一次系统读取命令；词素作为匹配了某个模式词法单元的字符串，比如词素为<code>name</code>词法单元<strong>id</strong>；指针lexemeBegin指向当前词素的开始位置处；指针forward的作用是一直向前扫描，直到匹配某个模式为止。</p>
 <p>下表中有三个模式，已经对应模式的动作。这个表指明了词法分析器需要的模式，已经匹配到对应模式之后的动作：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -208,6 +215,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>这里的动作是指匹配到对应模式之后需要做的相关操作，比如匹配到词法单元id之后的动作是生成对应的标识符，获取对应词法单元并返回给语法分析器；匹配到空白符之后我们将输入回退到非空白符的开头，而且不向语法分析器返回任何词法单元。等等。</p>
 <p>上表中满足模式P<sub>2</sub>和也同时满足模式P<sub>3</sub>，当出现这种冲突时我们首先选择P<sub>2</sub>。这是因为在解决冲突时 </p>
 <blockquote>
@@ -218,6 +226,7 @@
 <p>以及将上面三个合并之后得到的NFA：</p>
 <p><img src="/uploads/compiler_regular_fa/21.png" alt=""></p>
 <p>现在如果词法分析器模拟了上图的NFA，那么该分析器必须从它的输入中<code>lexemeBegin</code>指向的位置开始读取输入，并移动forward指针。然后根据子集构造法来获取当前的状态集合。<br>需要注意的是：这里并不是使用子集构造法将NFA转换为DFA，而只是简单地想知道某一状态集合通过子集构造法之后得到的新的状态集合（不过在下面的“词法分析器使用的DFA”一节会使用该表，该表的第二列就是对应DFA的状态）。</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -266,6 +275,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>在上表中，最终会达到一个没有后续状态的输入点。此时不可能有任何更长的输入前缀使得这个NFA到达某个接受状态，此后的状态将一直为空。比如上表中状态编号为C、E、F之后再继续输入a，那么此时就没有任何的后续状态。</p>
 <p><img src="/uploads/compiler_regular_fa/22.png" alt=""></p>
 <p>上图中我们的输入字符串以 <code>aaba</code> 开头。当我们在读入第四个符号 a 之后，此时我们处于一个空状态集合中（也可以从上表中第三行得出）。</p>

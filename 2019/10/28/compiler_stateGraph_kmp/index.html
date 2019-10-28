@@ -6,6 +6,7 @@
 </blockquote>
 <p>5）、<strong>回退🌟号</strong>：上图中接受状态右上角的*号，表示我们识别到的词素并不包含使我们到达接受状态的符号（也就是上图中的no let/dig边）。此时我们需要回退forward指针到倒数第二个状态。这其中可能会回退多步，所以这里用*号来表示需要回退；</p>
 <h3 id="relop状态转换图"><a href="#relop状态转换图" class="headerlink" title="relop状态转换图"></a>relop状态转换图</h3><p>我们根据上一节的relop词法单元，已经对应的属性来构造一个relop的状态转换图</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -37,9 +38,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p><img src="/uploads/compiler_stateGraph_kmp/2.png" alt=""></p>
 <p>其实对于这个状态转换图来说，我只画了其中的比较运算符和逻辑运算符。对于位运算符（&lt;&lt;左移, &gt;&gt;右移）并没画出来。这里主要是想表达各个接收状态，和forward指针回退的操作。</p>
-<h3 id="id（标识符）和关键字的状态转换图"><a href="#id（标识符）和关键字的状态转换图" class="headerlink" title="id（标识符）和关键字的状态转换图"></a>id（标识符）和关键字的状态转换图</h3><table>
+<h3 id="id（标识符）和关键字的状态转换图"><a href="#id（标识符）和关键字的状态转换图" class="headerlink" title="id（标识符）和关键字的状态转换图"></a>id（标识符）和关键字的状态转换图</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:left">词法单元</th>
@@ -57,6 +60,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>注：上表中的正则表达式将逗号“,”更改为”|”。<br>对于关键字来说，它们看起来和标识符是很像的。但它们并不是标识符。</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/3.png" alt=""></p>
 <p>对于关键字<code>if/else/for</code>等等关键字，标识符<code>forearm</code>同样也是满足上诉转换图的。</p>
@@ -77,7 +81,8 @@
 <blockquote>
 <p>识别到对应词法单元时，如果该标识符尚未加入符号表。此时词法分析器会将该 <strong>标识符</strong> (也可以理解为词素) 放入符号表中。</p>
 </blockquote>
-<h3 id="词法单元number状态转换图"><a href="#词法单元number状态转换图" class="headerlink" title="词法单元number状态转换图"></a>词法单元number状态转换图</h3><table>
+<h3 id="词法单元number状态转换图"><a href="#词法单元number状态转换图" class="headerlink" title="词法单元number状态转换图"></a>词法单元number状态转换图</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:left">词法单元</th>
@@ -99,11 +104,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>下图是一个识别整数和浮点数的状态转换图：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/4.png" alt=""></p>
 <p>从上图中我们可以看到，接收状态22既匹配到了科学计数法表示的浮点数（包含小数部分，也包含指数部分），也匹配到了科学计数法表示的整数。<br>接收状态23是匹配到的整数词素；接收状态24为不带科学计数法的的整数。</p>
 <p>当我们在接收状态时，返回词法单元 <strong>number</strong> 以及一个指向 <strong>常量表</strong> 条目的指针，上面找到的词素就放在这个常量表条目中。</p>
-<h3 id="ws（空白符）状态转换图"><a href="#ws（空白符）状态转换图" class="headerlink" title="ws（空白符）状态转换图"></a>ws（空白符）状态转换图</h3><table>
+<h3 id="ws（空白符）状态转换图"><a href="#ws（空白符）状态转换图" class="headerlink" title="ws（空白符）状态转换图"></a>ws（空白符）状态转换图</h3><div class="table-container">
+<table>
 <thead>
 <tr>
 <th style="text-align:left">词法单元</th>
@@ -119,6 +126,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>我们用转换delim替换上表中的blank、tab、newline：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/5.png" alt=""></p>
 <p>空白符后面需要跟一个非空白符才能确定当前已经完成了对连续空白符的扫描。</p>
@@ -150,6 +158,7 @@
 <li>1）、由于前面提到过真前缀的前提，因此我们从s=1开始计算。首先我们将f(1)设置为0，既状态1对应的失效函数值为0。并且这里我们新增一个辅助游标t用于对照状态s：</li>
 </ul>
 <p><img src="/uploads/compiler_stateGraph_kmp/8.png" alt=""></p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -176,9 +185,11 @@
 </tr>
 </tbody>
 </table>
+</div>
 <ul>
 <li>2）、此时我们比较一下状态t的转换（a）和状态s的转换（b），发现字符a并不等于字符b。此时我们将f(s+1)，即f(2)的值设置为0：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -205,11 +216,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>并且将s移动到状态2：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/9.png" alt=""></p>
 <ul>
 <li>3）、继续比较状态t的转换（a）和状态s的转换（a）此时他们相等。因此 <strong>先将t的自增1，然后将f(s+1)，即f(2)的值设置为t的值（此时为1）</strong>：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -236,11 +249,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>同样的，此时将s移动到状态3：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/10.png" alt=""></p>
 <ul>
 <li>4）、依次比较后续的s=3，和s=4的情况。它们的情形和第三步类似：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -267,6 +282,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>此时t=3，s=5。对应的状态转换图为：</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/11.png" alt=""></p>
 <ul>
@@ -280,6 +296,7 @@
 <ul>
 <li>7）、对于后续状态的失效函数值确定，可以仿照第2、3和5步进行求解。最终完整失效函数为：</li>
 </ul>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -306,11 +323,13 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>下面是对应的代码：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">#include &lt;iostream&gt;</div><div class="line">#include &lt;string&gt;</div><div class="line">#include &lt;vector&gt;</div><div class="line"></div><div class="line">using namespace std;</div><div class="line">void trie_func(string pattern, vector&lt;int&gt; &amp;f) &#123;</div><div class="line">	const string::size_type length = pattern.size()+1;</div><div class="line">	int t = 0;</div><div class="line">	f[0]=t;// f[0] store t</div><div class="line">	f[1]=0;</div><div class="line">	for(int s = 1; s&lt; length-1; s++)	</div><div class="line">	&#123;</div><div class="line">		while(t&gt;0 &amp;&amp; pattern[t] != pattern[s])&#123; t=f[t]; f[0]=t;  &#125;	</div><div class="line">		if(pattern[s]==pattern[t])&#123; t=t+1; f[s+1]=t; f[0]=t; &#125;</div><div class="line">		else &#123;f[s+1]=0;&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">int main(int argc, const char * argv[])&#123;</div><div class="line">	string pattern(&quot;ababaca&quot;);</div><div class="line">	vector &lt;int&gt; trie(pattern.size()+1);</div><div class="line">	trie_func(pattern,trie);</div><div class="line">	for (vector&lt;int&gt;::iterator itr = trie.begin(); itr != trie.end(); itr++) &#123;</div><div class="line">		cout&lt;&lt;*itr&lt;&lt;endl;</div><div class="line">	&#125;</div><div class="line">	return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <h3 id="子串与主串的比较"><a href="#子串与主串的比较" class="headerlink" title="子串与主串的比较"></a>子串与主串的比较</h3><p>现在我们以主串<code>bcbababaababacacd</code> 和子串 <code>ababaca</code> 作为例子，来看主串是否包含子串。</p>
 <p><img src="/uploads/compiler_stateGraph_kmp/14.png" alt=""></p>
 <p>我们从前面知道子串失效函数为：</p>
+<div class="table-container">
 <table>
 <thead>
 <tr>
@@ -337,6 +356,7 @@
 </tr>
 </tbody>
 </table>
+</div>
 <p>这里我将上一节的字符s替换为state，是因为这一节我会用字符s用作当前子串相对于主串的偏移量。而真正原因是我太懒了，发现图中和失效函数都用了同一个字符s。为了避免混淆，但又不想重新画图🤣。</p>
 <ul>
 <li>1）、主串的第一个字符和子串的第一个字符不相等。此时我们将子串向右滑动一位，此时偏移值<code>s = 1</code> ：</li>
