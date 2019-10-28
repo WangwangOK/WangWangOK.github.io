@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T03:13:18.512Z</updated>
+  <updated>2019-10-28T03:16:19.201Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/compiler_token_regular/"/>
     <id>http://yoursite.com/2019/10/28/compiler_token_regular/</id>
     <published>2019-10-28T03:09:25.132Z</published>
-    <updated>2019-10-28T03:13:18.512Z</updated>
+    <updated>2019-10-28T03:16:19.201Z</updated>
     
     <content type="html"><![CDATA[<p>本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：<br>1）、首先解释什么是词法单元；<br>2）、如何手动识别词法单元；<br>3）、最后是词法分析器如何自动机自动识别词法单元；<br>本文主要是看一下词分析器的词法单元部分。包括一些基本概念，以及词法单元的识别。</p>
 <p>首先我们先大体上看一下词法分析器的作用。它的主要任务是读入源程序的输入字符、将它们组成词素，生成并输出一个词法单元的序列。每个词法单元对应一个词素。</p>
@@ -131,7 +131,65 @@
 <p><img src="https://upload-images.jianshu.io/upload_images/619906-48a1b711bf76bbfd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
 <p>从这儿我们可以知道，对于编译器而言在进行词法分析的时候，需要通过lexemeBegin和forward来扫描缓冲区。如果匹配某一个词素时，比如很长的字符串（比如将一片短篇小说作为常量字符串放到一个变量中）时，那就会出现缓冲区长度不足的情况，因此在日常编码中将长字符串拆分成多个短的字符串。</p>
 <p>这其实也算是学习编译原理，有助于提供编程效率的一个例子了。</p>
-<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在前面我们用正则表达式来表示一个模式，现在我们需要通过制定模式来识别对应的词法单元。下面是大部分词法单元，以及对应的模式：<br>|词法单元|模式|<br>|:—|:—|<br>|<strong>digit</strong>|[0-9]|<br>|<strong>digits</strong>|digit+|<br>|<strong>number</strong>|digits(.digits)?(E[+-]?digits)?|<br>|<strong>letter</strong>|[A-Za-z]|<br>|<strong>id</strong>|letter(letter | digit)<em>|<br>|<strong>if</strong>|if|<br>|<strong>then</strong>|then|<br>|<strong>else</strong>|else|<br>|<strong>relop</strong>|&lt; | &gt; | &lt;= | &gt;= | == | !=|<br>|<em>*ws</em></em>(空白符)|(blank | tab | newline)+|</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在前面我们用正则表达式来表示一个模式，现在我们需要通过制定模式来识别对应的词法单元。下面是大部分词法单元，以及对应的模式：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">词法单元</th>
+<th style="text-align:left">模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>digit</strong></td>
+<td style="text-align:left">[0-9]</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>digits</strong></td>
+<td style="text-align:left">digit+</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>number</strong></td>
+<td style="text-align:left">digits(.digits)?(E[+-]?digits)?</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>letter</strong></td>
+<td style="text-align:left">[A-Za-z]</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>id</strong></td>
+<td style="text-align:left">letter(letter \</td>
+<td>digit)*</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>if</strong></td>
+<td style="text-align:left">if</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>then</strong></td>
+<td style="text-align:left">then</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>else</strong></td>
+<td style="text-align:left">else</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">&lt; \</td>
+<td>&gt; \</td>
+<td>&lt;= \</td>
+<td>&gt;= \</td>
+<td>== \</td>
+<td>!=</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>ws</strong>(空白符)</td>
+<td style="text-align:left">(blank \</td>
+<td>tab \</td>
+<td>newline)+</td>
+</tr>
+</tbody>
+</table>
 <p>上表中的词法单元<code>ws</code>和其他词法单元不同。当我们识别到ws时，</p>
 <blockquote>
 <p><strong>我们并不将它返回给语法分析器，而是从这个空白符之后的字符开始继续进行词法分析。返回给语法分析器的是下一个词法单元</strong> 。</p>
