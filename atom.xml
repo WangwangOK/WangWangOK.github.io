@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T07:26:26.317Z</updated>
+  <updated>2019-10-28T07:30:42.191Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,15 +16,13 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
+    <title>语法分析——文法的基础概念</title>
     <link href="http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/"/>
     <id>http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/</id>
     <published>2019-10-28T06:29:13.863Z</published>
-    <updated>2019-10-28T07:26:26.317Z</updated>
+    <updated>2019-10-28T07:30:42.191Z</updated>
     
-    <content type="html"><![CDATA[<p>title: 语法分析——文法的基础概念<br>tags: </p>
-<pre><code>- 语法分析
-</code></pre><h2 id="categories-编译原理"><a href="#categories-编译原理" class="headerlink" title="categories: 编译原理"></a>categories: 编译原理</h2><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
 <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>语法分析通常用于编译器中。在我们的编译器模型中，语法分析器从词法分析器获得一个词法单元组成的串，并验证这个串可以由源语言的文法（比如上下文无关文法，在后面会详细解释）生成。</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/1.png" alt=""></p>
 <p>处理文法的语法分析器大体上可以分分为三种类型：通用的、自顶向下的和自底向上的。而编译器中常用的的方法分为自顶向下和自底向上。顾名思义：</p>
@@ -177,12 +175,14 @@
     
     <summary type="html">
     
-      &lt;p&gt;title: 语法分析——文法的基础概念&lt;br&gt;tags: &lt;/p&gt;
-&lt;pre&gt;&lt;code&gt;- 语法分析
-&lt;/code&gt;&lt;/pre&gt;&lt;h2 id=&quot;categories-编译原理&quot;&gt;&lt;a href=&quot;#categories-编译原理&quot; class=&quot;headerlink&quot; 
+      &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，
     
     </summary>
     
+      <category term="编译原理" scheme="http://yoursite.com/categories/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/"/>
+    
+    
+      <category term="语法分析" scheme="http://yoursite.com/tags/%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90/"/>
     
   </entry>
   
