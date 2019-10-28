@@ -1,7 +1,7 @@
 <!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 词法分析——词法单元和正则表达式 · 凌云壮志幾多愁</title><meta name="description" content="词法分析——词法单元和正则表达式 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">词法分析——词法单元和正则表达式</h1><div class="post-info">Oct 28, 2019</div><div class="post-content"><p>本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：<br>1）、首先解释什么是词法单元；<br>2）、如何手动识别词法单元；<br>3）、最后是词法分析器如何自动机自动识别词法单元；<br>本文主要是看一下词分析器的词法单元部分。包括一些基本概念，以及词法单元的识别。</p>
 <p>首先我们先大体上看一下词法分析器的作用。它的主要任务是读入源程序的输入字符、将它们组成词素，生成并输出一个词法单元的序列。每个词法单元对应一个词素。</p>
 <p>这里我们有提到几个专业名词：词素、词法单元。它们的定义马上就会说到，我们可以先看看下面这幅图：</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/619906-4d370c94997e7f1c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p><img src="https://images.xiaozhuanlan.com/photo/2019/5156ab1334b7f33858c6233c6a88fcd8.png" alt=""></p>
 <p>从图中我们可以看出来词法分析器还在和符号表进行交互，其主要作用是从符号表中读取有关标识符种类信息，以确定需要向语法分析器传送的词法单元。</p>
 <h2 id="一、词法单元"><a href="#一、词法单元" class="headerlink" title="一、词法单元"></a>一、词法单元</h2><p>现在我们就先来看看前面提到的一些专业名词：</p>
 <ul>
@@ -222,7 +222,7 @@
 </table>
 <p>表格里面的relop词法单元，区分其具体实例是通过对应词法单元属性值进行。</p>
 <p>这一节主要是了解了词法单元相关知识其中，包括有词法单元、词素和模式。为了能够了解模式，我们又学习了一下正则表达式。下一节则主要是讲解词法单元的识别。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/02/17/a_malloc_tutorial/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2019/02/17/a_malloc_tutorial/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2019/10/28/compiler_token_regular/';
 var disqus_title = '词法分析——词法单元和正则表达式';
 var disqus_url = 'http://yoursite.com/2019/10/28/compiler_token_regular/';

@@ -137,7 +137,7 @@
 <h4 id="FreeBSD中reallocf函数"><a href="#FreeBSD中reallocf函数" class="headerlink" title="FreeBSD中reallocf函数"></a>FreeBSD中reallocf函数</h4><p>FreeBSD提供了另外一个realloc函数的实现：<code>reallocf</code>，它会在任何情况下释放输入的指针（即使是再分配失败之后）。我们一样会调用realloc函数，但是只有我们在获得空的指针之后才会调用free函数。下面是具体的实现部分：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div></pre></td><td class="code"><pre><div class="line">void *reallocf(void *p, size_t size) &#123;</div><div class="line">    void *ptr = realloc(p, size);</div><div class="line">    if (!p) &#123;</div><div class="line">        free(p);</div><div class="line">    &#125;</div><div class="line">    return ptr;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>到这儿基本翻译完成，如有错误请及时本联系我，谢谢❤️</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_token_regular/" class="prev">上一篇</a><a href="/2018/05/18/source_code_objc_weak_t/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_token_regular/" class="prev">PREV</a><a href="/2018/05/18/source_code_objc_weak_t/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2019/02/17/a_malloc_tutorial/';
 var disqus_title = 'A Malloc Tutorial';
 var disqus_url = 'http://yoursite.com/2019/02/17/a_malloc_tutorial/';

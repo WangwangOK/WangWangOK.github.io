@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T03:31:06.065Z</updated>
+  <updated>2019-10-28T03:44:29.161Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,12 +20,12 @@
     <link href="http://yoursite.com/2019/10/28/compiler_token_regular/"/>
     <id>http://yoursite.com/2019/10/28/compiler_token_regular/</id>
     <published>2019-10-28T03:09:25.132Z</published>
-    <updated>2019-10-28T03:31:06.065Z</updated>
+    <updated>2019-10-28T03:44:29.161Z</updated>
     
     <content type="html"><![CDATA[<p>本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：<br>1）、首先解释什么是词法单元；<br>2）、如何手动识别词法单元；<br>3）、最后是词法分析器如何自动机自动识别词法单元；<br>本文主要是看一下词分析器的词法单元部分。包括一些基本概念，以及词法单元的识别。</p>
 <p>首先我们先大体上看一下词法分析器的作用。它的主要任务是读入源程序的输入字符、将它们组成词素，生成并输出一个词法单元的序列。每个词法单元对应一个词素。</p>
 <p>这里我们有提到几个专业名词：词素、词法单元。它们的定义马上就会说到，我们可以先看看下面这幅图：</p>
-<p><img src="https://upload-images.jianshu.io/upload_images/619906-4d370c94997e7f1c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p><img src="https://images.xiaozhuanlan.com/photo/2019/5156ab1334b7f33858c6233c6a88fcd8.png" alt=""></p>
 <p>从图中我们可以看出来词法分析器还在和符号表进行交互，其主要作用是从符号表中读取有关标识符种类信息，以确定需要向语法分析器传送的词法单元。</p>
 <h2 id="一、词法单元"><a href="#一、词法单元" class="headerlink" title="一、词法单元"></a>一、词法单元</h2><p>现在我们就先来看看前面提到的一些专业名词：</p>
 <ul>
