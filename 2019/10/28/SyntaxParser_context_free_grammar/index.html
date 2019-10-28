@@ -1,4 +1,6 @@
-<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 语法分析——文法的基础概念 · 凌云壮志幾多愁</title><meta name="description" content="语法分析——文法的基础概念 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">语法分析——文法的基础概念</h1><div class="post-info">Oct 28, 2019</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title>  · 凌云壮志幾多愁</title><meta name="description" content=" - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title"></h1><div class="post-info">Oct 28, 2019</div><div class="post-content"><p>title: 语法分析——文法的基础概念<br>tags: </p>
+<pre><code>- 语法分析
+</code></pre><h2 id="categories-编译原理"><a href="#categories-编译原理" class="headerlink" title="categories: 编译原理"></a>categories: 编译原理</h2><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
 <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>语法分析通常用于编译器中。在我们的编译器模型中，语法分析器从词法分析器获得一个词法单元组成的串，并验证这个串可以由源语言的文法（比如上下文无关文法，在后面会详细解释）生成。</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/1.png" alt=""></p>
 <p>处理文法的语法分析器大体上可以分分为三种类型：通用的、自顶向下的和自底向上的。而编译器中常用的的方法分为自顶向下和自底向上。顾名思义：</p>
@@ -81,7 +83,7 @@
 <p>比如正则表达式 <strong>$(a|b)^{*}abb$</strong> ，它对应的DFA为：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/9.png" alt=""></p>
 <p>从上面步骤我们可以得到一共有4个状态，因此对于对应文法则有4个非终结符，分别为 $A<em>{0},A</em>{1},A<em>{2},A</em>{3}$ 。根据上图的转换我们得到文法为：</p>
-<p>$<br>A<em>{0} \rightarrow aA</em>{0}\ | \ bA<em>{0}\ | \ aA</em>{1} \<br>A<em>{1} \rightarrow bA</em>{2} \<br>A<em>{2} \rightarrow bA</em>{3}<br>A_{3} \rightarrow ε<br>$</p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/12.png" alt=""></p>
 <hr>
 <h2 id="二、设计文法"><a href="#二、设计文法" class="headerlink" title="二、设计文法"></a>二、设计文法</h2><p>如果前面看到的，任何能够使用正则表达式描述的东西都可以使用文法来描述。因此在这儿来列举4点关于正则表达式和文法的异同：</p>
 <p>1）、将一个语言的语法结构分为词法和非词法两部分可以很方便地将编译器前端模块化，将前端分解为大小合适的组件；</p>
@@ -92,27 +94,31 @@
 <blockquote>
 <p><strong>正则表达式更适合描述标识符、常量、关键字、空白这样的语言构造的结构；文法更适合描述嵌套结构，比如if-else之类的</strong>；</p>
 </blockquote>
-<h3 id="1、左递归"><a href="#1、左递归" class="headerlink" title="1、左递归"></a>1、左递归</h3><p>左递归是指 <strong>产生式体的最左边符号和产生式头部的非终结符号相同</strong> 。对于产生式 $E \rightarrow E\ +\ T$ ，产生式的头部是E，同时E也是产生式体的最左边的非终结符号，因此该推导将会被将被递归调用。</p>
+<h3 id="1、左递归"><a href="#1、左递归" class="headerlink" title="1、左递归"></a>1、左递归</h3><p>左递归是指 <strong>产生式体的最左边符号和产生式头部的非终结符号相同</strong> 。对于产生式 </p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/16.png" alt="上下文无关文法"></p>
+<p>产生式的头部是E，同时E也是产生式体的最左边的非终结符号，因此该推导将会被将被递归调用。</p>
 <p>同样的，右递归也就是指的产生式头部的非终结符号和产生式体最右边的终结符相同的情况。</p>
 <p>该文法无法用于自顶向下的语法分析中，这是因为自顶向下的语法分析是基于LL文法的。而对于LL文法来说，第一个L指的是从左到右扫描语法分析树的一层的每个结点，遇到非终结符则应用对应非终结符的产生式。第二个L指的是最左推导。前面我们已经知道了最左推导，即每一次替换掉产生式最左边的非终结符，因此这也就和左递归的定义吻合了。关于更详细的自顶向下的语法分析将在后面进行详细讲解。</p>
 <p>既然存在左递归，那么消除左递归肯定是有必要的。</p>
 <h4 id="消除立即左递归："><a href="#消除立即左递归：" class="headerlink" title="消除立即左递归："></a><strong>消除立即左递归</strong>：</h4><p>比如存在立即左递归的产生式：</p>
-<p>$A \rightarrow A\alpha <em>{1}\ |\ A\alpha </em>{2}\ |\ …\ |A\alpha <em>{m}\ |\ \beta </em>{1}\ | \ \beta <em>{2}\ |\ …\ |\ \beta </em>{n}$</p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/14.png" alt="上下文无关文法"></p>
 <p>其中 $\beta _{i}$ 都不以A开头。因此我们可以用下面的技术来消除立即左递归：</p>
-<p>$<br>A \rightarrow \beta <em>{1}A</em>{1}\ |\ \beta <em>{2}A</em>{1}\ |\ …\ |\beta <em>{n}A</em>{1} \<br>A<em>{1} \rightarrow \alpha </em>{1}A<em>{1}\ |\ \alpha </em>{2}A<em>{1}\ |\ …\ | \alpha </em>{m}A_{1}\ |\ \epsilon<br>$</p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/15.png" alt="上下文无关文法"></p>
 <p>需要特别注意的是：<strong>第二个产生式到空串的产生式</strong> 。非终结符号A生成的串和替换之前生成的串一样，但不再是左递归的。这个过程消除了所有$A$和$A_{1}$产生式相关联的左递归。</p>
 <p>比如我们对文法</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/2.png" alt="上下文无关文法"></p>
 <p>应用消除立即左递归的技术上面文法的左递归，得到的结果为：</p>
-<p>$<br>E \rightarrow TE<em>{1}\<br>E</em>{1} \rightarrow +TE<em>{1}\ |\ \epsilon \<br>T \rightarrow FT</em>{1}\<br>T<em>{1} \rightarrow *FT</em>{1} |\ \epsilon \<br>F \rightarrow (E)|\mathbf{id}<br>$</p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/13.png" alt="上下文无关文法"></p>
 <h4 id="消除一般左递归"><a href="#消除一般左递归" class="headerlink" title="消除一般左递归"></a><strong>消除一般左递归</strong></h4><p>但并不是所有的文法都是立即左递归的，有可能是经过多次推导之后才发现递归的情形。比如下面的文法就不是立即左递归：</p>
-<p>$<br>S \rightarrow Aa\ |\ b\<br>A \rightarrow Ac\ |\ Sd\ |\ ϵ<br>$</p>
-<p>对于推导 $S \Rightarrow Aa \Rightarrow Sd$，因此非终结符号S是左递归的，但它并不是立即左递归。那么对于这种情况的左递归如何消除呢？</p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/17.png" alt="上下文无关文法"></p>
+<p>对于推导 </p>
+<p><img src="/uploads/SyntaxParser_context_free_grammar/18.png" alt="上下文无关文法"></p>
+<p>可以看出非终结符号S是左递归的，但它并不是立即左递归。那么对于这种情况的左递归如何消除呢？</p>
 <ul>
-<li><p>1）、首先将文法的所有非终结符，从开始符号按出现顺序，依次对它们进行编号为$A<em>{1},A</em>{2},A<em>{3},…,A</em>{n}$；</p>
+<li><p>1）、首先将文法的所有非终结符，从开始符号按出现顺序，依次对它们进行编号为A<sub>1</sub>, A<sub>2</sub>, A<sub>3</sub>, …,A<sub>n</sub>；</p>
 </li>
-<li><p>2）、从$A<em>{1}$开始依次读取每一个非终结符到$A</em>{n}$，我们称作$A_{i}$；</p>
-<p>同时又从$A<em>{1}$开始读取非终结符号到$A</em>{i-1}$，我们称作$A<em>{j}$ 。如果存在形如$A</em>{i} \rightarrow A_{j}\gamma$，那我们就将其替换为产生式组：</p>
+<li><p>2）、从A<sub>1</sub>开始依次读取每一个非终结符到A<sub>n</sub>，我们称作A<sub>i</sub>；</p>
+<p>同时又从A<sub>1</sub>开始读取非终结符号到A<sub>i-1</sub>，我们称作A<sub>j</sub> 。如果存在形如$A<em>{i} \rightarrow A</em>{j}\gamma$，那我们就将其替换为产生式组：</p>
 <p>$<br>Ⅰ、A<em>{i} \rightarrow \sigma </em>{1} \gamma\ |\ \sigma <em>{2} \gamma\ |\ …\ |\ \sigma </em>{k} \gamma \<br>Ⅱ、A<em>{j} \rightarrow \sigma </em>{1} \ |\ \sigma <em>{2} \ |\ …\ |\ \sigma </em>{k}<br>$<br>这样我们就可以尽最大的可能构造立即左递归了。</p>
 </li>
 <li><p>3）、如果此时存在立即左递归，则使用上面提到的消除立即左递归的方式来消除；</p>
@@ -145,7 +151,7 @@
 <p>下一篇文章，我们将会去看看自顶向下的语法分析技术。</p>
 </div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_regular2dfa/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2019/10/28/SyntaxParser_context_free_grammar/';
-var disqus_title = '语法分析——文法的基础概念';
+var disqus_title = '';
 var disqus_url = 'http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/';
 (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
