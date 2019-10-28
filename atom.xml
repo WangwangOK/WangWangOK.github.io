@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T03:51:36.600Z</updated>
+  <updated>2019-10-28T04:32:47.733Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,405 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>词法分析——手动词法单元的识别（状态转换图、KMP算法）</title>
+    <link href="http://yoursite.com/2019/10/28/compiler_stateGraph_kmp/"/>
+    <id>http://yoursite.com/2019/10/28/compiler_stateGraph_kmp/</id>
+    <published>2019-10-28T04:10:38.170Z</published>
+    <updated>2019-10-28T04:32:47.733Z</updated>
+    
+    <content type="html"><![CDATA[<p>在这儿我们先用手工的方式将正则表达式表示的模式转换为状态转换图。在下一节我们会用自动化的方法构造对应的转换图。</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/1.png" alt=""></p>
+<p>1）、<strong>结点</strong>：状态转换图有一组被称为“状态”的结点，它表示在扫描过程（即词法分析器扫描指定输入串，寻找指定模式词素）中可能出现的状态。也就是lexemeBegin指针和forward指针之间的所有的字符。<br>2）、<strong>边</strong>：从图的一个状态指向另一个状态，每条边的标号包含了一个或多个符号。如果找到这样的一条边，就将forward指针前移，并进入该边指向的下一个状态。<br>3）、<strong>开始状态</strong>：也就是上图中的<code>start</code>。<br>4）、<strong>接收状态或者最终状态</strong>：该状态表明已经找到了一个词素。也就是上图中两个圆圈。</p>
+<blockquote>
+<p>接收状态通常是 <strong>向语法分析器返回一个词法单元和相关的属性值</strong> 。</p>
+</blockquote>
+<p>5）、<strong>回退🌟号</strong>：上图中接受状态右上角的*号，表示我们识别到的词素并不包含使我们到达接受状态的符号（也就是上图中的no let/dig边）。此时我们需要回退forward指针到倒数第二个状态。这其中可能会回退多步，所以这里用*号来表示需要回退；</p>
+<h3 id="relop状态转换图"><a href="#relop状态转换图" class="headerlink" title="relop状态转换图"></a>relop状态转换图</h3><p>我们根据上一节的relop词法单元，已经对应的属性来构造一个relop的状态转换图</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">词素</th>
+<th style="text-align:left">词法单元名字</th>
+<th style="text-align:left">属性值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">&lt;</td>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">LT</td>
+</tr>
+<tr>
+<td style="text-align:left">&gt;</td>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">GT</td>
+</tr>
+<tr>
+<td style="text-align:left">…</td>
+<td style="text-align:left"><strong>…</strong></td>
+<td style="text-align:left">…</td>
+</tr>
+<tr>
+<td style="text-align:left">!=</td>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">NE</td>
+</tr>
+</tbody>
+</table>
+<p><img src="/uploads/compiler_stateGraph_kmp/2.png" alt=""></p>
+<p>其实对于这个状态转换图来说，我只画了其中的比较运算符和逻辑运算符。对于位运算符（&lt;&lt;左移, &gt;&gt;右移）并没画出来。这里主要是想表达各个接收状态，和forward指针回退的操作。</p>
+<h3 id="id（标识符）和关键字的状态转换图"><a href="#id（标识符）和关键字的状态转换图" class="headerlink" title="id（标识符）和关键字的状态转换图"></a>id（标识符）和关键字的状态转换图</h3><table>
+<thead>
+<tr>
+<th style="text-align:left">词法单元</th>
+<th style="text-align:left">模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>letter</strong></td>
+<td style="text-align:left">[A-Za-z]</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>id</strong></td>
+<td style="text-align:left">letter(letter \</td>
+<td>digit)*</td>
+</tr>
+</tbody>
+</table>
+<p>对于关键字来说，它们看起来和标识符是很像的。但它们并不是标识符。</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/3.png" alt=""></p>
+<p>对于关键字<code>if/else/for</code>等等关键字，标识符<code>forearm</code>同样也是满足上诉转换图的。</p>
+<p>为了解决上诉问题，编译原理中的处理方案有两个：</p>
+<ul>
+<li>（1）👏👏👏、初始化时就将各个保留字填入符号表中；<br>符号表的某个字段会指明这些串并不是普通的标识符，并指出其对应的词法单元。<br>当我们找到一个标识符时，如果该标识符尚未出现在符号表中，就会调用上图中出现的<code>installID</code>将此标识符放入符号表中，并返回一个指针（该指针指向词素对应的符号表条目）。</li>
+</ul>
+<blockquote>
+<p><strong>任何在词法分析时不在符号表中的标识符都不可能是一个保留字，因此它的词法单元是id</strong></p>
+</blockquote>
+<ul>
+<li>（2）、为每一个关键字建立单独的状态转换图；</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/1.png" alt=""></p>
+<p>对于这个状态图来说，我们必须要区分以<code>else</code>为前缀的标识符（比如elseid），因此我们在倒数第二个状态后的边，必须要限制为非字符和数字。</p>
+<p>使用第二个方案时：<strong>必须要设定词法单元的优先级，使得当一个词素同时匹配id和保留字模式时，优先识别保留字词法单元</strong>。</p>
+<p>我们从第一点可以确定标识符加入符号表的时机是：</p>
+<blockquote>
+<p>识别到对应词法单元时，如果该标识符尚未加入符号表。此时词法分析器会将该 <strong>标识符</strong> (也可以理解为词素) 放入符号表中。</p>
+</blockquote>
+<h3 id="词法单元number状态转换图"><a href="#词法单元number状态转换图" class="headerlink" title="词法单元number状态转换图"></a>词法单元number状态转换图</h3><table>
+<thead>
+<tr>
+<th style="text-align:left">词法单元</th>
+<th style="text-align:left">模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>digit</strong></td>
+<td style="text-align:left">[0-9]</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>digits</strong></td>
+<td style="text-align:left">digit+</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>number</strong></td>
+<td style="text-align:left">digits(.digits)?(E[+-]?digits)?</td>
+</tr>
+</tbody>
+</table>
+<p>下图是一个识别整数和浮点数的状态转换图：</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/4.png" alt=""></p>
+<p>从上图中我们可以看到，接收状态22既匹配到了科学计数法表示的浮点数（包含小数部分，也包含指数部分），也匹配到了科学计数法表示的整数。<br>接收状态23是匹配到的整数词素；接收状态24为不带科学计数法的的整数。</p>
+<p>当我们在接收状态时，返回词法单元 <strong>number</strong> 以及一个指向 <strong>常量表</strong> 条目的指针，上面找到的词素就放在这个常量表条目中。</p>
+<h3 id="ws（空白符）状态转换图"><a href="#ws（空白符）状态转换图" class="headerlink" title="ws（空白符）状态转换图"></a>ws（空白符）状态转换图</h3><table>
+<thead>
+<tr>
+<th style="text-align:left">词法单元</th>
+<th style="text-align:left">模式</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>ws</strong>(空白符)</td>
+<td style="text-align:left">(blank \</td>
+<td>tab \</td>
+<td>newline)+</td>
+</tr>
+</tbody>
+</table>
+<p>我们用转换delim替换上表中的blank、tab、newline：</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/5.png" alt=""></p>
+<p>空白符后面需要跟一个非空白符才能确定当前已经完成了对连续空白符的扫描。</p>
+<blockquote>
+<p>当我们识别到空白符之后，但我们 <strong>并不向语法分析器返回任何词法单元。相反，我们必须在这个空白符之后再次启动词法分析过程</strong> 。</p>
+</blockquote>
+<h3 id="基于状态转换图的的词法分析器体系结构"><a href="#基于状态转换图的的词法分析器体系结构" class="headerlink" title="基于状态转换图的的词法分析器体系结构"></a>基于状态转换图的的词法分析器体系结构</h3><ul>
+<li>1、使用一个state变量来保存一个状态转换图的当前状态编号（就是前面我们从0到27的编号）。</li>
+<li>2、用switch语句根据state的值将我们转到对应状态相应的代码段，该代码段为对应状态所需要执行的动作；</li>
+</ul>
+<h2 id="二、KMP算法"><a href="#二、KMP算法" class="headerlink" title="二、KMP算法"></a>二、KMP算法</h2><p>现在我们看一下KMP算法，它可以用于在文本串中识别一组关键字。在看KMP字符串匹配算法之前，我们先看一下朴素字符串匹配算法。</p>
+<h3 id="朴素字符串匹配算法"><a href="#朴素字符串匹配算法" class="headerlink" title="朴素字符串匹配算法"></a>朴素字符串匹配算法</h3><p>朴素字符串匹配算法是同一个循环找到所有有效偏移，寻找满足条件的情况。</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/6.png" alt=""></p>
+<p>朴素字符串匹配算法可以形象地看成是待匹配串（子串）沿着原文本（主串）滑动，同时对每个偏移都要检测子串上的字符是否与主串中对应字符相等。其中红色字符表示对应位置匹配成功，灰色字符表示匹配失败。<br>大致的代码是这样：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div></pre></td><td class="code"><pre><div class="line">using namespace std;</div><div class="line">int naive_string_matcher(string text, string pattern)</div><div class="line">&#123;</div><div class="line">     string::size_type n = text.size();</div><div class="line">     string::size_type m = pattern.size();</div><div class="line">     string::size_type total = n-m;</div><div class="line">     string::size_type s = -1;</div><div class="line">     for (string::size_type i = 0; i &lt; total; i++)</div><div class="line">     &#123;</div><div class="line">         s = i;</div><div class="line">         string::size_type matched = 0;</div><div class="line">         for(string::size_type idx = 0; idx &lt; m; idx++)</div><div class="line">         &#123;</div><div class="line">             if(pattern[idx] == text[s+idx]) matched++;</div><div class="line">         &#125;</div><div class="line">         if (matched == m) return s;</div><div class="line">     &#125;</div><div class="line">     return s;</div><div class="line"> &#125;</div></pre></td></tr></table></figure>
+<p>在最坏情况下，朴素字符串匹配算法的平均时间复杂度为O(n<sup>2</sup>) 。</p>
+<h3 id="失效函数"><a href="#失效函数" class="headerlink" title="失效函数"></a>失效函数</h3><p>KMP算法在最坏情况下也会比朴素字符串匹配算法好很多。为了快速处理文本串并在这些串中搜索一个关键字，定义了 <strong>失效函数</strong> f(s) ，其中s为对应状态图上的各个状态。也可以叫做辅助函数。<br>在这之前我们先看看串的一部分术语：</p>
+<ul>
+<li><strong>前缀</strong>：从串s尾部删除0个或多个符号后得到的串；</li>
+<li><strong>后缀</strong>：从串s开始处删除0个或多个符号后得到的串；</li>
+<li><strong>子串</strong>：删除某个前缀或者后缀之后得到的串；</li>
+<li><strong>真前缀、真后缀、真子串</strong>：指的是既不包含空串，也不包含本身的前缀、后缀、子串；</li>
+</ul>
+<p>针对关键字b<sub>1</sub>b<sub>2</sub>b<sub>3</sub>…b<sub>n</sub>，其目标是使得b<sub>1</sub>b<sub>2</sub>…b<sub>f(s)</sub>不仅是b<sub>1</sub>…b<sub>s</sub>的真前缀，又是b<sub>1</sub>…b<sub>s</sub>后缀的子串。并且b<sub>1</sub>b<sub>2</sub>…b<sub>f(s)</sub>是所求得的最长串。下面我们以串<code>ababaca</code>来进行讲解：</p>
+<h5 id="a、构造关键字状态转换图"><a href="#a、构造关键字状态转换图" class="headerlink" title="a、构造关键字状态转换图"></a>a、构造关键字状态转换图</h5><p>我们根据前面的知识，节点表示状态，有向边指的是转换</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/7.png" alt=""></p>
+<p>现在有了状态转换图，我们需要构造每一个状态节点s，所对应的失效函数值。</p>
+<h5 id="b、求解每一个状态s的函数值"><a href="#b、求解每一个状态s的函数值" class="headerlink" title="b、求解每一个状态s的函数值"></a>b、求解每一个状态s的函数值</h5><ul>
+<li>1）、由于前面提到过真前缀的前提，因此我们从s=1开始计算。首先我们将f(1)设置为0，既状态1对应的失效函数值为0。并且这里我们新增一个辅助游标t用于对照状态s：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/8.png" alt=""></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">s</th>
+<th style="text-align:left">1</th>
+<th style="text-align:left">2</th>
+<th style="text-align:left">3</th>
+<th style="text-align:left">4</th>
+<th style="text-align:left">5</th>
+<th style="text-align:left">6</th>
+<th style="text-align:left">7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">f(s)</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>2）、此时我们比较一下状态t的转换（a）和状态s的转换（b），发现字符a并不等于字符b。此时我们将f(s+1)，即f(2)的值设置为0：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">s</th>
+<th style="text-align:left">1</th>
+<th style="text-align:left">2</th>
+<th style="text-align:left">3</th>
+<th style="text-align:left">4</th>
+<th style="text-align:left">5</th>
+<th style="text-align:left">6</th>
+<th style="text-align:left">7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">f(s)</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+</tr>
+</tbody>
+</table>
+<p>并且将s移动到状态2：</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/9.png" alt=""></p>
+<ul>
+<li>3）、继续比较状态t的转换（a）和状态s的转换（a）此时他们相等。因此 <strong>先将t的自增1，然后将f(s+1)，即f(2)的值设置为t的值（此时为1）</strong>：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">s</th>
+<th style="text-align:left">1</th>
+<th style="text-align:left">2</th>
+<th style="text-align:left">3</th>
+<th style="text-align:left">4</th>
+<th style="text-align:left">5</th>
+<th style="text-align:left">6</th>
+<th style="text-align:left">7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">f(s)</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+</tr>
+</tbody>
+</table>
+<p>同样的，此时将s移动到状态3：</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/10.png" alt=""></p>
+<ul>
+<li>4）、依次比较后续的s=3，和s=4的情况。它们的情形和第三步类似：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">s</th>
+<th style="text-align:left">1</th>
+<th style="text-align:left">2</th>
+<th style="text-align:left">3</th>
+<th style="text-align:left">4</th>
+<th style="text-align:left">5</th>
+<th style="text-align:left">6</th>
+<th style="text-align:left">7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">f(s)</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+</tr>
+</tbody>
+</table>
+<p>此时t=3，s=5。对应的状态转换图为：</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/11.png" alt=""></p>
+<ul>
+<li>5）、现在我们比较一下状态t的转换（b）和状态s的转换（c），它们并不相等。由于 <strong>此时t不为0，说明在此之前肯定是存在某一串既为真前缀，又为后缀子串</strong> 。因此我们获取t当前位置对应失效函数函数的值。<br>此时t=3，查上表可知f(3)=1。所以现在我们将t移动到状态1：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/12.png" alt=""></p>
+<ul>
+<li>6）、同样的比较状态t的转换（b）和状态s的转换（c），依然不相等。<br>由于t不等于0，此时t=1，查第4步的表可知f(1)=0。所以我们现在将t移动到状态0：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/13.png" alt=""></p>
+<ul>
+<li>7）、对于后续状态的失效函数值确定，可以仿照第2、3和5步进行求解。最终完整失效函数为：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">s</th>
+<th style="text-align:left">1</th>
+<th style="text-align:left">2</th>
+<th style="text-align:left">3</th>
+<th style="text-align:left">4</th>
+<th style="text-align:left">5</th>
+<th style="text-align:left">6</th>
+<th style="text-align:left">7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">f(s)</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+</tr>
+</tbody>
+</table>
+<p>下面是对应的代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div></pre></td><td class="code"><pre><div class="line">#include &lt;iostream&gt;</div><div class="line">#include &lt;string&gt;</div><div class="line">#include &lt;vector&gt;</div><div class="line"></div><div class="line">using namespace std;</div><div class="line">void trie_func(string pattern, vector&lt;int&gt; &amp;f) &#123;</div><div class="line">	const string::size_type length = pattern.size()+1;</div><div class="line">	int t = 0;</div><div class="line">	f[0]=t;// f[0] store t</div><div class="line">	f[1]=0;</div><div class="line">	for(int s = 1; s&lt; length-1; s++)	</div><div class="line">	&#123;</div><div class="line">		while(t&gt;0 &amp;&amp; pattern[t] != pattern[s])&#123; t=f[t]; f[0]=t;  &#125;	</div><div class="line">		if(pattern[s]==pattern[t])&#123; t=t+1; f[s+1]=t; f[0]=t; &#125;</div><div class="line">		else &#123;f[s+1]=0;&#125;</div><div class="line">	&#125;</div><div class="line">&#125;</div><div class="line"></div><div class="line">int main(int argc, const char * argv[])&#123;</div><div class="line">	string pattern(&quot;ababaca&quot;);</div><div class="line">	vector &lt;int&gt; trie(pattern.size()+1);</div><div class="line">	trie_func(pattern,trie);</div><div class="line">	for (vector&lt;int&gt;::iterator itr = trie.begin(); itr != trie.end(); itr++) &#123;</div><div class="line">		cout&lt;&lt;*itr&lt;&lt;endl;</div><div class="line">	&#125;</div><div class="line">	return 0;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h3 id="子串与主串的比较"><a href="#子串与主串的比较" class="headerlink" title="子串与主串的比较"></a>子串与主串的比较</h3><p>现在我们以主串<code>bcbababaababacacd</code> 和子串 <code>ababaca</code> 作为例子，来看主串是否包含子串。</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/14.png" alt=""></p>
+<p>我们从前面知道子串失效函数为：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">state</th>
+<th style="text-align:left">1</th>
+<th style="text-align:left">2</th>
+<th style="text-align:left">3</th>
+<th style="text-align:left">4</th>
+<th style="text-align:left">5</th>
+<th style="text-align:left">6</th>
+<th style="text-align:left">7</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">f(s)</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+<td style="text-align:left">2</td>
+<td style="text-align:left">3</td>
+<td style="text-align:left">0</td>
+<td style="text-align:left">1</td>
+</tr>
+</tbody>
+</table>
+<p>这里我将上一节的字符s替换为state，是因为这一节我会用字符s用作当前子串相对于主串的偏移量。而真正原因是我太懒了，发现图中和失效函数都用了同一个字符s。为了避免混淆，但又不想重新画图🤣。</p>
+<ul>
+<li>1）、主串的第一个字符和子串的第一个字符不相等。此时我们将子串向右滑动一位，此时偏移值<code>s = 1</code> ：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/15.png" alt=""></p>
+<ul>
+<li>2）、依次对后面机会字符进行对比，直到<code>s=3</code>时，我们发现字符串 <code>ababa</code> 成功匹配，但是子串的第六个字符和主串的第九个字符并不相等：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/16.png" alt=""></p>
+<p>这时候失效函数就派上用途了。此时已匹配长度<code>q=5</code>，也就是说在状态转换图中对应于状态5。而状态5对应的失效函数值为3，对于串<code>ababa</code>来说，长度为3的串<code>aba</code>既是它的真前缀，又是它后缀的子串。此时主串和子串中的<code>aba</code>已经失效，已经没有再去比较的意义了，我们可以直接去比较主串中的a和子串中的b了：</p>
+<p><img src="/uploads/compiler_stateGraph_kmp/17.png" alt=""></p>
+<ul>
+<li>3）、现在我们将子串向右边移动2个字符，然后继续进行比较：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/18.png" alt=""></p>
+<p>这里计算偏移量s很重要：</p>
+<blockquote>
+<p>⚠️⚠️⚠️ <strong><code>s = s + (state - f(state))</code></strong></p>
+</blockquote>
+<p>比如这里的q=5，也就说明state=5，而f(state) = 3。因此向右的偏移量为：s = 3 + (5-3) = 5。</p>
+<ul>
+<li>4）从图中标红也能看出来a≠b，因此我们需要继续重复步骤3的事情：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/19.png" alt=""></p>
+<ul>
+<li>5）、如上图所示，我们继续将子串向右移动2个字符，进行比较：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/20.png" alt=""></p>
+<p>相等。但这里有一个需要注意的点是：此时state为1，而f(state)=0。这意味着此时并没有存在即是真前缀又是后缀的子串。<br>现在只能和第一步一样，手动将偏移量加1。</p>
+<ul>
+<li>6）、现在将偏移量加1之后，并将子串和主串进行匹配。此时匹配成功，因为我们可以判断主串是包含有指定关键字的字符串：</li>
+</ul>
+<p><img src="/uploads/compiler_stateGraph_kmp/21.png" alt=""><br>下面是简单的代码实现，需要注意的是这里并没有做极端情况的处理：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div></pre></td><td class="code"><pre><div class="line">int kmp_match(string text, string pattern) &#123;</div><div class="line">	vector&lt;int&gt; trie(pattern.size() + 1);</div><div class="line">	trie_func(pattern, trie);</div><div class="line"></div><div class="line">	int offset = -1;</div><div class="line">	int q = 0;</div><div class="line">	string::size_type m = text.size();</div><div class="line">	string::size_type n = pattern.size();</div><div class="line">	if (m &lt; n)</div><div class="line">	&#123;</div><div class="line">		return -1;</div><div class="line">	&#125;</div><div class="line"></div><div class="line">	for (string::size_type i = 0; i &lt; m; i++)</div><div class="line">	&#123;</div><div class="line">		while (q &gt; 0 &amp;&amp; text[i] != pattern[q] &amp;&amp; q != 0)</div><div class="line">		&#123;</div><div class="line">			q = trie[q];</div><div class="line">		&#125;</div><div class="line">		if (text[i] == pattern[q])</div><div class="line">		&#123;</div><div class="line">			q++;</div><div class="line">		&#125;</div><div class="line">		if (q==n)</div><div class="line">		&#123;</div><div class="line">			offset = i - q + 1;</div><div class="line">		&#125;</div><div class="line">	&#125;</div><div class="line">	return offset;</div><div class="line">&#125;</div><div class="line"></div><div class="line">int main()</div><div class="line">&#123;</div><div class="line">	string text(&quot;bcbababaababacacd&quot;);</div><div class="line">	string pattern(&quot;ababaca&quot;);</div><div class="line">	int offset = kmp_match(text, pattern);</div><div class="line">	cout &lt;&lt; &quot;offset: &quot; &lt;&lt; offset &lt;&lt; endl;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>本节到这儿，我们已经能够手工地为各类词法单元构造状态转换图了。这类词法单元包括有：标识符（包括字符）、数字（包括数位）、关键字、运算符等等，而且也知道如何使用KMP算法来寻找指定串，例如标识符和关键字等等。<br>在下一节就需要通过自动地方式里生层对应的状态图了。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在这儿我们先用手工的方式将正则表达式表示的模式转换为状态转换图。在下一节我们会用自动化的方法构造对应的转换图。&lt;/p&gt;
+&lt;p&gt;&lt;img src=&quot;/uploads/compiler_stateGraph_kmp/1.png&quot; alt=&quot;&quot;&gt;&lt;/p&gt;
+&lt;p&gt;1）、&lt;stron
+    
+    </summary>
+    
+      <category term="编译原理" scheme="http://yoursite.com/categories/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/"/>
+    
+    
+      <category term="词法分析" scheme="http://yoursite.com/tags/%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
   
   <entry>
     <title>词法分析——词法单元和正则表达式</title>
@@ -266,7 +665,7 @@
     <link href="http://yoursite.com/2019/02/17/a_malloc_tutorial/"/>
     <id>http://yoursite.com/2019/02/17/a_malloc_tutorial/</id>
     <published>2019-02-17T14:01:30.825Z</published>
-    <updated>2019-10-28T04:09:00.993Z</updated>
+    <updated>2019-10-28T04:11:15.522Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本篇文章是对<a href="https://wiki-prog.infoprepa.epita.fr/images/0/04/Malloc_tutorial.pdf" target="_blank" rel="external">该文章</a>的翻译，如有疑问可对照原文。</p>
 <h2 id="一、介绍"><a href="#一、介绍" class="headerlink" title="一、介绍"></a>一、介绍</h2><p>什么是malloc？如果连这个名儿都没有听说的话，那么应该在读这篇文章之前先去学习一下Unix环境下的C语言。对于程序员来说，malloc是在C语言编程中分配一块内存的函数，然后大多数人并不知道其背后的真实情况，或者仅仅是认为这是一个syscall或者语言关键字。这篇文章中只需要一些C的技能和一些系统知识，就能了解到malloc也只不过是一个简单的函数而已。<br>本文的主要目的是编写一个简单的malloc函数，来帮助我们了解底层概念。其目的并不是为了实现一个高效的malloc，仅仅提供基础功能。但是背后的概念能够帮助我们有效地去理解进程中内存是如何管理的，以及如何处理块的分配，再分配以及释放等等。<br>站在教学的角度来说，这是一个很好的C语言编程练习。同样也是一个很好文档，它能够帮助我们理解指针怎么来的，它们在堆里面是怎样组织起来的。</p>
@@ -2299,47 +2698,6 @@ char *find_char(char const *source,char const *chars){
       <category term="C" scheme="http://yoursite.com/tags/C/"/>
     
       <category term="指针" scheme="http://yoursite.com/tags/%E6%8C%87%E9%92%88/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>《C和指针Note》之操作符和表达式</title>
-    <link href="http://yoursite.com/2017/02/22/c_and_pointer_note_case2/"/>
-    <id>http://yoursite.com/2017/02/22/c_and_pointer_note_case2/</id>
-    <published>2017-02-22T15:18:03.000Z</published>
-    <updated>2017-02-22T15:35:25.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>这篇主要记录操作符和表达式相关的只是！<br><a id="more"></a><br>当前C语言环境:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">Apple LLVM version 8.0.0 (clang-800.0.38)</div><div class="line">Target: x86_64-apple-darwin15.6.0</div><div class="line">Thread model: posix</div><div class="line">InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin</div></pre></td></tr></table></figure></p>
-<h3 id="移位操作符"><a href="#移位操作符" class="headerlink" title="移位操作符"></a>移位操作符</h3><p>左移操作符<code>&lt;&lt;</code>,右移操作符<code>&gt;&gt;</code>;而且位移的操作数必须是<strong><em>整数类型</em></strong>。其中右移操作符存在两种情况：算术移位和逻辑移位；这里主要来说一说算术移位。</p>
-<h6 id="逻辑移位"><a href="#逻辑移位" class="headerlink" title="逻辑移位"></a>逻辑移位</h6><p>左边移入的位用0填充</p>
-<h6 id="算术移位"><a href="#算术移位" class="headerlink" title="算术移位"></a>算术移位</h6><p>算术移位也就是说会考虑到符号位，即左边移入的位由原值的符号位决定，如果符号位为1则移入的位为1，符号位为0则移入的位为0；<br>对于移位操作，还必须知道数字在计算机中是以二进制的形式存在的，而且负数的表示形式还稍有不同。</p>
-<blockquote>
-<p>负数在计算机中的二进制表示形式</p>
-<p>假设在当前计算机中，int型占8位。比如要知道数字<code>-10</code>在计算机的表现形式，第一步：数字<code>10</code>的二进制值为00001010，第二步用100000000来减去00001010。得到的就是<code>-10</code>在二进制中的表现形式为:11110110。更多关于负数补码的介绍<a href="http://www.ruanyifeng.com/blog/2009/08/twos_complement.html" target="_blank" rel="external">阮一峰的网络日志－－关于2的补码</a></p>
-</blockquote>
-<p>这里我举例说明一下移位操作:</p>
-<p><pre><code><br>int uint = 10; //00001010<br>int sint = -10;//11110110<br>printf(“%d\n”,uint &gt;&gt; 2);//00000010<br>printf(“%d\n”,sint &gt;&gt; 2);//11111101<br></code></pre>在当前环境下：</p>
-<p><pre><code><br>Apple LLVM version 8.0.0 (clang-800.0.38)<br>Target: x86_64-apple-darwin15.6.0<br>Thread model: posix<br>InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin<br></code></pre>打印的结果分别为<code>2</code>和<code>-3</code>,所以从这里看出来编译器对于左移操作是<strong><em>算术移位</em></strong>。</p>
-<h3 id="和–操作符"><a href="#和–操作符" class="headerlink" title="++和–操作符"></a>++和–操作符</h3><p>对于这两个操作符的计算就很简单了，还是来举例说明一下:</p>
-<p><pre><br>int a,b,c,d;<br>a = b = 10;<br>c = ++a;<br>d = b++;<br></pre>但是需要来理解这其中的原理:</p>
-<blockquote>
-<p>++和–操作符原理<br>抽象的说，前缀和后缀形式的增值操作符都复制一份变量值的拷贝，这些操作符的结果不是被他们所修改的变量，而是变量值的拷贝。</p>
-</blockquote>
-<h3 id="逗号操作符"><a href="#逗号操作符" class="headerlink" title="逗号操作符"></a>逗号操作符</h3><p>逗号操作符将多个表达式分隔开，这些表达式从左向右逐个进行求值，__整个逗号表达式的值就是最后那个表达式的值。</p>
-<p><pre><br>int (^f1)(int) = ^(int value){<br>  return value + 1;<br>};<br>int (^f2)(int) = ^(int value){<br>  return value + 2;<br>};<br>int (^f3)(int,int) = ^(int a,int b){<br>  return a + b;<br>};<br>int x,a,b,c;<br>x = 0;<br>//从这里开始<br>a = f1(x);<br>b = f2(x + a);<br>for (c = f3(a,b); c &lt; 10; c = f3(a,b)) {<br>  printf(“while statements c is:%d\n”,c);<br>  a = f1(++x);<br>  b = f2(x + a);<br>}<br>//到这里结束，这其中的代码将会被修改<br></pre>上面为原始的代码片段，现在我们需要使用逗号操作符来简化上面的代码，同时我选择用<code>while</code>循环来代替<code>for</code>循环。</p>
-<p><pre><br>while (a = f1(x),b = f2(x + a),c = f3(a,b),++x,c &lt; 10) {<br>  printf(“while statements c is:%d\n”,c);<br>}<br></pre>现在，循环中用于获得下一个值的语句只需要出现一次，逗号操作符使源码更易于维护。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;这篇主要记录操作符和表达式相关的只是！&lt;br&gt;
-    
-    </summary>
-    
-      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
-    
-    
-      <category term="C" scheme="http://yoursite.com/tags/C/"/>
     
   </entry>
   
