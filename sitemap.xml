@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2018/05/18/source_code_objc_weak_t/</loc>
+    
+    <lastmod>2019-10-28T04:43:22.606Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/10/28/compiler_stateGraph_kmp/</loc>
     
-    <lastmod>2019-10-28T04:37:17.884Z</lastmod>
+    <lastmod>2019-10-28T04:37:54.285Z</lastmod>
     
   </url>
   
@@ -19,13 +26,6 @@
     <loc>http://yoursite.com/2019/10/28/compiler_token_regular/</loc>
     
     <lastmod>2019-10-28T03:51:36.600Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>http://yoursite.com/2018/05/18/source_code_objc_weak_t/</loc>
-    
-    <lastmod>2018-05-30T14:15:06.000Z</lastmod>
     
   </url>
   
