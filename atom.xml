@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T03:27:50.617Z</updated>
+  <updated>2019-10-28T03:31:06.065Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/compiler_token_regular/"/>
     <id>http://yoursite.com/2019/10/28/compiler_token_regular/</id>
     <published>2019-10-28T03:09:25.132Z</published>
-    <updated>2019-10-28T03:27:50.617Z</updated>
+    <updated>2019-10-28T03:31:06.065Z</updated>
     
     <content type="html"><![CDATA[<p>本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：<br>1）、首先解释什么是词法单元；<br>2）、如何手动识别词法单元；<br>3）、最后是词法分析器如何自动机自动识别词法单元；<br>本文主要是看一下词分析器的词法单元部分。包括一些基本概念，以及词法单元的识别。</p>
 <p>首先我们先大体上看一下词法分析器的作用。它的主要任务是读入源程序的输入字符、将它们组成词素，生成并输出一个词法单元的序列。每个词法单元对应一个词素。</p>
@@ -178,9 +178,7 @@
 </tr>
 <tr>
 <td style="text-align:left"><strong>ws</strong>(空白符)</td>
-<td style="text-align:left">(blank \</td>
-<td>tab \</td>
-<td>newline)+</td>
+<td style="text-align:left">(blank,tab,newline)+</td>
 </tr>
 </tbody>
 </table>
