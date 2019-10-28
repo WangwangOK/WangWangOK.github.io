@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2019/10/28/compiler_regular2dfa/</loc>
+    
+    <lastmod>2019-10-28T05:57:15.238Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/10/28/compiler_regular_fa/</loc>
     
     <lastmod>2019-10-28T05:13:10.289Z</lastmod>

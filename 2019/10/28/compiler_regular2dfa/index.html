@@ -1,0 +1,296 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 词法分析——正则表达式直接转换为DFA · 凌云壮志幾多愁</title><meta name="description" content="词法分析——正则表达式直接转换为DFA - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">词法分析——正则表达式直接转换为DFA</h1><div class="post-info">Oct 28, 2019</div><div class="post-content"><p>在上篇文章中，我们至少学会了将正则表达式构造成对应的NFA和DFA。但是用上篇文章中从正则表达式转换为对应DFA的方式效率低下，即我们要先将正则表达式转换为NFA，然后使用子集构造法将NFA转换为对应DFA。</p>
+<p>在本篇文章中，我们将首先学习如何将正则表达式直接转换为DFA，并最小化DFA的状态数目。然后看看DFA模拟中时间和空间的权衡问题。</p>
+<p>在正式进入正则表达式转换为DFA之前我们需要一些基本概念，没有这些基本概念可能不太好理解后面提到的内容。</p>
+<h2 id="一、需要的基本概念"><a href="#一、需要的基本概念" class="headerlink" title="一、需要的基本概念"></a>一、需要的基本概念</h2><h4 id="重要状态"><a href="#重要状态" class="headerlink" title="重要状态"></a>重要状态</h4><p>NFA的重要状态直接对应于正则表达式中存放字母表中符号的位置，而 <strong>重要状态是指NFA的某一状态有一个标号为非空的离开转换</strong> 。比如我们在上一节中将正则表达式转换为对应NFA时引入了新状态，它们的离开转换都是空转换，因此它们并不是重要状态。</p>
+<blockquote>
+<p><strong>每个重要状态对应于正则表达式中某个运算分量</strong> 。</p>
+</blockquote>
+<p>因此我们在比较两个NFA状态集合时，判断它们是否一致的依据如下：<br>1）、具有相同的重要状态；<br>2）、要么都包含接受状态，要么都不包含接受状态；</p>
+<h4 id="抽象语法树"><a href="#抽象语法树" class="headerlink" title="抽象语法树"></a>抽象语法树</h4><p>注意这里的抽象语法树和上一节提到的语法分析树有一点不同，关于语法分析树可以回去看上一篇提到的语法分析树定义。但抽象语法树是必须要完全理解的。</p>
+<blockquote>
+<p><strong>抽象语法树中，每个内部结点代表一个运算符，该运算符结点的子结点代表这个运算符的运算分量</strong> !!!</p>
+</blockquote>
+<p>在抽象语法树中，内部结点代表的是程序的构造；而在语法分析树中，内部结点代表的是非终结符。有时候我们将语法分析树称为具体语法树；而抽象语法树简称为语法树。这是因为在文法的很多非终结符都代表程序的具体构造，还有各种辅助符号。而这些在抽象语法树中都是不需要的。</p>
+<p>而前面提到的重要状态就是抽象语法树中运算符的运算分量。下面是正则表达式 <code>(a|b)*abb</code>对应的抽象语法树：</p>
+<p><img src="/uploads/compiler_regular2nfa/1" alt="(a|b)*abb的抽象语法树"></p>
+<p>1）、<strong>结束标记符#</strong>：前面我们提到了重要状态，但（NFA或者DFA）接受状态没有一个标号为非空的离开转换，因此接受状态为非重要状态。基于此，我们可以给正则表达式的右边连接一个结束标记符 <code>#</code> ，使得正则表达式的接受状态成为重要状态。那么我们也就不用特殊处理接受状态了。</p>
+<p>2）、<strong>叶子节点位置</strong>：上面抽象语法树叶子结点下方都有一个有序的整数，我们称这个整数为对应叶子的结点的位置。<strong>非空的叶子结点才会赋予相应的整数</strong>，也就是说为空串的叶子结点我们不需要对其增加位置。</p>
+<h2 id="二、nullable、firstpos、lastpos和followpos函数"><a href="#二、nullable、firstpos、lastpos和followpos函数" class="headerlink" title="二、nullable、firstpos、lastpos和followpos函数"></a>二、nullable、firstpos、lastpos和followpos函数</h2><p>我们要从一个正则表达式直接构造出DFA，除了前面我们已经构造了的抽象语法树之外，我们还需要计算nullable、firstpos、lastpos和followpos函数。</p>
+<ul>
+<li>1）、<strong><code>bool nullable(n)</code></strong>：其中n的取值为抽象语法树中任意结点（可以是叶子结点，也可以是是内部结点。即运算符和运算分量），其返回值的逻辑是当此结点的子表达式中包含有空串ε时返回true，否则为false；</li>
+<li>2）、<strong><code>nodes firstpos(n)</code></strong>：子表达式的语言中某个串的第一个符号，该语言是以n为根的子表达式；</li>
+<li>3）、<strong><code>nodes lastpos(n)</code></strong>：子表达式的语言中某个串的最后一个符号，同样的该语言也是以n为根的子表达式；</li>
+<li>4）、<strong><code>nodes followpos(n)</code></strong>：这相对要复杂一点。比如在抽象语法树中存在两个结点分别为n和m，存在某个串s = a<sub>1</sub>…a<sub>i</sub>a<sub>i+1</sub>…a<sub>p</sub>，即以该正则表达式为模式的串。要满足followpos(n)==m，那么则需要a<sub>i</sub>和位置n匹配，a<sub>I+1</sub>和位置m匹配。比如当前有一个符号串<code>aabb</code>，想要构造该串对应于上图抽象语法树中各个节点顺序为1、3、4、5，因此我们就说follow(3)=4。通俗一点说就是要看抽象语法树指定结点的followpos，需要先找到对应结点在某个符号串中的位置，然后看该符号后一位符号即可。</li>
+</ul>
+<p>上面的nodes表示的结点集合。前面说的结点均指的是抽象语法树中的重要位置。</p>
+<p>更详细点，当我们计算上面抽象语法树位置1的followpos，即followpos(1)。那么我们通过抽象语法树来看，位置1之后经过并运算和闭包运算可以得到的子串有：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">aa;/// 第一个a来自于位置1，第二个a来自于位置1。闭包运算循环了两次；</div><div class="line">ab;/// a来自于位置1，b来自于位置2。闭包运算循环了2次；</div><div class="line">aa;///第一个a来自于位置1，第二个a来自于位置3。闭包运算循环了1次；</div></pre></td></tr></table></figure>
+<p>因此得到 followpos(1) = {1,2,3};</p>
+<p>下表整理了计算nullable、firstpos、lastpos的计算规则：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">结点n</th>
+<th style="text-align:left">nullabl(n)</th>
+<th style="text-align:left">firstpos(n)</th>
+<th style="text-align:left">lastpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">标号为ε的叶子结点</td>
+<td style="text-align:left">true</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">∅</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">位置为i的叶子结点</td>
+<td style="text-align:left">false</td>
+<td style="text-align:left">{i}</td>
+<td style="text-align:left">{i}</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left"><strong>并</strong> 结点n=c1\</td>
+<td style="text-align:left">c2</td>
+<td style="text-align:left">nullable(c1) 逻辑或 nullable(c2)</td>
+<td style="text-align:left">firstpos(c1) ∪ firstpos(c2)</td>
+<td>lastpos(c1) ∪ lastpos(c2)</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left"><strong>连接</strong> 结点n=c1c2</td>
+<td style="text-align:left">nullable(c1) 逻辑与 nullable(c2)</td>
+<td style="text-align:left">如果 <strong>nullable(c1)</strong> 为真，那么值为firstpos(c1) ∪ firstpos(c2)。否则为firstpos(c1)</td>
+<td style="text-align:left">如果 <strong>nullable(c2)</strong> 为真，那么值为lastpos(c1) ∪ lastpos(c2)。否则为lastpos(c2)</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left"><strong>闭包</strong> 结点n=c1*</td>
+<td style="text-align:left">true</td>
+<td style="text-align:left">firstpos(c1)</td>
+<td style="text-align:left">lastpos(c1)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>1、每个叶子结点的firstpos和lastpos只包含它自身。上表中第2点；</li>
+<li>2、“并” 结点的firstpos和lastpos分别是它所有子节点的firstpos和lastpos的并集。上表第3点；</li>
+<li>3、“闭包”结点的firstpos和lastpos分别是它唯一子节点的firstpos和lastpos。上表的第5点；</li>
+<li>4、对于“连接”结点而言，firstpos主要是看左子结点是否为空。而lastpos右子节点是否为空。</li>
+</ul>
+<p>现在我们运用上面的规则，将第一节的抽象语法树中每个结点的firstpos和lastpos求出来。如下图：</p>
+<p><img src="/uploads/compiler_regular2nfa/2" alt=""></p>
+<p>图中蓝色表示firstpos集合，而橙色表示lastpos集合。</p>
+<h4 id="计算followpos"><a href="#计算followpos" class="headerlink" title="计算followpos"></a>计算followpos</h4><p>只有两种情况会使得正则表达式的某个位置跟在另一个位置之后：</p>
+<ul>
+<li><p>1）、如果是结点n是一个“连接”结点，且在抽象语法树中其左右子节点分别为c1，c2。那么对于lastpos(c1)中的每个位置i，firstpos(c2)中所有位置都在followpos(i)中；<br>通俗的讲就是以“连接”结点为根的子树，左子结点lastpos集合中每个位置的followpos都包含右子结点的firstpos。有点类似于二叉树后序遍历，左子树最大结点的后面跟着的是右子树的最小结点。</p>
+</li>
+<li><p>2）、如果n是“闭包”结点，lastpos(n)中每个位置的followpos都包含于的firstpos(n)中；</p>
+</li>
+</ul>
+<p>基于上诉两个规则，我们对上面的图求解各个重要结点的followpos（上图已经标出每个结点的firstpos和lastpos）。下面是详细步骤：</p>
+<ul>
+<li>1、首先我们运用规则1来查看第一个“连接”结点，其左子结点的lastpos为<code>{1,2}</code>，并且其右子结点的firstpos为<code>{3}</code>。因此位置1结点和位置2结点的followpos都包含有位置3。</li>
+</ul>
+<p><img src="/uploads/compiler_regular2nfa/3" alt=""></p>
+<p>需要注意一点的是并不是看的当前结点本身的lastpos和firstpos，而是看的其左子结点的lastpos和右子结点的firstpos。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">{3}</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">{3}</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>2、同理我们将剩下的“连接”结点运用规则1，得到如下结果（这里太简单了我就不画图了）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">{4}</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">{5}</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">{6}</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>3、现在是时候运用上面的规则2了，查找抽象语法树中的“闭包”结点。它和“连接”结点不同的是：“连接”结点看的是其左右子树的lastpos和firstpos，而“闭包”结点看的是其本身的lastpos和firstpos。</li>
+</ul>
+<p><img src="/uploads/compiler_regular2nfa/4" alt=""></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">{1,2}</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">{1,2}</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>4、现在我们将前面三步得到的数据进行合并之后的结果为：</li>
+</ul>
+<p>很明显位置6作为增广正则表达式中存在的终结符标识，因此其followpos为空集。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">{1,2,3}</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">{1,2,3}</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">{4}</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">{5}</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">{6}</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">∅</td>
+</tr>
+</tbody>
+</table>
+<p>回过头来看一下正则表表达式 <code>(a|b)*abb</code>匹配子串中，位置1对应的结点a其后可能存在字符为a（位置1）、b（位置2）、a（位置3）。位置2和位置1同理。</p>
+<p>现在我们将每个位置，已经对应的followpos用一个有向图来表示如下：</p>
+<p><img src="/uploads/compiler_regular2nfa/5" alt=""></p>
+<p>很明显的可以看出来，表示followpos函数的有向图几乎就是相应的正则表达式不包含空转换的NFA。</p>
+<h2 id="三、根据正则表达式构建DFA"><a href="#三、根据正则表达式构建DFA" class="headerlink" title="三、根据正则表达式构建DFA"></a>三、根据正则表达式构建DFA</h2><p>要从一个正则表达式构造一个DFA的大致步骤如下：</p>
+<ul>
+<li>1、根据扩展的正则表达式构造出一个抽象语法树；</li>
+<li>2、计算每个节点的nullable函数值、firstpos函数值、lastpos函数值。以及重要位置节点的followpos函数值；</li>
+<li>3、抽象语法树根节点的 <strong>firstpos</strong> 作为DFA的开始状态；</li>
+<li>4、查看正则表达式中存在的各个转换（即a或者b），将当前状态中相同转换的followpos合并到一个集合中；</li>
+<li>5、如果合并的集合出现新的状态，则将该状态添加到DFA的状态集合中；</li>
+<li>6、如果经过各个转换之后没有新状态就停止。否则重复执行4~6步；</li>
+</ul>
+<p>看一下例子能够更加清晰地认识到如何根据正则表达式构建DFA。</p>
+<p><img src="/uploads/compiler_regular2nfa/2" alt=""></p>
+<p>图中蓝色表示firstpos集合，而橙色表示lastpos集合。</p>
+<p>1）、对于正则表达式 <code>(a|b)*abb</code>，我们构造得到的抽象语法树，已经对应的firstpos/lastpos都在上图中;</p>
+<p>2）、我们将根节点的firstpos = {1,2,3} 作为DFA的开始状态：</p>
+<p>3）、该正则表达式中存在的转换有<code>a, b</code>，开始状态集合为{1,2,3}，此时我们将状态集合{1,2,3}相同状态的followpos合并到一个集合中。<br>集合{1,2,3}中对应转换a的位置有1，3；对应转换b的位置有{2}。<br>转换a的 <code>followpos(1)={1,2,3}, followpos(3)={4}</code>，将两个集合合并起来为 <code>{1,2,3,4}</code>，由于该状态是新状态，因此将状态集合{1,2,3,4}添加到DFA中；<br>转换b的<code>followpos(2)={1,2,3}</code>，由于该状态并不是新状态。因此只是一个简单转换即可。</p>
+<p>重复执行第三步，得到的最终结果为：</p>
+<p><img src="/uploads/compiler_regular2nfa/6" alt="基于抽象语法树得到的DFA"></p>
+<h2 id="四、最小化DFA的状态数"><a href="#四、最小化DFA的状态数" class="headerlink" title="四、最小化DFA的状态数"></a>四、最小化DFA的状态数</h2><p>对于同一个语言，可以存在多个识别此语言的DFA。例如上图和上一节中由NFA通过子集构造法得到的DFA都能够识别正则表达式 <code>(a|b)*abb</code>。可以看出来它们的个数也不一样。因此如果让我们使用DFA来实现词法分析器，我们肯定是希望使用状态数量尽量少的DFA了。</p>
+<p>首先我们先看看区分状态的概念： <strong>区分状态</strong>，如果从状态s和t出发，沿着标号为x的路径到达的两个状态中只有一个是接受状态，那么我们就说串x区分状态s和t。状态s和t是可区分的。<br>空串ε可以区分任何一个接受状态和非接受状态。</p>
+<p><img src="/uploads/compiler_regular2nfa/7" alt="子集构造法得到的DFA"></p>
+<p>上图中串 <code>bb</code> 可以区分状态A和B，这是因为从A出发经过标号为bb的路径到达会接受状态C，而状态B经过标号bb的路径到达状态E接受状态。</p>
+<p>其次还有一个重要的结论：<strong>任何正则语言都有一个唯一的状态数目最少的DFA</strong>。而且从任意一个接受相同语言的DFA出发，通过 分组、合并等价的状态，我们总是可以构建得到这个状态数量最少的DFA。</p>
+<p>因此DFA状态最小化算法的工作原理是：</p>
+<blockquote>
+<p><strong>将一个DFA的状态集合划分成多个组，每个组中的各个状态之间相互不可区分，但是来自不同组任意的两个状态是可区分的</strong>（前面提到的区分概念）。</p>
+</blockquote>
+<p>然后将每个组中的状态合并成状态最少DFA的一个状态。</p>
+<p>最初，划分两个组：<strong>接受状态组和非接受状态组</strong>。基本步骤是从当前划分中取一个状态组，比如 A = {s<sub>1</sub>, s<sub>2</sub>, … , s<sub>k</sub>}，并选定某个输入符号a，检查a是否可以用于区分A组中的某些状态。查看s<sub>1</sub>, s<sub>2</sub>, … , s<sub>k</sub>在a上的转换，如果这些转换的到达的状态落入当前划分的两个或多个组中，我们就将A分割成多个组。</p>
+<p>我们以上图为例来看看DFA状态最小化算法：<br>1）、首先划分两组：接受状态组合非接受状态组，这里我们分别给他们起名为组1和组2。</p>
+<p><img src="/uploads/compiler_regular2nfa/8" alt=""></p>
+<p>2）、在上图看到DFA仅有a、b两种转换。由于组2只包含了一个状态，并且该状态为接受状态而不能再被分割，所以组2原封不动。因此我们继续看组1。<br>组1中的状态A、B、C、D针对a的转换，得到的状态均为状态B，因此串a无法区分状态A、B、C、D。</p>
+<p>3）、组1中的状态A、B、C、D针对b的转换，状态A、B、C都是到达组内某个成员上，这显然是无法区分的（前面提到过组内各个状态之间互不可区分）。但状态D到达的是组2成员对应的状态，很明显状态D可以和A、B、C区分开来。因此我们可以继续将组1划分更小的组：</p>
+<p><img src="/uploads/compiler_regular2nfa/9" alt=""></p>
+<p>4）、类似于第三步，组3的状态A、B、C针对b的转换可以划分为两个不同的组。这是因为状态A、C经过转换b之后均为组内状态；而状态B经过转换b得到的组4成员对应的状态：</p>
+<p><img src="/uploads/compiler_regular2nfa/10" alt=""></p>
+<p>由于组5中各个状态，无论是针对转换a，还是转换b而言，得到的状态均相同。因此我们不能讲组5进行更细粒度的划分。那么上图就是最终的划分结果。</p>
+<p>现在我们根据上面的信息画出对应的状态转换表，由于状态A和状态C经过转换得到的状态是一样的，因此集合{A,C}这里以状态A表示：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">状态</th>
+<th style="text-align:left">a</th>
+<th style="text-align:left">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">A</td>
+</tr>
+<tr>
+<td style="text-align:left">B</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">D</td>
+</tr>
+<tr>
+<td style="text-align:left">D</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">E</td>
+</tr>
+<tr>
+<td style="text-align:left">E</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">A</td>
+</tr>
+</tbody>
+</table>
+<p>我们画出对应的DFA，并将其与上面我们用抽象语法树构造得到的DFA进行对比：</p>
+<p><img src="/uploads/compiler_regular2nfa/11" alt=""></p>
+<p>很明显能够对比出来，上面两个DFA除了赋予各个状态的名称不一样之外，各个转换以及转换后的状态都是一样的。我们称这两个状态机是同构的。<strong>同构</strong>是指对于两个不同的自动机，如果某个自动只是通过更改状态的名字就可以转换为另一个自动机。</p>
+<h2 id="五、DFA模拟中的时间和空间的权衡"><a href="#五、DFA模拟中的时间和空间的权衡" class="headerlink" title="五、DFA模拟中的时间和空间的权衡"></a>五、DFA模拟中的时间和空间的权衡</h2><p>最简单和最快捷的表示一个DFA的转换函数的方法是：使用一个以状态和字符为下标的二维表。给定一个状态和下一个输入字符，我们访问这个数组就可以找出下一个状态以及我们必须要执行的特殊动作。<br>但是我们知道对于二维表而言，各个状态针对某些字符并没有对应转换。如果数量变多了之后就会存在大量的空间浪费问题。</p>
+<p>我们可以使用一个带有四个数组的数据结构，如下图所示：</p>
+<p><img src="/uploads/compiler_regular2nfa/12" alt=""></p>
+<p>1）、base数组用于确定状态s条目的基准位置；<br>2）、next和check数组存放的正式对应状态条目；<br>3）、数组check用于确定base[s]给出的基准位置是否正确，如果错误则使用default数组来确定另一个基准位置；</p>
+<p>在计算状态s在输入a的后继状态时，我们首先查看数组next和check中在位置 <code>index = base[s] + a</code> （a指当前输入字符，其对应于ascii码表上固定数字）上的状态条目。<br>a、如果check[index] == s，那么该状态条目有效（该状态指的是经过转换a之后得到的后续状态）；<br>b、如果check[index] != s，那我们则得到另一个状态条目t = default[s]。并将状态t设置为当前状态重复上诉过程获取下一个状态；</p>
+<p>下面是对应的伪代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">int nextState(s,a) &#123;</div><div class="line">  if(check[base[s]+a] == s) return next[base[s]+a];</div><div class="line">  else return nextState(default[s],a);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在这一节中需要重点理解的就是抽象语法树：抽象语法树的每个内部结点代表一个运算符，该内部结点的子节点代表运算符的运算分量。然后可以根据正则表达式构造对应的抽象语法树。<br>函数nullable、firspos、lastpos以及followpos在构造DFA中起着重要的作用。nullable指的是对应结点的子表达式是否可能返回空串；firstpos是子表表达式串的第一个符号；lastpos是子表达式串的最后一个符号；followpos则是相对要复杂一点，只针对连接结点和闭包结点求followpos。<br>在有了上面只是作为铺垫之后，求正则表达式来DFA的转换就要轻松许多。首先是在抽象语法树中以根节点所在的firstpos集合作为DFA的开始状态。然后查看集合内部各个序号对应的转换，获取对应需要的followpos求并集。以此类推下去可构造一个完整的DFA。<br>而在最小化DFA状态数时，则根据不同的划分，递归地将各组区分开来，得到状态数最少的DFA。而在最后也给出了权衡时间和空间的数据结构。</p>
+<p>到这儿基本上把词法分析相关的知识都简单过了一遍了。后续再继续更新语法分析部分。</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_regular_fa/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2019/10/28/compiler_regular2dfa/';
+var disqus_title = '词法分析——正则表达式直接转换为DFA';
+var disqus_url = 'http://yoursite.com/2019/10/28/compiler_regular2dfa/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>关注微博<a href="http://weibo.com/wwloading" target="_blank">@凌云壮志幾多愁</a>，让我们有更多的联系。</p><p>© 2016 - 2019 <a href="http://yoursite.com">王望</a>, Powered By <a href="https://hexo.io/" target="_blank">Hexo</a></p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>

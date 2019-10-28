@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T05:13:10.289Z</updated>
+  <updated>2019-10-28T05:57:15.238Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,316 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>词法分析——正则表达式直接转换为DFA</title>
+    <link href="http://yoursite.com/2019/10/28/compiler_regular2dfa/"/>
+    <id>http://yoursite.com/2019/10/28/compiler_regular2dfa/</id>
+    <published>2019-10-28T05:41:34.677Z</published>
+    <updated>2019-10-28T05:57:15.238Z</updated>
+    
+    <content type="html"><![CDATA[<p>在上篇文章中，我们至少学会了将正则表达式构造成对应的NFA和DFA。但是用上篇文章中从正则表达式转换为对应DFA的方式效率低下，即我们要先将正则表达式转换为NFA，然后使用子集构造法将NFA转换为对应DFA。</p>
+<p>在本篇文章中，我们将首先学习如何将正则表达式直接转换为DFA，并最小化DFA的状态数目。然后看看DFA模拟中时间和空间的权衡问题。</p>
+<p>在正式进入正则表达式转换为DFA之前我们需要一些基本概念，没有这些基本概念可能不太好理解后面提到的内容。</p>
+<h2 id="一、需要的基本概念"><a href="#一、需要的基本概念" class="headerlink" title="一、需要的基本概念"></a>一、需要的基本概念</h2><h4 id="重要状态"><a href="#重要状态" class="headerlink" title="重要状态"></a>重要状态</h4><p>NFA的重要状态直接对应于正则表达式中存放字母表中符号的位置，而 <strong>重要状态是指NFA的某一状态有一个标号为非空的离开转换</strong> 。比如我们在上一节中将正则表达式转换为对应NFA时引入了新状态，它们的离开转换都是空转换，因此它们并不是重要状态。</p>
+<blockquote>
+<p><strong>每个重要状态对应于正则表达式中某个运算分量</strong> 。</p>
+</blockquote>
+<p>因此我们在比较两个NFA状态集合时，判断它们是否一致的依据如下：<br>1）、具有相同的重要状态；<br>2）、要么都包含接受状态，要么都不包含接受状态；</p>
+<h4 id="抽象语法树"><a href="#抽象语法树" class="headerlink" title="抽象语法树"></a>抽象语法树</h4><p>注意这里的抽象语法树和上一节提到的语法分析树有一点不同，关于语法分析树可以回去看上一篇提到的语法分析树定义。但抽象语法树是必须要完全理解的。</p>
+<blockquote>
+<p><strong>抽象语法树中，每个内部结点代表一个运算符，该运算符结点的子结点代表这个运算符的运算分量</strong> !!!</p>
+</blockquote>
+<p>在抽象语法树中，内部结点代表的是程序的构造；而在语法分析树中，内部结点代表的是非终结符。有时候我们将语法分析树称为具体语法树；而抽象语法树简称为语法树。这是因为在文法的很多非终结符都代表程序的具体构造，还有各种辅助符号。而这些在抽象语法树中都是不需要的。</p>
+<p>而前面提到的重要状态就是抽象语法树中运算符的运算分量。下面是正则表达式 <code>(a|b)*abb</code>对应的抽象语法树：</p>
+<p><img src="/uploads/compiler_regular2nfa/1" alt="(a|b)*abb的抽象语法树"></p>
+<p>1）、<strong>结束标记符#</strong>：前面我们提到了重要状态，但（NFA或者DFA）接受状态没有一个标号为非空的离开转换，因此接受状态为非重要状态。基于此，我们可以给正则表达式的右边连接一个结束标记符 <code>#</code> ，使得正则表达式的接受状态成为重要状态。那么我们也就不用特殊处理接受状态了。</p>
+<p>2）、<strong>叶子节点位置</strong>：上面抽象语法树叶子结点下方都有一个有序的整数，我们称这个整数为对应叶子的结点的位置。<strong>非空的叶子结点才会赋予相应的整数</strong>，也就是说为空串的叶子结点我们不需要对其增加位置。</p>
+<h2 id="二、nullable、firstpos、lastpos和followpos函数"><a href="#二、nullable、firstpos、lastpos和followpos函数" class="headerlink" title="二、nullable、firstpos、lastpos和followpos函数"></a>二、nullable、firstpos、lastpos和followpos函数</h2><p>我们要从一个正则表达式直接构造出DFA，除了前面我们已经构造了的抽象语法树之外，我们还需要计算nullable、firstpos、lastpos和followpos函数。</p>
+<ul>
+<li>1）、<strong><code>bool nullable(n)</code></strong>：其中n的取值为抽象语法树中任意结点（可以是叶子结点，也可以是是内部结点。即运算符和运算分量），其返回值的逻辑是当此结点的子表达式中包含有空串ε时返回true，否则为false；</li>
+<li>2）、<strong><code>nodes firstpos(n)</code></strong>：子表达式的语言中某个串的第一个符号，该语言是以n为根的子表达式；</li>
+<li>3）、<strong><code>nodes lastpos(n)</code></strong>：子表达式的语言中某个串的最后一个符号，同样的该语言也是以n为根的子表达式；</li>
+<li>4）、<strong><code>nodes followpos(n)</code></strong>：这相对要复杂一点。比如在抽象语法树中存在两个结点分别为n和m，存在某个串s = a<sub>1</sub>…a<sub>i</sub>a<sub>i+1</sub>…a<sub>p</sub>，即以该正则表达式为模式的串。要满足followpos(n)==m，那么则需要a<sub>i</sub>和位置n匹配，a<sub>I+1</sub>和位置m匹配。比如当前有一个符号串<code>aabb</code>，想要构造该串对应于上图抽象语法树中各个节点顺序为1、3、4、5，因此我们就说follow(3)=4。通俗一点说就是要看抽象语法树指定结点的followpos，需要先找到对应结点在某个符号串中的位置，然后看该符号后一位符号即可。</li>
+</ul>
+<p>上面的nodes表示的结点集合。前面说的结点均指的是抽象语法树中的重要位置。</p>
+<p>更详细点，当我们计算上面抽象语法树位置1的followpos，即followpos(1)。那么我们通过抽象语法树来看，位置1之后经过并运算和闭包运算可以得到的子串有：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">aa;/// 第一个a来自于位置1，第二个a来自于位置1。闭包运算循环了两次；</div><div class="line">ab;/// a来自于位置1，b来自于位置2。闭包运算循环了2次；</div><div class="line">aa;///第一个a来自于位置1，第二个a来自于位置3。闭包运算循环了1次；</div></pre></td></tr></table></figure>
+<p>因此得到 followpos(1) = {1,2,3};</p>
+<p>下表整理了计算nullable、firstpos、lastpos的计算规则：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">结点n</th>
+<th style="text-align:left">nullabl(n)</th>
+<th style="text-align:left">firstpos(n)</th>
+<th style="text-align:left">lastpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">标号为ε的叶子结点</td>
+<td style="text-align:left">true</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">∅</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">位置为i的叶子结点</td>
+<td style="text-align:left">false</td>
+<td style="text-align:left">{i}</td>
+<td style="text-align:left">{i}</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left"><strong>并</strong> 结点n=c1\</td>
+<td style="text-align:left">c2</td>
+<td style="text-align:left">nullable(c1) 逻辑或 nullable(c2)</td>
+<td style="text-align:left">firstpos(c1) ∪ firstpos(c2)</td>
+<td>lastpos(c1) ∪ lastpos(c2)</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left"><strong>连接</strong> 结点n=c1c2</td>
+<td style="text-align:left">nullable(c1) 逻辑与 nullable(c2)</td>
+<td style="text-align:left">如果 <strong>nullable(c1)</strong> 为真，那么值为firstpos(c1) ∪ firstpos(c2)。否则为firstpos(c1)</td>
+<td style="text-align:left">如果 <strong>nullable(c2)</strong> 为真，那么值为lastpos(c1) ∪ lastpos(c2)。否则为lastpos(c2)</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left"><strong>闭包</strong> 结点n=c1*</td>
+<td style="text-align:left">true</td>
+<td style="text-align:left">firstpos(c1)</td>
+<td style="text-align:left">lastpos(c1)</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>1、每个叶子结点的firstpos和lastpos只包含它自身。上表中第2点；</li>
+<li>2、“并” 结点的firstpos和lastpos分别是它所有子节点的firstpos和lastpos的并集。上表第3点；</li>
+<li>3、“闭包”结点的firstpos和lastpos分别是它唯一子节点的firstpos和lastpos。上表的第5点；</li>
+<li>4、对于“连接”结点而言，firstpos主要是看左子结点是否为空。而lastpos右子节点是否为空。</li>
+</ul>
+<p>现在我们运用上面的规则，将第一节的抽象语法树中每个结点的firstpos和lastpos求出来。如下图：</p>
+<p><img src="/uploads/compiler_regular2nfa/2" alt=""></p>
+<p>图中蓝色表示firstpos集合，而橙色表示lastpos集合。</p>
+<h4 id="计算followpos"><a href="#计算followpos" class="headerlink" title="计算followpos"></a>计算followpos</h4><p>只有两种情况会使得正则表达式的某个位置跟在另一个位置之后：</p>
+<ul>
+<li><p>1）、如果是结点n是一个“连接”结点，且在抽象语法树中其左右子节点分别为c1，c2。那么对于lastpos(c1)中的每个位置i，firstpos(c2)中所有位置都在followpos(i)中；<br>通俗的讲就是以“连接”结点为根的子树，左子结点lastpos集合中每个位置的followpos都包含右子结点的firstpos。有点类似于二叉树后序遍历，左子树最大结点的后面跟着的是右子树的最小结点。</p>
+</li>
+<li><p>2）、如果n是“闭包”结点，lastpos(n)中每个位置的followpos都包含于的firstpos(n)中；</p>
+</li>
+</ul>
+<p>基于上诉两个规则，我们对上面的图求解各个重要结点的followpos（上图已经标出每个结点的firstpos和lastpos）。下面是详细步骤：</p>
+<ul>
+<li>1、首先我们运用规则1来查看第一个“连接”结点，其左子结点的lastpos为<code>{1,2}</code>，并且其右子结点的firstpos为<code>{3}</code>。因此位置1结点和位置2结点的followpos都包含有位置3。</li>
+</ul>
+<p><img src="/uploads/compiler_regular2nfa/3" alt=""></p>
+<p>需要注意一点的是并不是看的当前结点本身的lastpos和firstpos，而是看的其左子结点的lastpos和右子结点的firstpos。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">{3}</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">{3}</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>2、同理我们将剩下的“连接”结点运用规则1，得到如下结果（这里太简单了我就不画图了）：</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">{4}</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">{5}</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">{6}</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>3、现在是时候运用上面的规则2了，查找抽象语法树中的“闭包”结点。它和“连接”结点不同的是：“连接”结点看的是其左右子树的lastpos和firstpos，而“闭包”结点看的是其本身的lastpos和firstpos。</li>
+</ul>
+<p><img src="/uploads/compiler_regular2nfa/4" alt=""></p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">{1,2}</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">{1,2}</td>
+</tr>
+</tbody>
+</table>
+<ul>
+<li>4、现在我们将前面三步得到的数据进行合并之后的结果为：</li>
+</ul>
+<p>很明显位置6作为增广正则表达式中存在的终结符标识，因此其followpos为空集。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">位置n</th>
+<th style="text-align:left">followpos(n)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">{1,2,3}</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">{1,2,3}</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">{4}</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">{5}</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">{6}</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">∅</td>
+</tr>
+</tbody>
+</table>
+<p>回过头来看一下正则表表达式 <code>(a|b)*abb</code>匹配子串中，位置1对应的结点a其后可能存在字符为a（位置1）、b（位置2）、a（位置3）。位置2和位置1同理。</p>
+<p>现在我们将每个位置，已经对应的followpos用一个有向图来表示如下：</p>
+<p><img src="/uploads/compiler_regular2nfa/5" alt=""></p>
+<p>很明显的可以看出来，表示followpos函数的有向图几乎就是相应的正则表达式不包含空转换的NFA。</p>
+<h2 id="三、根据正则表达式构建DFA"><a href="#三、根据正则表达式构建DFA" class="headerlink" title="三、根据正则表达式构建DFA"></a>三、根据正则表达式构建DFA</h2><p>要从一个正则表达式构造一个DFA的大致步骤如下：</p>
+<ul>
+<li>1、根据扩展的正则表达式构造出一个抽象语法树；</li>
+<li>2、计算每个节点的nullable函数值、firstpos函数值、lastpos函数值。以及重要位置节点的followpos函数值；</li>
+<li>3、抽象语法树根节点的 <strong>firstpos</strong> 作为DFA的开始状态；</li>
+<li>4、查看正则表达式中存在的各个转换（即a或者b），将当前状态中相同转换的followpos合并到一个集合中；</li>
+<li>5、如果合并的集合出现新的状态，则将该状态添加到DFA的状态集合中；</li>
+<li>6、如果经过各个转换之后没有新状态就停止。否则重复执行4~6步；</li>
+</ul>
+<p>看一下例子能够更加清晰地认识到如何根据正则表达式构建DFA。</p>
+<p><img src="/uploads/compiler_regular2nfa/2" alt=""></p>
+<p>图中蓝色表示firstpos集合，而橙色表示lastpos集合。</p>
+<p>1）、对于正则表达式 <code>(a|b)*abb</code>，我们构造得到的抽象语法树，已经对应的firstpos/lastpos都在上图中;</p>
+<p>2）、我们将根节点的firstpos = {1,2,3} 作为DFA的开始状态：</p>
+<p>3）、该正则表达式中存在的转换有<code>a, b</code>，开始状态集合为{1,2,3}，此时我们将状态集合{1,2,3}相同状态的followpos合并到一个集合中。<br>集合{1,2,3}中对应转换a的位置有1，3；对应转换b的位置有{2}。<br>转换a的 <code>followpos(1)={1,2,3}, followpos(3)={4}</code>，将两个集合合并起来为 <code>{1,2,3,4}</code>，由于该状态是新状态，因此将状态集合{1,2,3,4}添加到DFA中；<br>转换b的<code>followpos(2)={1,2,3}</code>，由于该状态并不是新状态。因此只是一个简单转换即可。</p>
+<p>重复执行第三步，得到的最终结果为：</p>
+<p><img src="/uploads/compiler_regular2nfa/6" alt="基于抽象语法树得到的DFA"></p>
+<h2 id="四、最小化DFA的状态数"><a href="#四、最小化DFA的状态数" class="headerlink" title="四、最小化DFA的状态数"></a>四、最小化DFA的状态数</h2><p>对于同一个语言，可以存在多个识别此语言的DFA。例如上图和上一节中由NFA通过子集构造法得到的DFA都能够识别正则表达式 <code>(a|b)*abb</code>。可以看出来它们的个数也不一样。因此如果让我们使用DFA来实现词法分析器，我们肯定是希望使用状态数量尽量少的DFA了。</p>
+<p>首先我们先看看区分状态的概念： <strong>区分状态</strong>，如果从状态s和t出发，沿着标号为x的路径到达的两个状态中只有一个是接受状态，那么我们就说串x区分状态s和t。状态s和t是可区分的。<br>空串ε可以区分任何一个接受状态和非接受状态。</p>
+<p><img src="/uploads/compiler_regular2nfa/7" alt="子集构造法得到的DFA"></p>
+<p>上图中串 <code>bb</code> 可以区分状态A和B，这是因为从A出发经过标号为bb的路径到达会接受状态C，而状态B经过标号bb的路径到达状态E接受状态。</p>
+<p>其次还有一个重要的结论：<strong>任何正则语言都有一个唯一的状态数目最少的DFA</strong>。而且从任意一个接受相同语言的DFA出发，通过 分组、合并等价的状态，我们总是可以构建得到这个状态数量最少的DFA。</p>
+<p>因此DFA状态最小化算法的工作原理是：</p>
+<blockquote>
+<p><strong>将一个DFA的状态集合划分成多个组，每个组中的各个状态之间相互不可区分，但是来自不同组任意的两个状态是可区分的</strong>（前面提到的区分概念）。</p>
+</blockquote>
+<p>然后将每个组中的状态合并成状态最少DFA的一个状态。</p>
+<p>最初，划分两个组：<strong>接受状态组和非接受状态组</strong>。基本步骤是从当前划分中取一个状态组，比如 A = {s<sub>1</sub>, s<sub>2</sub>, … , s<sub>k</sub>}，并选定某个输入符号a，检查a是否可以用于区分A组中的某些状态。查看s<sub>1</sub>, s<sub>2</sub>, … , s<sub>k</sub>在a上的转换，如果这些转换的到达的状态落入当前划分的两个或多个组中，我们就将A分割成多个组。</p>
+<p>我们以上图为例来看看DFA状态最小化算法：<br>1）、首先划分两组：接受状态组合非接受状态组，这里我们分别给他们起名为组1和组2。</p>
+<p><img src="/uploads/compiler_regular2nfa/8" alt=""></p>
+<p>2）、在上图看到DFA仅有a、b两种转换。由于组2只包含了一个状态，并且该状态为接受状态而不能再被分割，所以组2原封不动。因此我们继续看组1。<br>组1中的状态A、B、C、D针对a的转换，得到的状态均为状态B，因此串a无法区分状态A、B、C、D。</p>
+<p>3）、组1中的状态A、B、C、D针对b的转换，状态A、B、C都是到达组内某个成员上，这显然是无法区分的（前面提到过组内各个状态之间互不可区分）。但状态D到达的是组2成员对应的状态，很明显状态D可以和A、B、C区分开来。因此我们可以继续将组1划分更小的组：</p>
+<p><img src="/uploads/compiler_regular2nfa/9" alt=""></p>
+<p>4）、类似于第三步，组3的状态A、B、C针对b的转换可以划分为两个不同的组。这是因为状态A、C经过转换b之后均为组内状态；而状态B经过转换b得到的组4成员对应的状态：</p>
+<p><img src="/uploads/compiler_regular2nfa/10" alt=""></p>
+<p>由于组5中各个状态，无论是针对转换a，还是转换b而言，得到的状态均相同。因此我们不能讲组5进行更细粒度的划分。那么上图就是最终的划分结果。</p>
+<p>现在我们根据上面的信息画出对应的状态转换表，由于状态A和状态C经过转换得到的状态是一样的，因此集合{A,C}这里以状态A表示：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">状态</th>
+<th style="text-align:left">a</th>
+<th style="text-align:left">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">A</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">A</td>
+</tr>
+<tr>
+<td style="text-align:left">B</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">D</td>
+</tr>
+<tr>
+<td style="text-align:left">D</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">E</td>
+</tr>
+<tr>
+<td style="text-align:left">E</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">A</td>
+</tr>
+</tbody>
+</table>
+<p>我们画出对应的DFA，并将其与上面我们用抽象语法树构造得到的DFA进行对比：</p>
+<p><img src="/uploads/compiler_regular2nfa/11" alt=""></p>
+<p>很明显能够对比出来，上面两个DFA除了赋予各个状态的名称不一样之外，各个转换以及转换后的状态都是一样的。我们称这两个状态机是同构的。<strong>同构</strong>是指对于两个不同的自动机，如果某个自动只是通过更改状态的名字就可以转换为另一个自动机。</p>
+<h2 id="五、DFA模拟中的时间和空间的权衡"><a href="#五、DFA模拟中的时间和空间的权衡" class="headerlink" title="五、DFA模拟中的时间和空间的权衡"></a>五、DFA模拟中的时间和空间的权衡</h2><p>最简单和最快捷的表示一个DFA的转换函数的方法是：使用一个以状态和字符为下标的二维表。给定一个状态和下一个输入字符，我们访问这个数组就可以找出下一个状态以及我们必须要执行的特殊动作。<br>但是我们知道对于二维表而言，各个状态针对某些字符并没有对应转换。如果数量变多了之后就会存在大量的空间浪费问题。</p>
+<p>我们可以使用一个带有四个数组的数据结构，如下图所示：</p>
+<p><img src="/uploads/compiler_regular2nfa/12" alt=""></p>
+<p>1）、base数组用于确定状态s条目的基准位置；<br>2）、next和check数组存放的正式对应状态条目；<br>3）、数组check用于确定base[s]给出的基准位置是否正确，如果错误则使用default数组来确定另一个基准位置；</p>
+<p>在计算状态s在输入a的后继状态时，我们首先查看数组next和check中在位置 <code>index = base[s] + a</code> （a指当前输入字符，其对应于ascii码表上固定数字）上的状态条目。<br>a、如果check[index] == s，那么该状态条目有效（该状态指的是经过转换a之后得到的后续状态）；<br>b、如果check[index] != s，那我们则得到另一个状态条目t = default[s]。并将状态t设置为当前状态重复上诉过程获取下一个状态；</p>
+<p>下面是对应的伪代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">int nextState(s,a) &#123;</div><div class="line">  if(check[base[s]+a] == s) return next[base[s]+a];</div><div class="line">  else return nextState(default[s],a);</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在这一节中需要重点理解的就是抽象语法树：抽象语法树的每个内部结点代表一个运算符，该内部结点的子节点代表运算符的运算分量。然后可以根据正则表达式构造对应的抽象语法树。<br>函数nullable、firspos、lastpos以及followpos在构造DFA中起着重要的作用。nullable指的是对应结点的子表达式是否可能返回空串；firstpos是子表表达式串的第一个符号；lastpos是子表达式串的最后一个符号；followpos则是相对要复杂一点，只针对连接结点和闭包结点求followpos。<br>在有了上面只是作为铺垫之后，求正则表达式来DFA的转换就要轻松许多。首先是在抽象语法树中以根节点所在的firstpos集合作为DFA的开始状态。然后查看集合内部各个序号对应的转换，获取对应需要的followpos求并集。以此类推下去可构造一个完整的DFA。<br>而在最小化DFA状态数时，则根据不同的划分，递归地将各组区分开来，得到状态数最少的DFA。而在最后也给出了权衡时间和空间的数据结构。</p>
+<p>到这儿基本上把词法分析相关的知识都简单过了一遍了。后续再继续更新语法分析部分。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在上篇文章中，我们至少学会了将正则表达式构造成对应的NFA和DFA。但是用上篇文章中从正则表达式转换为对应DFA的方式效率低下，即我们要先将正则表达式转换为NFA，然后使用子集构造法将NFA转换为对应DFA。&lt;/p&gt;
+&lt;p&gt;在本篇文章中，我们将首先学习如何将正则表达式直接转
+    
+    </summary>
+    
+      <category term="编译原理" scheme="http://yoursite.com/categories/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/"/>
+    
+    
+      <category term="词法分析" scheme="http://yoursite.com/tags/%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
   
   <entry>
     <title>词法分析——从正则表达式到有穷自动机</title>
@@ -2793,117 +3103,6 @@ keybuffer.deallocate(capacity: keys.count)
     
     
       <category term="HTTP" scheme="http://yoursite.com/tags/HTTP/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>《C和指针Note》之数组和指针</title>
-    <link href="http://yoursite.com/2017/02/22/c_and_pointer_note_case4/"/>
-    <id>http://yoursite.com/2017/02/22/c_and_pointer_note_case4/</id>
-    <published>2017-02-22T15:55:26.000Z</published>
-    <updated>2017-02-22T16:05:01.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>记录指针和数组直接的关系!<br><a id="more"></a><br>当前C语言环境:</p>
-<pre>
-Apple LLVM version 8.0.0 (clang-800.0.38)
-Target: x86_64-apple-darwin15.6.0
-Thread model: posix
-InstalledDir: /Applications/Xcode.app/Contents/Developer/Toolchains/XcodeDefault.xctoolchain/usr/bin
-</pre>
-
-<h2 id="一维数组"><a href="#一维数组" class="headerlink" title="一维数组"></a>一维数组</h2><h3 id="数组名"><a href="#数组名" class="headerlink" title="数组名"></a>数组名</h3><p>数组名的值是一个指针常量，也是数组第一个元素的地址。</p>
-<blockquote>
-<p>注意⚠️<br>数组具有确定的数量的元素，而指针只是一个标量值，<strong><em>只有数组名在表达式中使用时，编译器才会为他参数一个指针常量(意思就是你不能修改这个指针的值)</em></strong>。</p>
-</blockquote>
-<p>指针常量所指向的是内存中数组的起始位置，如果修改这个指针常量，唯一可行的操作就是把整个数组移动到内存的其他位置，但是在程序完成链接之后，内存中数组的位置是固定的，所以当程序运行时，在想移动数组就晚了。</p>
-<h5 id="数组名不作为指针常量来表示的两种场景"><a href="#数组名不作为指针常量来表示的两种场景" class="headerlink" title="数组名不作为指针常量来表示的两种场景"></a>数组名不作为指针常量来表示的两种场景</h5><blockquote>
-<p>注意：这里说的是<strong>不作为</strong>指针常量。</p>
-</blockquote>
-<ul>
-<li>1.数组名作为sizeof操作符：<br>sizeof返回整个数组所占用的字节，而不是每个元素所占用的字节，也不是指向数组的指针的长度。</li>
-<li>2.数组名用于单目操作符&amp;时：<br>返回一个指向数组的指针，而不是一个指向指针常量的指针。</li>
-</ul>
-<pre>
-int a[10];
-int *c;
-c = &a[0];c = a;//这里赋值的是一个指针的拷贝。
-</pre>
-
-<h3 id="下标引用和指针-间接取值操作"><a href="#下标引用和指针-间接取值操作" class="headerlink" title="下标引用和指针(间接取值操作)"></a>下标引用和指针(间接取值操作)</h3><p><code>array[3]，*(array + 3)</code>出了优先级之外，下标引用和间接访问完全相同。</p>
-<p><pre><br>int array[10];<br>int *ap = array + 2;<br></pre></p>
-<ul>
-<li>1.<code>ap</code>:这是一个指针地址，所以该表达式和<code>&amp;array[2]</code>或者<code>array+2</code>相同。</li>
-<li>2.<code>*ap</code>:间接访问，与<code>array[2]</code>和<code>*(array + 2)</code>相同。</li>
-<li>3.<code>ap[6]</code>:C的下标引用和间接访问表达式是一样的，所以ap[6]和<code>*(ap + 6)</code>相同，与<code>array[8]</code>和<code>*(array + 8)</code>相同。</li>
-<li>4.<code>ap + 6</code>:ap为一个指针地址，地址向后偏移6，则<code>ap + 6</code>和<code>&amp;array[8]</code>，<code>array + 8</code>相同。</li>
-<li>5.<code>*(ap + 6)</code>:上面说过<code>ap+6</code>为一个地址，由此可以得出<code>*(ap+6)</code>为间接求得地址对应的值，它和<code>array[8]</code>和<code>*(array+8)</code>相同，其实它和<code>2&gt;.</code>类似。</li>
-<li>–&gt;6.<code>ap[-1]</code>:使用-1的偏移量使得道它前一个元素，也就是<code>array[1]</code>或者<code>*(array + 2 - 1)</code>。</li>
-</ul>
-<p>上面说这么多，其实只要抓住：当前表示的地址，元素还是间接获取操作就可以了。</p>
-<blockquote>
-<p>注意⚠️:<br>上面提到的<strong>“C的下标引用和间接访问表达式是一样的”</strong>。</p>
-</blockquote>
-<h6 id="思考题"><a href="#思考题" class="headerlink" title="思考题:"></a>思考题:</h6><p><code>2[array]</code>，这个表达式中的array是上文中的array。在这个上下文环境中，<code>2[array]</code>表达的意思是什么：</p>
-<h6 id="解答"><a href="#解答" class="headerlink" title="解答:"></a>解答:</h6><p>因为前面我一直在强调，下标引用和间接表达式求值是相同的，所以:</p>
-<ul>
-<li>第一步：我们可以把<code>2[array]</code>改写成<code>*(2 + array)</code></li>
-<li>第二步:由于加法运算符的两个操作数是可以交换位置的，所以把上面的表达式改写为:<code>*(array + 2)</code>;<br>也就是说<code>2[array]</code>其实和<code>array[2]</code>是相等的。</li>
-</ul>
-<h6 id="关于指针间接操作符和下标操作的比较"><a href="#关于指针间接操作符和下标操作的比较" class="headerlink" title="关于指针间接操作符和下标操作的比较"></a>关于指针间接操作符和下标操作的比较</h6><blockquote>
-<p>相对于指针的间接访问和下标操作，在可读性方面下标的方式更好，但是在执行效率上面<strong><em>下标不会比指针更有效率，但是指针有时候比下标效率更高</em></strong>。</p>
-</blockquote>
-<p>具体的效率比较为:</p>
-<ul>
-<li>1.当你根据某个固定数目的增量在一个数组中移动时，使用指针变量将比使用下标产生效率更高的代码。</li>
-<li>2.声明为寄存器变量的指针通常比用于静态内存和堆栈中的指针效率更高。<br>关于如何将变量声明为寄存器变量，我们可以使用<code>register</code>关键字来声明，比如:<code>register int *p1;</code>，<code>register</code>：这个关键字请求编译器尽可能的将变量存在CPU 内部寄存器中而不是通过内存寻址访问以提高效率。<strong>register 变量必须是一个单个的值，并且其长度应小于或等于整型的长度。而且register 变量可能不存放在内存中，所以不能用取址运算符“&amp;”来获取register 变量的地址。</strong></li>
-<li>3.像&amp;array[2]或者array+2这种在运行时求值的常量表达式代价很高。</li>
-</ul>
-<h3 id="数组的初始化"><a href="#数组的初始化" class="headerlink" title="数组的初始化"></a>数组的初始化</h3><p>数组的初始化需要一系列的值，例如：</p>
-<p><pre><br>int array[5] = {1,2,3,4,5};//如果在初始化的时候，初始化的个数比数组的大小小的话，空余的元素将会被赋值为0。<br>int array[] =  {1,2,3,4,5};//如果在声明中没有给出数组的长度，编译器会把数组的长度设置为刚好能够容易所有初始值的长度。<br></pre>对于<strong>静态数组</strong>：存储于静态内存的数组只初始化一次，当程序执行时，静态数组已经初始化完毕。如果数组没有被初始化，数组元素的初始值将会自动设置为0。<br>对于<strong>自动变量</strong>：由于自动变量位于运行时堆栈，所以自动变量在缺省的情况下是未被初始化的。<br>所以这里需要思考的是：当数组的初始化在一个函数中，程序在每次进入该函数的时候，是否值得每次都对该数组重新进行初始化。如果不需要的的话，我们可以把该数组声明为<code>static</code>。</p>
-<p>######指定初始化器(c99)<br>只初始化数组中的指定元素，方法是：在初始化列表中使用带方括号的下标指明待初始化的元素。<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">int array[5] = &#123;[5] = 23&#125;;//把array[5]初始化为23</div></pre></td></tr></table></figure></p>
-<h2 id="多维数组"><a href="#多维数组" class="headerlink" title="多维数组"></a>多维数组</h2><p>如<code>int xy[3][2]</code>数组维数不止一个的称为<code>多维数组</code>。<br>数组<code>xy[3][2]</code>在内存中的存储顺序为:</p>
-<p><pre><code>(0,0) (0,1)  (1,0) (1,1)  (2,0) (2,1)//多维数组中的元素存储顺序按照最右边的下标率先变化的原则，称为<strong>行主序</strong>。</code></pre>关于是把第一个下标(上面定义的数组<code>xy</code>中的3)解释为行还是解释为列，都可以的，只要你在使用这个数组的时候使用同一种就可以。如果你把第一个下标解释为行第二个下标解释为列，那么当你按照存储顺序逐个访问数组元素时，所获得的元素是按行排列的，相反则是按列排列的。</p>
-<h3 id="数组名和下标"><a href="#数组名和下标" class="headerlink" title="数组名和下标"></a>数组名和下标</h3><p><code>int xy[3][2]</code>，数组名<code>xy</code>是一个指向包涵2个整型元素的数组的指针（指向数组的指针）。<br>下面我们来看看数组的下标和指针之间的关系:</p>
-<ul>
-<li>1.<code>xy</code>:在三个包含两个整型元素的数组中，<code>xy</code>为指向第一个子数组。（注意：这是指针，说明了指向）</li>
-<li>2.<code>xy + 1</code>:在三个包含两个整型元素的数组中，<code>xy</code>为指向第二个子数组，+1是根据包含2个整型元素的数组长度进行调整的，所以是指向第二个子数组。（注意：同上，这是指针，说明了指向）</li>
-<li>3.<code>*(xy + 1)</code>:获取指向第二个子数组的指针，通过间接操作符得到这个子数组，或者可以把该表达式写为<code>xy[1]</code>（即表示的是第二个子数组）。</li>
-<li>4.<code>*(xy + 1) ＋ 1</code>：在第三点中我们取得了第二个子数组，记得我们在上面讲一维数组的时候，获取数组第n个元素的地址的办法是:<code>array + n</code>或者<code>&amp;array[n]</code>，在和<code>*(xy + 1) ＋ 1</code>进行对比之后不难发现，其表达的意思就是获取第二个子数组中第2个元素（因为数组下标是从0开始）的地址或者可以把该表达式写为<code>xy[1] ＋ 1</code>（注意：同上，这是指针，是一个地址）</li>
-<li>5.<code>*(*(xy + 1) + 1)</code>：由间接操作符，获得第4点中的指针指向的具体元素。同上我们可以写为:<code>*(xy[1] + 1)</code>，进一步改写<code>xy[1][1]</code>;</li>
-</ul>
-<h3 id="指向数组的指针"><a href="#指向数组的指针" class="headerlink" title="指向数组的指针"></a>指向数组的指针</h3><p><pre><br>int vector[10];<br>int matrix[3][4];<br>int *vp = vector;<br>int (*mp)[10] = matrix;//下标引用的优先级是高于间接引用的，所以我们需要在间接引用这里手动加上括号才行<br></pre>所以<code>mp</code>是一个指向整型数组的指针，<code>vp</code>是指向整型变量的指针。</p>
-<blockquote>
-<p>这里需要注意一下：<br>一定不要把指向数组的指针和指针数组浓混了，那个确保算术优先级的括号是很重要的，<code>int (*mp)[10]</code>代表的是指向数组的指针，而<code>int *mp[10]</code>表示的是指针数组。</p>
-</blockquote>
-<p>当数组作为函数的参数的时候，多维数组和一维数组相同，<strong>都是用指针作为参数进行传递，这个指针是指向数组第一个元素的指针</strong>。</p>
-<h6 id="一维数组作为函数参数的函数声明形式"><a href="#一维数组作为函数参数的函数声明形式" class="headerlink" title="一维数组作为函数参数的函数声明形式"></a>一维数组作为函数参数的函数声明形式</h6><p>实参：<code>int vectors[10];</code><br>函数声明:<code>void vector(int *vec);</code>或者<code>void vector (int vet[])</code></p>
-<h6 id="多维数组作为函数参数的函数声明形式"><a href="#多维数组作为函数参数的函数声明形式" class="headerlink" title="多维数组作为函数参数的函数声明形式"></a>多维数组作为函数参数的函数声明形式</h6><p>实参：<code>int matrixs[3][10];</code><br>函数声明:<code>void matrix(int (*mat)[10])</code>;或者void matrix(int mat[][10]);<code>void matrix(int mat[][10]);</code><br>这里的关键在于编译器必须知道第二个及以后各维的长度才能对各下标进行求值，因此在原型中必须声明这个维的长度</p>
-<h6 id="关于多维数组初始化"><a href="#关于多维数组初始化" class="headerlink" title="关于多维数组初始化"></a>关于多维数组初始化</h6><ul>
-<li><p>第一种方式:<br><pre><code>int xy[3][2] = {1,2,3,4,5,6};</code></pre>这种就是在声明变量的时候就在后面跟着一长串的初始数据。</p>
-</li>
-<li><p>第二种方式:<br><pre><br>int xy[3][2];<br>xy[0][0] = 1;<br>xy[0][1] = 2;<br>…<br>xy[2][0] = 5<br>xy[2][1] = 6;</pre>这和第一种的差别就在于，这一种是对数组元素一个一个的去赋值，这种存储顺序是以最右边下标率先变化的（前面注释提到的行主序）。</p>
-</li>
-<li><p>第三种方式:<br>因为多维数组可以看成是每个元素由一个子数组组成，所以我们可以按照一个子数组为一个个体来初始化。<br><pre><br>int xy[3][2] = {<br>{1,2},<br>{3,4},<br>{5,6}<br>};<br></pre>这样看起来和第一种的方式是有点类似的。</p>
-</li>
-</ul>
-<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><ul>
-<li>1 .数组变量是const指针，所以是不能被赋值的；</li>
-<li>2.如果指针指向的不是一片连续的空间，那么对地址进行加操作（或者减操作）是没有意义；</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;记录指针和数组直接的关系!&lt;br&gt;
-    
-    </summary>
-    
-      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
-    
-    
-      <category term="C" scheme="http://yoursite.com/tags/C/"/>
-    
-      <category term="指针" scheme="http://yoursite.com/tags/%E6%8C%87%E9%92%88/"/>
     
   </entry>
   
