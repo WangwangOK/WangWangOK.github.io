@@ -17,7 +17,7 @@
 <h3 id="逗号操作符"><a href="#逗号操作符" class="headerlink" title="逗号操作符"></a>逗号操作符</h3><p>逗号操作符将多个表达式分隔开，这些表达式从左向右逐个进行求值，__整个逗号表达式的值就是最后那个表达式的值。</p>
 <p><pre><br>int (^f1)(int) = ^(int value){<br>  return value + 1;<br>};<br>int (^f2)(int) = ^(int value){<br>  return value + 2;<br>};<br>int (^f3)(int,int) = ^(int a,int b){<br>  return a + b;<br>};<br>int x,a,b,c;<br>x = 0;<br>//从这里开始<br>a = f1(x);<br>b = f2(x + a);<br>for (c = f3(a,b); c &lt; 10; c = f3(a,b)) {<br>  printf(“while statements c is:%d\n”,c);<br>  a = f1(++x);<br>  b = f2(x + a);<br>}<br>//到这里结束，这其中的代码将会被修改<br></pre>上面为原始的代码片段，现在我们需要使用逗号操作符来简化上面的代码，同时我选择用<code>while</code>循环来代替<code>for</code>循环。</p>
 <p><pre><br>while (a = f1(x),b = f2(x + a),c = f3(a,b),++x,c &lt; 10) {<br>  printf(“while statements c is:%d\n”,c);<br>}<br></pre>现在，循环中用于获得下一个值的语句只需要出现一次，逗号操作符使源码更易于维护。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/02/22/c_and_pointer_note_case3/" class="prev">上一篇</a><a href="/2017/02/20/c_and_pointer_note_base/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/02/22/c_and_pointer_note_case3/" class="prev">PREV</a><a href="/2017/02/20/c_and_pointer_note_base/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/02/22/c_and_pointer_note_case2/';
 var disqus_title = '《C和指针Note》之操作符和表达式';
 var disqus_url = 'http://yoursite.com/2017/02/22/c_and_pointer_note_case2/';
