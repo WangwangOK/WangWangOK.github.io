@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T07:30:42.191Z</updated>
+  <updated>2019-10-28T07:44:38.241Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/"/>
     <id>http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/</id>
     <published>2019-10-28T06:29:13.863Z</published>
-    <updated>2019-10-28T07:30:42.191Z</updated>
+    <updated>2019-10-28T07:44:38.241Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
 <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>语法分析通常用于编译器中。在我们的编译器模型中，语法分析器从词法分析器获得一个词法单元组成的串，并验证这个串可以由源语言的文法（比如上下文无关文法，在后面会详细解释）生成。</p>
@@ -163,8 +163,9 @@
 <p>总结一下上面提到的内容：对于每个非终结符号A，找出他的两个或多个选项之间的最长公共前缀 α。如果 α 不为空，即存在一个非平凡的公共前缀，那么将所有A的产生式</p>
 <p>$A \rightarrow \alpha\beta_{1}\ |\ \alpha\beta_{2}\ |\ …\ |\ \alpha\beta_{n}\ |\ \gamma$</p>
 <p>替换为</p>
-<p>$<br>A \rightarrow \alpha A^{‘}\ |\ \gamma\\<br>A^{‘} \rightarrow \beta_{1}\ |\ \beta_{2}\ |\ …\ |\ \beta_{n}<br>$</p>
-<p>其中 γ 表示所有不以 α 开头的产生式； $A^{‘}$ 是一个新的非终结符号。不断地应用这个转换，直到每个非终结符号的任意两个产生式体都没有公共前缀为止。</p>
+<script type="math/tex; mode=display">
+A \rightarrow \alpha A^{'}\ |\ \gamma\\
+A^{'} \rightarrow \beta_{1}\ |\ \beta_{2}\ |\ ...\ |\ \beta_{n}</script><p>其中 γ 表示所有不以 α 开头的产生式； $A^{‘}$ 是一个新的非终结符号。不断地应用这个转换，直到每个非终结符号的任意两个产生式体都没有公共前缀为止。</p>
 <hr>
 <h3 id="3、非上下文无关语言的构造"><a href="#3、非上下文无关语言的构造" class="headerlink" title="3、非上下文无关语言的构造"></a>3、非上下文无关语言的构造</h3><p>在常见的程序设计语言中，存在少量无法文法描述的语法构造。在C或者Java的文法不区分由不同字符串组成的标识符。所有的标识符在文法中都被表示为像 <strong>id</strong> 这样的词法单元。在这些语言的编译器中，<strong>标识符是否先声明后使用是在语义分析阶段检查的</strong> 。</p>
 <h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>在本篇文章中，介绍了一大堆的概念。比如上下文无关文法里面的产生式、终结符、非终结符，还有开始符号等等；然后我们接触到了推导的概念，推导又分为最左推导和最右推导。我们根据这两种推导，我们可以构造出对应语法分析树；语法分析树的所有叶子结点从左到右拼起来之后，得到的就是对应产生式文法的句子。而中间过程中出现的则成为句型；</p>

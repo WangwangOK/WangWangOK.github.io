@@ -139,15 +139,16 @@
 <p>总结一下上面提到的内容：对于每个非终结符号A，找出他的两个或多个选项之间的最长公共前缀 α。如果 α 不为空，即存在一个非平凡的公共前缀，那么将所有A的产生式</p>
 <p>$A \rightarrow \alpha\beta_{1}\ |\ \alpha\beta_{2}\ |\ …\ |\ \alpha\beta_{n}\ |\ \gamma$</p>
 <p>替换为</p>
-<p>$<br>A \rightarrow \alpha A^{‘}\ |\ \gamma\\<br>A^{‘} \rightarrow \beta_{1}\ |\ \beta_{2}\ |\ …\ |\ \beta_{n}<br>$</p>
-<p>其中 γ 表示所有不以 α 开头的产生式； $A^{‘}$ 是一个新的非终结符号。不断地应用这个转换，直到每个非终结符号的任意两个产生式体都没有公共前缀为止。</p>
+<script type="math/tex; mode=display">
+A \rightarrow \alpha A^{'}\ |\ \gamma\\
+A^{'} \rightarrow \beta_{1}\ |\ \beta_{2}\ |\ ...\ |\ \beta_{n}</script><p>其中 γ 表示所有不以 α 开头的产生式； $A^{‘}$ 是一个新的非终结符号。不断地应用这个转换，直到每个非终结符号的任意两个产生式体都没有公共前缀为止。</p>
 <hr>
 <h3 id="3、非上下文无关语言的构造"><a href="#3、非上下文无关语言的构造" class="headerlink" title="3、非上下文无关语言的构造"></a>3、非上下文无关语言的构造</h3><p>在常见的程序设计语言中，存在少量无法文法描述的语法构造。在C或者Java的文法不区分由不同字符串组成的标识符。所有的标识符在文法中都被表示为像 <strong>id</strong> 这样的词法单元。在这些语言的编译器中，<strong>标识符是否先声明后使用是在语义分析阶段检查的</strong> 。</p>
 <h2 id="三、总结"><a href="#三、总结" class="headerlink" title="三、总结"></a>三、总结</h2><p>在本篇文章中，介绍了一大堆的概念。比如上下文无关文法里面的产生式、终结符、非终结符，还有开始符号等等；然后我们接触到了推导的概念，推导又分为最左推导和最右推导。我们根据这两种推导，我们可以构造出对应语法分析树；语法分析树的所有叶子结点从左到右拼起来之后，得到的就是对应产生式文法的句子。而中间过程中出现的则成为句型；</p>
 <p>而且，我们也了解到如何通过正则表达式来构造对应的上下文无关文法。大致的过程是根据正则表达式，我们可以根据词法分析一章的知识来构造一个NFA（根据连接、并、闭包运算对应的状态转换图）。我们根据NFA的状态数对应非终结符号，具体转换规则都已经详细列在了上面；</p>
 <p>在构造文法的过程中，我们遇到左递归的情况。因此我们需要知道如何去消除立即左递归，和左递归。详细的消除方法在上面用C++语法已列出；最后我们还了解了提取左公因子的方法，当我们不清楚应该如何选择产生式，推迟这个时机，待我们有足够信息做出正确选择之前。</p>
 <p>下一篇文章，我们将会去看看自顶向下的语法分析技术。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_regular2dfa/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_regular2dfa/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2019/10/28/SyntaxParser_context_free_grammar/';
 var disqus_title = '语法分析——文法的基础概念';
 var disqus_url = 'http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/';
