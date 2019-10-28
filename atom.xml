@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-02-17T14:21:24.705Z</updated>
+  <updated>2019-10-28T03:13:18.512Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -14,6 +14,201 @@
   </author>
   
   <generator uri="http://hexo.io/">Hexo</generator>
+  
+  <entry>
+    <title>词法分析——词法单元和正则表达式</title>
+    <link href="http://yoursite.com/2019/10/28/compiler_token_regular/"/>
+    <id>http://yoursite.com/2019/10/28/compiler_token_regular/</id>
+    <published>2019-10-28T03:09:25.132Z</published>
+    <updated>2019-10-28T03:13:18.512Z</updated>
+    
+    <content type="html"><![CDATA[<p>本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：<br>1）、首先解释什么是词法单元；<br>2）、如何手动识别词法单元；<br>3）、最后是词法分析器如何自动机自动识别词法单元；<br>本文主要是看一下词分析器的词法单元部分。包括一些基本概念，以及词法单元的识别。</p>
+<p>首先我们先大体上看一下词法分析器的作用。它的主要任务是读入源程序的输入字符、将它们组成词素，生成并输出一个词法单元的序列。每个词法单元对应一个词素。</p>
+<p>这里我们有提到几个专业名词：词素、词法单元。它们的定义马上就会说到，我们可以先看看下面这幅图：</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/619906-4d370c94997e7f1c.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p>从图中我们可以看出来词法分析器还在和符号表进行交互，其主要作用是从符号表中读取有关标识符种类信息，以确定需要向语法分析器传送的词法单元。</p>
+<h2 id="一、词法单元"><a href="#一、词法单元" class="headerlink" title="一、词法单元"></a>一、词法单元</h2><p>现在我们就先来看看前面提到的一些专业名词：</p>
+<ul>
+<li><strong>词法单元</strong>：由一个 <strong>词法单元名和一个可选的属性</strong> 构成。<br>比如一个特定的关键字，或者代表一个标识符的输入字符序列。</li>
+</ul>
+<blockquote>
+<p>词法单元是语法分析器处理的输入符号。</p>
+</blockquote>
+<ul>
+<li><p><strong>词素</strong>：源程序中的一个字符序列，它和某个词法单元的模式匹配。它被词法分析器识别为该词法单元的一个实例；</p>
+</li>
+<li><p><strong>模式</strong>：它描述了一个词法单元的词素可能具有的形式；</p>
+</li>
+</ul>
+<p>这儿我大致地解释一下这三个概念之间的关系：词法单元指定的是某一类型的事物，用面向对象来说就是，词法单元类（class）；词素就是指的是该类的具体实例；而模式就是该类的一个属性，它描述了词素所具有的具体特征。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">class Tokens&#123;</div><div class="line">  string pattern;</div><div class="line">&#125;;</div><div class="line">Tokens lexeme;</div></pre></td></tr></table></figure>
+<p>并不是说实际就是这个代码，我只是为了便于理解，而进行的类比。下表给出了一些常见的词法单元：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">词法单元</th>
+<th style="text-align:left">非正式描述</th>
+<th style="text-align:left">词素实例</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><strong>if(关键字)</strong></td>
+<td style="text-align:left">字符i,f</td>
+<td style="text-align:left">if</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>else(关键字)</strong></td>
+<td style="text-align:left">字符e,l,s,e</td>
+<td style="text-align:left">else</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>comparison(比较运算符)</strong></td>
+<td style="text-align:left">&lt;,&gt;,&lt;=,&gt;=,==…</td>
+<td style="text-align:left">&lt;=, !=</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>id(标识符)</strong></td>
+<td style="text-align:left">字母开头的字母/数字串</td>
+<td style="text-align:left">pi, printf</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>number(数字)</strong></td>
+<td style="text-align:left">数字常量</td>
+<td style="text-align:left">3.1415</td>
+</tr>
+<tr>
+<td style="text-align:left"><strong>literal(字符/串)</strong></td>
+<td style="text-align:left">两双引号之间的任何字符</td>
+<td style="text-align:left">“hello, world”</td>
+</tr>
+</tbody>
+</table>
+<h4 id="词法单元的大致分类"><a href="#词法单元的大致分类" class="headerlink" title="词法单元的大致分类"></a>词法单元的大致分类</h4><p>1）、<strong>关键字</strong>：每个关键字有一个词法单元；<br>2）、<strong>标识符</strong>：一个表示所有标识符的词法单元；<br>3）、<strong>常量</strong>：常量词法单元包含的数字和字符串；<br>4）、<strong>运算符</strong>：运算法也是一个词法单元，可以是比较运算符，也可以是算术运算符；<br>5）、<strong>标点符号</strong>：每一个标点符号有一个词法单元。比如括号等等；</p>
+<h4 id="词法单元的属性值"><a href="#词法单元的属性值" class="headerlink" title="词法单元的属性值"></a>词法单元的属性值</h4><p>从这里我们可以看出来词法单元表示了一类事物，但是我们如何去区分具体的词素？ <strong>词法分析器不仅向语法分析器返回一个词法单元的名字，还会返回一个描述该词法单元的词素属性值</strong>。</p>
+<p>比如我们声明的一个变量、或者函数时，它作为标识符一类的词法单元。它们更加详细的信息（词素、类型、第一次在源代码中出现的位置）都会保存在符号表中。<br>因此：</p>
+<blockquote>
+<p><strong>一个标识符的属性值是一个指向符号表中该标识符对应项的指针</strong>。</p>
+</blockquote>
+<p>注意，词法单元的属性值是指向符号表项的指针。</p>
+<h2 id="二、正则表达式"><a href="#二、正则表达式" class="headerlink" title="二、正则表达式"></a>二、正则表达式</h2><p>这一节主要是在讲正则表达式，如果已经熟悉了正则表达式，可以直接跳过阅读词法单元的识别。而且这一节会增加很多概念，也是比较枯燥的。<br>从前面我们可以感性（直观）知道哪些词素是某一类型的词法单元。为了能够明确地划分不同词素对应的词法单元，我们需要引入正则表达式。<br>正则表达式是一种用来描述词素模式的重要表示方法。因此正则表达式就描述了特定词素对应的模式。</p>
+<p>在词法分析中，最重要的语言上的运算是：<strong>并、连接和闭包</strong> 运算：</p>
+<ul>
+<li>并（L|M）：得到的串s可能属于L也可能属于M。但只能是其中之一；</li>
+<li>连接(LM)：得到的串s即属于L，也属于M；</li>
+<li>闭包：闭包分Kleene闭包和正闭包。Kleene闭包是指某一集合的符号重复 0～∞ 多次，可能是空串。正必报不包含重复0次，即不包含空串；</li>
+</ul>
+<p><code>letter_ (letter_ | digit_) *</code>这是一个c语言中标识符的正则表达式。其中用letter<em>来表示任一字母或者下划线，用digit</em>表示数位。c语言中标识符必须是必须是以字符开头，包含数字、字符来表示。</p>
+<h4 id="优先级"><a href="#优先级" class="headerlink" title="优先级"></a>优先级</h4><p>正则表达式中，括号的优先级最高，优先级依次降低：<br>1）、一元运算符 <code>*</code>；<br>2）、连接（左结合）；<br>3）、并运算符优先级最低（左结合）；</p>
+<p>比如正则表达式 <code>(a|b)*</code>，可以表示多个串：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">空集;//闭包次数为0;　</div><div class="line">a;//闭包次数为1,取并的左边;</div><div class="line">aa;//闭包次数为2,一直取并的左边;</div><div class="line">aa...a;//闭包次数为n,一直取并的左边;</div><div class="line">b;//闭包次数为1,取并的右边;</div><div class="line">bb;//闭包次数为2,取并的右边;</div><div class="line">bb...b;//闭包次数为n,取并的右边;</div><div class="line">ab;//闭包次数为2,先取左边再取右边;</div><div class="line">ba;//闭包次数为2,先取右边再取左边;</div><div class="line">...</div></pre></td></tr></table></figure>
+<p>如上, 可以用一个正则表达式定义的语言叫做<strong>正则集合</strong>。如果两个正则表达式r和s表示相同的语言，则称 r 和 s 等价<code>r=s</code> 。</p>
+<h6 id="例一"><a href="#例一" class="headerlink" title="例一"></a>例一</h6><p>c语言中的标识符是由字母、数字和下划线组成的串，下面是c标识符对应语言的正则定义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">letter_ -&gt; A | B | C | ... | Z | a | b | c | ... | z | _ </div><div class="line">digit  -&gt; 0 | 1 | ... | 9 </div><div class="line">id -&gt; letter_ (letter_ | digit  ) *</div></pre></td></tr></table></figure>
+<h6 id="例二"><a href="#例二" class="headerlink" title="例二"></a>例二</h6><p>无符号数是形如5280、0.01234、6.336E4或者1.89E-4的串。下面的正则定义给出了这类符号串的精确定义：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">digit -&gt; 0 | 1 | ...| 9</div><div class="line">digits -&gt; digit  digit* </div><div class="line">optionalFraction -&gt; . digits | 空集</div><div class="line">optionalExponent -&gt; (E (+|-|空) digits) | 空</div><div class="line">number -&gt; digits optionalFraction optionalExponent</div></pre></td></tr></table></figure>
+<h4 id="正则表达式的扩展"><a href="#正则表达式的扩展" class="headerlink" title="正则表达式的扩展"></a>正则表达式的扩展</h4><ul>
+<li><strong>单目后缀运算符+</strong>：指的正闭包；</li>
+<li><strong>单目后缀运算符?</strong>：表示出现0个，或者一个；</li>
+<li><strong>字符类</strong>：正则表达式a<sub>1</sub> | a<sub>2</sub> | a<sub>3</sub> |…|a<sub>n</sub>可以缩写为 <strong>[a<sub>1</sub>a<sub>2</sub>a<sub>3</sub>…a<sub>n</sub>]</strong>。当a1到an形成一个逻辑上连续的序列时，可以写作 <strong>[a1 - a<sub>n</sub>]</strong>;</li>
+</ul>
+<h6 id="例三"><a href="#例三" class="headerlink" title="例三"></a>例三</h6><p>我们可以使用正则表达式的扩展，来把例一的正则表达式进行改写：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">letter_ -&gt; [A-Za-z_]</div><div class="line">digit  -&gt; [0-9]</div><div class="line">id -&gt; letter_ (letter_ | digit  ) *</div></pre></td></tr></table></figure>
+<p>现在通过正则表达式，我们可以写出对应词法单元对应的模式来。因此下一步要做的就是读取源代码里面的字符流，搭配对应的词法单元的模式，生成对应的词法单元。</p>
+<h2 id="三、输入缓冲"><a href="#三、输入缓冲" class="headerlink" title="三、输入缓冲"></a>三、输入缓冲</h2><p>很多情况下，我们需要至少向前看一个字符。比如在c语言中，像-、=或者&lt; 这样单字符运算符也有可能是 -&gt; 、== 或者&lt;= 这样的双字符。<br>在编译原理中会引入一个哨兵标记的双缓冲区方案来处理向前看运算符的问题。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/619906-6ec31e45740ca97f.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="使用一对输入缓冲区（两个连续的*是Fortran中的指数运算）"><br>上图中出现的lexemeBegin和forward指针作用分别是：<br>1）、<code>lexemeBegin</code>：该指针指向当前词素的开始处。当前我们正在匹配某一正则表达式对应模式的词素；<br>2）、<code>forward</code>：该指针一直向前扫描，直到发现某个模式被匹配为止。</p>
+<ul>
+<li><p>第一步、读取内容到缓冲区中：每次读取缓冲区长度的字符到缓冲区中；<br>每个输入缓冲区的容量通常是一个磁盘块的大小，比如4096字节。我们在读取的时候就是一次性读取一个缓冲区长度的字符到缓冲区中，以避免频繁的使用读取函数。<br>当输入文件中的剩余字符不足缓冲区长度的时候，文件的默认会有一个eof（end of file）来表示文件结束。</p>
+</li>
+<li><p>第二步、lexemeBegin和forward指针的移动：使用lexemeBegin指针和forward指针读取指定模式的词素。<br>一旦确定了下一个词素（下图中的左括号）forward指针将指向该词素 <strong>结尾的字符</strong> 。词法分析器将这个词素作为某个返回给语法分析器的词法单元的属性值记录下来（在前面我们提过的词法单元分为词法单元名和可选的属性）。<br>然后lexemeBegin指针移动到 <strong>刚刚找到词素之后的第一个字符</strong> 。如下图所示：</p>
+</li>
+</ul>
+<p><img src="https://upload-images.jianshu.io/upload_images/619906-da9b7057e178325e.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<ul>
+<li>第三步、缓冲区的替换：我们在移动forward指针前需要判断当前是否已经到达某个缓冲区的末尾。<br>如果是，我们需要将新字符读入到另外一个缓冲区中（前面提到的双缓冲区），且将forward指针指向新缓冲区的头部。</li>
+</ul>
+<h4 id="哨兵标记"><a href="#哨兵标记" class="headerlink" title="哨兵标记"></a>哨兵标记</h4><p>如前面所说，我们在每次移动forward指针时，我们都需要检查是否到达了缓冲区的末尾。如果是的话，我们就需要加载另一个缓冲区。因此在这里我们需要做两次测试：<br>1）、检查是否到达缓冲区的末尾；<br>2）、确定读入的字符是什么；<br>解决这两个问题，我们可以在缓冲区的末尾增加一个“哨兵”，比如<code>eof</code>：</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/619906-48a1b711bf76bbfd.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""></p>
+<p>从这儿我们可以知道，对于编译器而言在进行词法分析的时候，需要通过lexemeBegin和forward来扫描缓冲区。如果匹配某一个词素时，比如很长的字符串（比如将一片短篇小说作为常量字符串放到一个变量中）时，那就会出现缓冲区长度不足的情况，因此在日常编码中将长字符串拆分成多个短的字符串。</p>
+<p>这其实也算是学习编译原理，有助于提供编程效率的一个例子了。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在前面我们用正则表达式来表示一个模式，现在我们需要通过制定模式来识别对应的词法单元。下面是大部分词法单元，以及对应的模式：<br>|词法单元|模式|<br>|:—|:—|<br>|<strong>digit</strong>|[0-9]|<br>|<strong>digits</strong>|digit+|<br>|<strong>number</strong>|digits(.digits)?(E[+-]?digits)?|<br>|<strong>letter</strong>|[A-Za-z]|<br>|<strong>id</strong>|letter(letter | digit)<em>|<br>|<strong>if</strong>|if|<br>|<strong>then</strong>|then|<br>|<strong>else</strong>|else|<br>|<strong>relop</strong>|&lt; | &gt; | &lt;= | &gt;= | == | !=|<br>|<em>*ws</em></em>(空白符)|(blank | tab | newline)+|</p>
+<p>上表中的词法单元<code>ws</code>和其他词法单元不同。当我们识别到ws时，</p>
+<blockquote>
+<p><strong>我们并不将它返回给语法分析器，而是从这个空白符之后的字符开始继续进行词法分析。返回给语法分析器的是下一个词法单元</strong> 。</p>
+</blockquote>
+<p>我们从前面的知识了解到，词法分析器通过对应模式识别到词法单元之后，会将词法单元名返回给语法分析器（空白符除外），以及对应词法单元的属性来确定某一特定实例。下表展示了对应词法单元，和对应属性：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">词素</th>
+<th style="text-align:left">词法单元名字</th>
+<th style="text-align:left">属性值</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">任何空白符</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+</tr>
+<tr>
+<td style="text-align:left">if</td>
+<td style="text-align:left"><strong>if</strong></td>
+<td style="text-align:left">-</td>
+</tr>
+<tr>
+<td style="text-align:left">else</td>
+<td style="text-align:left"><strong>else</strong></td>
+<td style="text-align:left">-</td>
+</tr>
+<tr>
+<td style="text-align:left">id</td>
+<td style="text-align:left"><strong>id</strong></td>
+<td style="text-align:left">指向符号表条目的指针</td>
+</tr>
+<tr>
+<td style="text-align:left">number</td>
+<td style="text-align:left"><strong>number</strong></td>
+<td style="text-align:left">指向符号表条目的指针</td>
+</tr>
+<tr>
+<td style="text-align:left">&lt;</td>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">LT</td>
+</tr>
+<tr>
+<td style="text-align:left">&gt;</td>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">GT</td>
+</tr>
+<tr>
+<td style="text-align:left">…</td>
+<td style="text-align:left"><strong>…</strong></td>
+<td style="text-align:left">…</td>
+</tr>
+<tr>
+<td style="text-align:left">!=</td>
+<td style="text-align:left"><strong>relop</strong></td>
+<td style="text-align:left">NE</td>
+</tr>
+</tbody>
+</table>
+<p>表格里面的relop词法单元，区分其具体实例是通过对应词法单元属性值进行。</p>
+<p>这一节主要是了解了词法单元相关知识其中，包括有词法单元、词素和模式。为了能够了解模式，我们又学习了一下正则表达式。下一节则主要是讲解词法单元的识别。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;本系列文章是《编译原理》的读书笔记，并加入了一些个人的理解。本系列的主要内容顺序如下：&lt;br&gt;1）、首先解释什么是词法单元；&lt;br&gt;2）、如何手动识别词法单元；&lt;br&gt;3）、最后是词法分析器如何自动机自动识别词法单元；&lt;br&gt;本文主要是看一下词分析器的词法单元部分。包括一些
+    
+    </summary>
+    
+      <category term="编译原理" scheme="http://yoursite.com/categories/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/"/>
+    
+    
+      <category term="词法分析" scheme="http://yoursite.com/tags/%E8%AF%8D%E6%B3%95%E5%88%86%E6%9E%90/"/>
+    
+  </entry>
   
   <entry>
     <title>A Malloc Tutorial</title>
@@ -2070,42 +2265,6 @@ char *find_char(char const *source,char const *chars){
     <summary type="html">
     
       &lt;p&gt;这篇主要记录操作符和表达式相关的只是！&lt;br&gt;
-    
-    </summary>
-    
-      <category term="C语言" scheme="http://yoursite.com/categories/C%E8%AF%AD%E8%A8%80/"/>
-    
-    
-      <category term="C" scheme="http://yoursite.com/tags/C/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>《C和指针Note》之基础</title>
-    <link href="http://yoursite.com/2017/02/20/c_and_pointer_note_base/"/>
-    <id>http://yoursite.com/2017/02/20/c_and_pointer_note_base/</id>
-    <published>2017-02-19T16:50:02.000Z</published>
-    <updated>2017-02-22T15:19:45.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>C存在两种不同的环境：<code>翻译环境</code>和<code>执行环境</code>;<br><a id="more"></a><br>翻译环境是将源代码转换为可执行的机器指令，而执行环境用于实际执行代码。</p>
-<h3 id="翻译"><a href="#翻译" class="headerlink" title="翻译"></a>翻译</h3><p>其中翻译阶段主要包括了<code>编译</code>和<code>链接</code>两部分。</p>
-<blockquote>
-<p>__ 编译<br>将源代码转换为目标代码的过程，在这个过程中包含了<code>预处理</code>（预处理相关操作，比如define替换为实际值）和<code>解析</code>（判断源代码的意思），在最后生成<code>目标代码</code>（机器指令的初步形式）。</p>
-<h4 id="链接"><a href="#链接" class="headerlink" title="链接"></a>链接</h4><p>链接器会把各个目标文件捆绑起来形成一个可执行程序。在这个过程中会引入c函数库。</p>
-</blockquote>
-<h3 id="执行"><a href="#执行" class="headerlink" title="执行"></a>执行</h3><p>程序载入到内存中，并初始化在堆栈中没有初始化的变量。</p>
-<blockquote>
-<p>__ 运行时堆栈<br>用户保存函数的局部变量和返回值。</p>
-<h4 id="静态内存"><a href="#静态内存" class="headerlink" title="静态内存"></a>静态内存</h4><p>存储在静态内存中的变量将会在程序执行期间一直保留！</p>
-</blockquote>
-<p>程序的终止可以是<code>main函数</code>完成返回，也可以是主动执行了<code>exit</code>。</p>
-<h3 id="一个技巧"><a href="#一个技巧" class="headerlink" title="一个技巧"></a>一个技巧</h3><p>如果在使用注释的时候<code>/**/</code>嵌套了多层会导致注释失效，这时候我们可以在最外层添加:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">#if 0</div><div class="line">//中间为代码</div><div class="line">#endif</div></pre></td></tr></table></figure></p>
-<p>而且在使用注释的时候并不会把注释掉的部分从源代码中删除，只是不去执行而已，使用<code>if endif</code>的话是在逻辑上删除了这一段代码的。<br>这在后面的预处理器那一节会讲更多。</p>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;C存在两种不同的环境：&lt;code&gt;翻译环境&lt;/code&gt;和&lt;code&gt;执行环境&lt;/code&gt;;&lt;br&gt;
     
     </summary>
     
