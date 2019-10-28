@@ -1,0 +1,293 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 词法分析——从正则表达式到有穷自动机 · 凌云壮志幾多愁</title><meta name="description" content="词法分析——从正则表达式到有穷自动机 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">词法分析——从正则表达式到有穷自动机</h1><div class="post-info">Oct 28, 2019</div><div class="post-content"><p>自动机在本质上是和状态转换图类似的。但也有一点不同，它们只能对每个可能的输入串简单地回答“是”或者“否”；有穷自动机分为两类：</p>
+<ul>
+<li>1、<strong>不确定的有穷自动机（NFA）</strong>：其边上的标号没有任何限制，离开一个状态的多条边上可以存在多个相同的符号，也可以是空；</li>
+<li>2、<strong>确定的有穷自动机（DFA）</strong>：对于每个符号而言，以该符号为标号的边有且只有一条离开该状态。</li>
+</ul>
+<p>下面我们就一次来看看不确定的有穷自动机，和确定的有穷自动机。</p>
+<h2 id="一、NFA——不确定的有穷自动机"><a href="#一、NFA——不确定的有穷自动机" class="headerlink" title="一、NFA——不确定的有穷自动机"></a>一、NFA——不确定的有穷自动机</h2><p>不确定的有穷自动机由下面几个部分组成：<br>1）、有穷的状态集合，类似于上一节中状态转换表的每一个节点；<br>2）、一个输入符号集合，可以简单地理解为unicode字符集之类的；<br>3）、转换函数，类似于状态转换表中的有向箭头一样；<br>4）、开始状态，或者叫初始状态；<br>5）、接受状态，也称作终止状态，如下图的双圆圈表示；</p>
+<p><img src="/uploads/compiler_regular_fa/1.png" alt=""></p>
+<p>上图是一个能够识别正则表达式 <code>(a|b)*abb</code>的NFA转换图。</p>
+<h4 id="转换表和接收串"><a href="#转换表和接收串" class="headerlink" title="转换表和接收串"></a>转换表和接收串</h4><p>我们可以将一个NFA表示为一张转换表。表的每一行表示一个状态，表的每一列对应于输入符号和空串。先将上图的NFA转换图转换成为对应的转换表，然后根据转换表再具体说明其中的含义：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">状态</th>
+<th style="text-align:left">a</th>
+<th style="text-align:left">b</th>
+<th style="text-align:left">空字符ε</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">0</td>
+<td style="text-align:left">{0,1}</td>
+<td style="text-align:left">{0}</td>
+<td style="text-align:left">∅</td>
+</tr>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">{2}</td>
+<td style="text-align:left">∅</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">{3}</td>
+<td style="text-align:left">∅</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">∅</td>
+</tr>
+</tbody>
+</table>
+<p>对于一个给定的状态和给定的转换，其得到的值是NFA转换图中应用对应转换之后得到的状态集合。如果对应的转换没有后续状态，则用符号∅表示。</p>
+<p>而自动机在判断是否接收字符串的依据是：存在某条字符序列组成符号串的路径，该路径能够从开始状态到达某个接收状态。我们就说NFA接收这个符号串。比如：</p>
+<p><img src="/uploads/compiler_regular_fa/2.png" alt=""></p>
+<p>该NFA接收符号串：</p>
+<p><img src="/uploads/compiler_regular_fa/3.png" alt=""></p>
+<p>即字符串<code>aaa</code>被这个NFA接受。路径中的ε并不会记录在实际的路径中。</p>
+<h2 id="二、DFA——确定的有穷自动机"><a href="#二、DFA——确定的有穷自动机" class="headerlink" title="二、DFA——确定的有穷自动机"></a>二、DFA——确定的有穷自动机</h2><p>确定的有穷自动机是不确定有穷自动机的特例，它性质如下：<br>1）、没有输入符号ε；<br>2）、对于每一个状态s，每一个输入符号a，有且只有一条边离开状态s。</p>
+<p>通俗来讲就是指定某个状态，不存在两个或者以上相同的转换存在。比如对于NFA而言，状态0中转换a可以到达两个及其以上不同的状态；而DFA则只能到达一个（有且只有）状态。 比如下面同样是识别<code>(a|b)*abb</code>的DFA转换图：</p>
+<p><img src="/uploads/compiler_regular_fa/4.png" alt=""></p>
+<p>对于给定的输入串<code>ababb</code>，这个DFA的对应状态顺序为：0、1、2、1、2、3。</p>
+<h2 id="三、正则表达式、NFA以及DFA之间的关联"><a href="#三、正则表达式、NFA以及DFA之间的关联" class="headerlink" title="三、正则表达式、NFA以及DFA之间的关联"></a>三、正则表达式、NFA以及DFA之间的关联</h2><p>这里首先我们将正则表达式转变为接受相同语言的NFA。然后介绍如何将NFA转变为DFA。这样我们就有了一个粗略的方式将正则表达式转换为NFA和DFA的方案。</p>
+<h4 id="正则表达构造NFA的规则"><a href="#正则表达构造NFA的规则" class="headerlink" title="正则表达构造NFA的规则"></a>正则表达构造NFA的规则</h4><p>通过正则表达式构造NFA主要分为六种情况。在下面每一个情况中，我们都有提出状态i和状态f是否为新状态。指出的意义在于我们需要明确新构建NFA时出现的状态是否为原各个NFA中已有状态，还是需要我们去新增一个状态。比如在连接运算中出现的状态i和f并非新状态，而是已有状态的特殊状态：</p>
+<ul>
+<li><p><strong>规则1</strong>、空字符ε表达式；对于表达式ε，构造下面的NFA<br><img src="/uploads/compiler_regular_fa/5.png" alt=""><br>这里i是一个新状态，也是NFA的开始状态；f是另一个新状态，也表示NFA的接受状态</p>
+</li>
+<li><p><strong>规则2</strong>、字母表中子表达式；<br>这里状态i和状态f是新状态<br><img src="/uploads/compiler_regular_fa/6.png" alt=""></p>
+</li>
+<li><p><strong>规则3</strong>、正则表达式中的并运算；<br>假设正则表达式s和t对应的NFA为N(s)和N(t)，<code>r = s|t</code>的NFA为N(r)。这里状态i和状态f是新状态：<br><img src="/uploads/compiler_regular_fa/7.png" alt=""><br>因此从状态i到状态f的任何路径要么只通过N(s)，要么只通过N(t)。且离开i或进入f的ε转换都不会改变路径上的标号。因此我们可以判定 <strong>N(r)识别 L(r) = L(s) ∪ L(t)</strong> 。</p>
+</li>
+<li><p><strong>规则4</strong>、正则表达式中的连接运算；<br>同样的，假设正则表达式s和t对应的NFA为N(s)和N(t)，<code>r = st</code> 。对应的NFA为：<br><img src="/uploads/compiler_regular_fa/8.png" alt=""><br>这个情形下的状态i和状态f并非新引入的状态，而是原有正则表达式s和t中已有的状态。</p>
+</li>
+<li><p><strong>规则5</strong>、正则表达式中的闭包运算；<br>这里假设正则表达式 <code>r = s*</code>，N(s)表示正则表达式s对应的NFA。因此闭包运算得到的NFA为：<br><img src="/uploads/compiler_regular_fa/9.png" alt=""><br>这里状态i和状态f都是新引入的状态。</p>
+</li>
+<li><p><strong>规则6</strong>、括号表达式<code>r = (s)</code> 其NFA是完全相同的；</p>
+</li>
+</ul>
+<p>因此 <strong>只有在正则表达式的连接运算和括号存在时，才不会引入新的状态</strong> 。N(r)的状态数最多为r中出现的运算符和运算分量总数的两倍。这是因为每一个构造步骤最毒只引入两个新状态。</p>
+<h4 id="正则表达式构造NFA实例"><a href="#正则表达式构造NFA实例" class="headerlink" title="正则表达式构造NFA实例"></a>正则表达式构造NFA实例</h4><p>现在我们运用上面提到的规则，来将一个正则表达式转换为对应的NFA。将正则表达式转换为NFA的算法是语法制导的，也就是说：</p>
+<blockquote>
+<p>沿着正则表达式的语法分析树 <strong>自底向上</strong> 递归的进行。</p>
+</blockquote>
+<p>下面关于语法分析树定义部分可以选读，由于会用到很多专业名词，此时大可不必去细究语法分析树，因为对于我来说理解下文并不是必须需要这些知识点。但为了行文的准确性，我将下面要用的语法分析树的定义先列出来。<br>语法分析树用图形方式展示了从文法的开始符号推导出相应语言中符号串的过程。给定一个上下文无关文法，该文法的语法分析树具有如下形式：<br>1）、根节点的标号为文法的开始符号（大体上为文法的第一个产生式的首个符号）；<br>2）、每个叶子结点的标号为一个终结符或者空ε（具体字母表中的符号，粗略来看它的叶子结点从左到右组成了最终的正则表达式）；<br>3）、每个内部结点的标号为一个非终结符（可以简单理解为该符号还存在产生式还可以可以推导出终结符号）。<br>4）、对于产生式A-&gt;XYZ，对于X, Y ,Z来说既可以是终结符，也可以是非终结符。</p>
+<p>对于正则表达式 <code>(a|b)*abb</code> ，我们构造处对应的语法分析树：</p>
+<p><img src="/uploads/compiler_regular_fa/10.png" alt=""></p>
+<p>1）、既然是自底向上的，那首先肯定是看子表达式a和b。运用规则1，即可得到两个NFA：</p>
+<p><img src="/uploads/compiler_regular_fa/11.png" alt=""></p>
+<p>2）、现在的叶子节点为并运算符，此时运用规则3。此时我们需要新引入两个状态，并且原有NFA中的接受状态要变为非接受状态：</p>
+<p><img src="/uploads/compiler_regular_fa/12.png" alt=""></p>
+<p>对于带有括号的正则表达式而言，我们从规则6可知，括号运算符不会改变当前的NFA。因此当遇到括号时NFA不改变。</p>
+<p>3）、对于闭包运算符来说，同样会引入两个新状态：</p>
+<p><img src="/uploads/compiler_regular_fa/13.png" alt=""></p>
+<p>4）、最后是3个连接操作，连接的子表达式分别是a、b、b。因此将它们连接之后得到的最终NFA如下：</p>
+<p><img src="/uploads/compiler_regular_fa/14.png" alt=""></p>
+<h4 id="NFA到DFA的转换——子集构造法"><a href="#NFA到DFA的转换——子集构造法" class="headerlink" title="NFA到DFA的转换——子集构造法"></a>NFA到DFA的转换——子集构造法</h4><p>现在我们已经能够从正则表达式转换为NFA了，那如果我们要把正则表达式转换为DFA呢？这里先介绍用NFA转换为DFA的方式，后续会将通过抽象语法树搭配firstpos，lastpos和followpos直接从正则表达式构造DFA。现在我们先通过子集构造法来讲NFA转换为DFA。</p>
+<p>子集构造法中，我们需要通过NFA为DFA构造转换表。</p>
+<blockquote>
+<p><strong>DFA的每一个状态是一个NFA的状态集合</strong>。</p>
+</blockquote>
+<p>DFA的状态是一个集合，该集合里面包含的是对应NFA的状态。</p>
+<p>我们在上面看到在将正则表达式构造成NFA时，NFA里面存在很多空转换。所以当务之急是如果正确地处理NFA上面的空转换。下面展示了NFA的状态集合上的相关操作：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">操作</th>
+<th style="text-align:left">解释</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">ε-closure(s)</td>
+<td style="text-align:left">指的是从NFA的状态s开始，可以通过ε转换得到的状态集合</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">ε-closure(T)</td>
+<td style="text-align:left">指的是集合T中的某个NFA状态，该状态只通过ε转换得到的状态集合</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">move(T,a)</td>
+<td style="text-align:left">即集合T中的状态通过转换a得到的状态集合</td>
+</tr>
+</tbody>
+</table>
+<p>假设s<sub>0</sub>是NFA的开始状态，那么对应DFA的开始状态就是 <strong>ε-closure(s<sub>0</sub>)</strong> 。而DFA的接受状态是至少包含NFA接受状态的集合。</p>
+<p>我们在上一节得到的NFA，现在我们将该NFA转换为DFA：</p>
+<p>1、对于开始状态0，我们使用操作1（上表中序号为1的操作，下文类似），即状态0通过ε空转换可以得到的状态集合为： <code>{0, 1, 2, 3, 7}</code>。<br>这里有一点需要注意的是：因为路径可以不包含边，所以状态0也是可以从它自身出发经过标号ε到达的状态。</p>
+<p><img src="/uploads/compiler_regular_fa/15.png" alt=""></p>
+<p>2、我们对第一步得到的集合求转换a的集合。现在我们看状态集合<code>{0, 1, 2, 3, 7}</code>通过转换a（即应用操作3）可以得到的状态集合<code>{3,8}</code>。此时我们对集合<code>{3,8}</code>应用操作2得到的集合为<code>{1, 2, 4, 6, 7}</code>：</p>
+<p><img src="/uploads/compiler_regular_fa/16.png" alt=""></p>
+<p>在集合{0, 1, 2, 3, 7}里面，只有状态2和状态7可以通过a转换得到的集合是{3, 8}。此时查看状态3通过空转换得到集合为：<br>a、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>7</sub>;<br>b、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>1</sub> –<code>ε</code>–&gt; s<sub>2</sub>;<br>c、s<sub>3</sub> –<code>ε</code>–&gt; s<sub>6</sub> –<code>ε</code>–&gt; s<sub>1</sub> –<code>ε</code>–&gt; s<sub>4</sub>;<br>因此最终的集合为 <strong>{1,2,3,4,6,7,8}</strong>。</p>
+<p>3、同样的，我们对第一步得到的集合求转换b的集合。现在我们看状态集合<code>{0, 1, 2, 3, 7}</code>通过转换b可以得到的状态集合<code>{5}</code>。然后集合{5}通过空转换可以得到的集合为{1, 2, 4, 6, 7}</p>
+<p><img src="/uploads/compiler_regular_fa/17.png" alt=""></p>
+<p>具体的分析和第2步类似。</p>
+<p>这样我们对后续出现的每一个状态都执行对应的转换a、转换b。我们可以得到一个状态转换表：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">NFA状态</th>
+<th style="text-align:left">DFA状态</th>
+<th style="text-align:left">a</th>
+<th style="text-align:left">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">{0,1,2,4,7}</td>
+<td style="text-align:left">A</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">C</td>
+</tr>
+<tr>
+<td style="text-align:left">{1,2,3,4,6,7,8}</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">D</td>
+</tr>
+<tr>
+<td style="text-align:left">{1,2,4,5,6,7}</td>
+<td style="text-align:left">C</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">C</td>
+</tr>
+<tr>
+<td style="text-align:left">{1,2,4,5,6,7,9}</td>
+<td style="text-align:left">D</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">E</td>
+</tr>
+<tr>
+<td style="text-align:left">{1,2,4,5,6,7,10}</td>
+<td style="text-align:left">E</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">C</td>
+</tr>
+</tbody>
+</table>
+<p>我们前面说过NFA开始状态通过ε转换得到集合为开始状态，因此上表中对应DFA对应的状态为A。而NFA状态集合中包含有接受状态对应DFA的状态E，因此E为DFA的接受状态。对应的DFA如下：</p>
+<p><img src="/uploads/compiler_regular_fa/18.png" alt=""></p>
+<p>下面是对应算法的伪代码描述。模拟一个NFA的执行（即NFA转换为DFA）</p>
+<p>a）、输入部分：<br>一个以eof结束的输入串x；<br>一个NFA N，它的开始状态为s<sub>0</sub>，接受状态为F，转换函数<code>move</code>；<br>b）、输出：如果NFA N接受符号串x，则返回yes，否则返回no；</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">S = ε-closure(s0); /// 首先求出开始状态经过空转换之后的集合，即上面的第1步</div><div class="line">c = nextChar(); /// 读取下一个输入字符</div><div class="line">while(c != eof) &#123;</div><div class="line">  /// 首先计算当前集合S经过转换c之后得到集合，然后用该集合进行空转换。得到c转换之后真正的元素集合。</div><div class="line">  /// 即上面提到的第2、3步</div><div class="line">  S = ε-closure(move(S,c)); </div><div class="line">  c = nextChar();</div><div class="line">&#125;</div><div class="line">if (S ∩ F != ∅) return YES;</div><div class="line">else retnru NO;</div></pre></td></tr></table></figure>
+<h2 id="四、词法分析器生成工具的设计"><a href="#四、词法分析器生成工具的设计" class="headerlink" title="四、词法分析器生成工具的设计"></a>四、词法分析器生成工具的设计</h2><p>词法分析器的程序包含一个固定模拟自动机的程序（先不指定是NFA，还是DFA）。下图是一个lex程序转换成自动机的结构：</p>
+<p><img src="/uploads/compiler_regular_fa/19.png" alt=""></p>
+<p>这里提到了前面介绍的几个概念，这儿简要说明一下。输入缓冲区可以让我们依次读入多个字符到缓冲区中（这个大致为4096字节），而不是每读入一个字符就调用一次系统读取命令；词素作为匹配了某个模式词法单元的字符串，比如词素为<code>name</code>词法单元<strong>id</strong>；指针lexemeBegin指向当前词素的开始位置处；指针forward的作用是一直向前扫描，直到匹配某个模式为止。</p>
+<p>下表中有三个模式，已经对应模式的动作。这个表指明了词法分析器需要的模式，已经匹配到对应模式之后的动作：</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">序号</th>
+<th style="text-align:left">模式</th>
+<th style="text-align:left">动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">P<sub>1</sub></td>
+<td style="text-align:left"><code>a</code></td>
+<td style="text-align:left">A<sub>1</sub></td>
+</tr>
+<tr>
+<td style="text-align:left">P<sub>2</sub></td>
+<td style="text-align:left"><code>abb</code></td>
+<td style="text-align:left">A<sub>2</sub></td>
+</tr>
+<tr>
+<td style="text-align:left">P<sub>3</sub></td>
+<td style="text-align:left"><code>a*b+</code></td>
+<td style="text-align:left">A<sub>3</sub></td>
+</tr>
+</tbody>
+</table>
+<p>这里的动作是指匹配到对应模式之后需要做的相关操作，比如匹配到词法单元id之后的动作是生成对应的标识符，获取对应词法单元并返回给语法分析器；匹配到空白符之后我们将输入回退到非空白符的开头，而且不向语法分析器返回任何词法单元。等等。</p>
+<p>上表中满足模式P<sub>2</sub>和也同时满足模式P<sub>3</sub>，当出现这种冲突时我们首先选择P<sub>2</sub>。这是因为在解决冲突时 </p>
+<blockquote>
+<p><strong>以先出现的模式为主</strong> (P<sub>2</sub>先于P<sub>3</sub>列出)。</p>
+</blockquote>
+<p>下面列出三个模式对应的NFA：</p>
+<p><img src="/uploads/compiler_regular_fa/20.png" alt=""></p>
+<p>以及将上面三个合并之后得到的NFA：</p>
+<p><img src="/uploads/compiler_regular_fa/21.png" alt=""></p>
+<p>现在如果词法分析器模拟了上图的NFA，那么该分析器必须从它的输入中<code>lexemeBegin</code>指向的位置开始读取输入，并移动forward指针。然后根据子集构造法来获取当前的状态集合。<br>需要注意的是：这里并不是使用子集构造法将NFA转换为DFA，而只是简单地想知道某一状态集合通过子集构造法之后得到的新的状态集合（不过在下面的“词法分析器使用的DFA”一节会使用该表，该表的第二列就是对应DFA的状态）。</p>
+<table>
+<thead>
+<tr>
+<th style="text-align:left">NFA状态</th>
+<th style="text-align:left">状态编号（DFA状态）</th>
+<th style="text-align:left">a</th>
+<th style="text-align:left">b</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">{0,1,3,7}</td>
+<td style="text-align:left">A</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">C</td>
+</tr>
+<tr>
+<td style="text-align:left">{2,4,7}</td>
+<td style="text-align:left">B</td>
+<td style="text-align:left">D</td>
+<td style="text-align:left">E</td>
+</tr>
+<tr>
+<td style="text-align:left">{8}</td>
+<td style="text-align:left">C</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">C</td>
+</tr>
+<tr>
+<td style="text-align:left">{7}</td>
+<td style="text-align:left">D</td>
+<td style="text-align:left">D</td>
+<td style="text-align:left">C</td>
+</tr>
+<tr>
+<td style="text-align:left">{5,8}</td>
+<td style="text-align:left">E</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">F</td>
+</tr>
+<tr>
+<td style="text-align:left">{6,8}</td>
+<td style="text-align:left">F</td>
+<td style="text-align:left">∅</td>
+<td style="text-align:left">C</td>
+</tr>
+</tbody>
+</table>
+<p>在上表中，最终会达到一个没有后续状态的输入点。此时不可能有任何更长的输入前缀使得这个NFA到达某个接受状态，此后的状态将一直为空。比如上表中状态编号为C、E、F之后再继续输入a，那么此时就没有任何的后续状态。</p>
+<p><img src="/uploads/compiler_regular_fa/22.png" alt=""></p>
+<p>上图中我们的输入字符串以 <code>aaba</code> 开头。当我们在读入第四个符号 a 之后，此时我们处于一个空状态集合中（也可以从上表中第三行得出）。</p>
+<blockquote>
+<p><strong>这时候我们就沿着状态集的顺序往回找，直到找到包含一个或多个接受状态的集合为止</strong> 。</p>
+</blockquote>
+<p>如果集合中存在多个接受状态，那么我们就选择模式靠前相对应的接受状态。此时将<code>forward</code>指针移动到词素的末尾，同时执行对应的动作（前面表格中的A<sub>1</sub>…A<sub>3</sub>）。</p>
+<p>在这里表明输入串aaba被模式 <code>a*b+</code> 匹配。然后执行对应的动作A<sub>3</sub>。</p>
+<h4 id="词法分析器使用的DFA"><a href="#词法分析器使用的DFA" class="headerlink" title="词法分析器使用的DFA"></a>词法分析器使用的DFA</h4><p>根据前面的转换表，我们构造出对应的DFA：</p>
+<p><img src="/uploads/compiler_regular_fa/23.png" alt=""></p>
+<p>对于状态{6,8}而言有两个接受状态，分别对应于模式 abb 和 a<em>b+ 。由于前一个模式先被列出，因此我们选择 <em>*abb</em></em> 作为状态{6,8}所关联的模式。</p>
+<p>在词法分析器中，使用DFA和使用NFA的方法相似。模拟DFA运行，直到某一点上没有后续状态为止。这种时候我们就沿着顺序往回找，直到找到包含一个或多个接受状态的集合为止。</p>
+<h4 id="向前看运算符"><a href="#向前看运算符" class="headerlink" title="向前看运算符"></a>向前看运算符</h4><p>有时候为了能够正确地识别某个词法单元的实际词素，我们需要指明 <strong>该词法单元模式r<sub>1</sub>之后必须跟着模式r<sub>2</sub></strong> ，因此我们可以将其表示为 “r<sub>1</sub>/r<sub>2</sub>“ 。实际上在将r<sub>1</sub>/r<sub>2</sub>转换为对应的NFA时，<strong>我们把/看成ε（不会去输入中查找/）</strong>。 例如：</p>
+<p><img src="/uploads/compiler_regular_fa/24.png" alt=""></p>
+<p>上图是词法单元IF的模式，在这个模式中我们使用了向前看运算符。状态6表明了关键字IF的出现，因为如果只是单单的空转换之前的模式（r<sub>1</sub>）将无法准确的识别是关键字if，还是一个带有if前缀的标识符。<br>当进入了状态6时，我们需要向回扫描到最晚出现的状态2，此时我们找到了对应词法单元的词素。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在本篇文章中，我们认识到了NFA（不确定的有穷自动机）和DFA（确定的有穷自动机），以及它们与状态转换图之间的差异。DFA和NFA最明显的差异莫过于对于每一个状态s，对于同一个输入符号而言有且只有一条离开该状态的边。<br>其次我们知道了如何通过正则表达式构造NFA，大致的操作有连接、并、闭包和简单的括号操作操作。其中并和闭包操作会引入新状态（使用空转换进行连接）。<br>然后我们通过子集构造法可以将NFA转换为对应的DFA。其中包括有三种操作，分别是：某一指定状态的空转换；某一指定集合执行空转换；某一指定集合执行特定转换a。通过这三种操作我们构造出NFA对应DFA的转换表。<br>最后我们了解了一点词法分析器生成工具的设计，以及向前看运算符的作用。</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_stateGraph_kmp/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2019/10/28/compiler_regular_fa/';
+var disqus_title = '词法分析——从正则表达式到有穷自动机';
+var disqus_url = 'http://yoursite.com/2019/10/28/compiler_regular_fa/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>关注微博<a href="http://weibo.com/wwloading" target="_blank">@凌云壮志幾多愁</a>，让我们有更多的联系。</p><p>© 2016 - 2019 <a href="http://yoursite.com">王望</a>, Powered By <a href="https://hexo.io/" target="_blank">Hexo</a></p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
