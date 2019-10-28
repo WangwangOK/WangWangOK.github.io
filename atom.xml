@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T05:58:09.139Z</updated>
+  <updated>2019-10-28T06:06:41.856Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/compiler_regular2dfa/"/>
     <id>http://yoursite.com/2019/10/28/compiler_regular2dfa/</id>
     <published>2019-10-28T05:41:34.677Z</published>
-    <updated>2019-10-28T05:58:09.139Z</updated>
+    <updated>2019-10-28T06:06:41.856Z</updated>
     
     <content type="html"><![CDATA[<p>在上篇文章中，我们至少学会了将正则表达式构造成对应的NFA和DFA。但是用上篇文章中从正则表达式转换为对应DFA的方式效率低下，即我们要先将正则表达式转换为NFA，然后使用子集构造法将NFA转换为对应DFA。</p>
 <p>在本篇文章中，我们将首先学习如何将正则表达式直接转换为DFA，并最小化DFA的状态数目。然后看看DFA模拟中时间和空间的权衡问题。</p>
@@ -78,11 +78,10 @@
 </tr>
 <tr>
 <td style="text-align:left">3</td>
-<td style="text-align:left"><strong>并</strong> 结点n=c1\</td>
-<td style="text-align:left">c2</td>
+<td style="text-align:left"><strong>并</strong> 结点n=c1,c2</td>
 <td style="text-align:left">nullable(c1) 逻辑或 nullable(c2)</td>
 <td style="text-align:left">firstpos(c1) ∪ firstpos(c2)</td>
-<td>lastpos(c1) ∪ lastpos(c2)</td>
+<td style="text-align:left">lastpos(c1) ∪ lastpos(c2)</td>
 </tr>
 <tr>
 <td style="text-align:left">4</td>
@@ -100,6 +99,7 @@
 </tr>
 </tbody>
 </table>
+<p>由于md格式问题，上表第3行的逗号“,”替换为正则表达式中的”|”符号。</p>
 <ul>
 <li>1、每个叶子结点的firstpos和lastpos只包含它自身。上表中第2点；</li>
 <li>2、“并” 结点的firstpos和lastpos分别是它所有子节点的firstpos和lastpos的并集。上表第3点；</li>

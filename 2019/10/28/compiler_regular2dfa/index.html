@@ -54,11 +54,10 @@
 </tr>
 <tr>
 <td style="text-align:left">3</td>
-<td style="text-align:left"><strong>并</strong> 结点n=c1\</td>
-<td style="text-align:left">c2</td>
+<td style="text-align:left"><strong>并</strong> 结点n=c1,c2</td>
 <td style="text-align:left">nullable(c1) 逻辑或 nullable(c2)</td>
 <td style="text-align:left">firstpos(c1) ∪ firstpos(c2)</td>
-<td>lastpos(c1) ∪ lastpos(c2)</td>
+<td style="text-align:left">lastpos(c1) ∪ lastpos(c2)</td>
 </tr>
 <tr>
 <td style="text-align:left">4</td>
@@ -76,6 +75,7 @@
 </tr>
 </tbody>
 </table>
+<p>由于md格式问题，上表第3行的逗号“,”替换为正则表达式中的”|”符号。</p>
 <ul>
 <li>1、每个叶子结点的firstpos和lastpos只包含它自身。上表中第2点；</li>
 <li>2、“并” 结点的firstpos和lastpos分别是它所有子节点的firstpos和lastpos的并集。上表第3点；</li>
