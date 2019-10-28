@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T05:57:15.238Z</updated>
+  <updated>2019-10-28T05:58:09.139Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/compiler_regular2dfa/"/>
     <id>http://yoursite.com/2019/10/28/compiler_regular2dfa/</id>
     <published>2019-10-28T05:41:34.677Z</published>
-    <updated>2019-10-28T05:57:15.238Z</updated>
+    <updated>2019-10-28T05:58:09.139Z</updated>
     
     <content type="html"><![CDATA[<p>在上篇文章中，我们至少学会了将正则表达式构造成对应的NFA和DFA。但是用上篇文章中从正则表达式转换为对应DFA的方式效率低下，即我们要先将正则表达式转换为NFA，然后使用子集构造法将NFA转换为对应DFA。</p>
 <p>在本篇文章中，我们将首先学习如何将正则表达式直接转换为DFA，并最小化DFA的状态数目。然后看看DFA模拟中时间和空间的权衡问题。</p>
@@ -36,7 +36,7 @@
 </blockquote>
 <p>在抽象语法树中，内部结点代表的是程序的构造；而在语法分析树中，内部结点代表的是非终结符。有时候我们将语法分析树称为具体语法树；而抽象语法树简称为语法树。这是因为在文法的很多非终结符都代表程序的具体构造，还有各种辅助符号。而这些在抽象语法树中都是不需要的。</p>
 <p>而前面提到的重要状态就是抽象语法树中运算符的运算分量。下面是正则表达式 <code>(a|b)*abb</code>对应的抽象语法树：</p>
-<p><img src="/uploads/compiler_regular2nfa/1" alt="(a|b)*abb的抽象语法树"></p>
+<p><img src="/uploads/compiler_regular2nfa/1.png" alt="(a|b)*abb的抽象语法树"></p>
 <p>1）、<strong>结束标记符#</strong>：前面我们提到了重要状态，但（NFA或者DFA）接受状态没有一个标号为非空的离开转换，因此接受状态为非重要状态。基于此，我们可以给正则表达式的右边连接一个结束标记符 <code>#</code> ，使得正则表达式的接受状态成为重要状态。那么我们也就不用特殊处理接受状态了。</p>
 <p>2）、<strong>叶子节点位置</strong>：上面抽象语法树叶子结点下方都有一个有序的整数，我们称这个整数为对应叶子的结点的位置。<strong>非空的叶子结点才会赋予相应的整数</strong>，也就是说为空串的叶子结点我们不需要对其增加位置。</p>
 <h2 id="二、nullable、firstpos、lastpos和followpos函数"><a href="#二、nullable、firstpos、lastpos和followpos函数" class="headerlink" title="二、nullable、firstpos、lastpos和followpos函数"></a>二、nullable、firstpos、lastpos和followpos函数</h2><p>我们要从一个正则表达式直接构造出DFA，除了前面我们已经构造了的抽象语法树之外，我们还需要计算nullable、firstpos、lastpos和followpos函数。</p>
@@ -107,7 +107,7 @@
 <li>4、对于“连接”结点而言，firstpos主要是看左子结点是否为空。而lastpos右子节点是否为空。</li>
 </ul>
 <p>现在我们运用上面的规则，将第一节的抽象语法树中每个结点的firstpos和lastpos求出来。如下图：</p>
-<p><img src="/uploads/compiler_regular2nfa/2" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/2.png" alt=""></p>
 <p>图中蓝色表示firstpos集合，而橙色表示lastpos集合。</p>
 <h4 id="计算followpos"><a href="#计算followpos" class="headerlink" title="计算followpos"></a>计算followpos</h4><p>只有两种情况会使得正则表达式的某个位置跟在另一个位置之后：</p>
 <ul>
@@ -120,7 +120,7 @@
 <ul>
 <li>1、首先我们运用规则1来查看第一个“连接”结点，其左子结点的lastpos为<code>{1,2}</code>，并且其右子结点的firstpos为<code>{3}</code>。因此位置1结点和位置2结点的followpos都包含有位置3。</li>
 </ul>
-<p><img src="/uploads/compiler_regular2nfa/3" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/3.png" alt=""></p>
 <p>需要注意一点的是并不是看的当前结点本身的lastpos和firstpos，而是看的其左子结点的lastpos和右子结点的firstpos。</p>
 <table>
 <thead>
@@ -168,7 +168,7 @@
 <ul>
 <li>3、现在是时候运用上面的规则2了，查找抽象语法树中的“闭包”结点。它和“连接”结点不同的是：“连接”结点看的是其左右子树的lastpos和firstpos，而“闭包”结点看的是其本身的lastpos和firstpos。</li>
 </ul>
-<p><img src="/uploads/compiler_regular2nfa/4" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/4.png" alt=""></p>
 <table>
 <thead>
 <tr>
@@ -227,7 +227,7 @@
 </table>
 <p>回过头来看一下正则表表达式 <code>(a|b)*abb</code>匹配子串中，位置1对应的结点a其后可能存在字符为a（位置1）、b（位置2）、a（位置3）。位置2和位置1同理。</p>
 <p>现在我们将每个位置，已经对应的followpos用一个有向图来表示如下：</p>
-<p><img src="/uploads/compiler_regular2nfa/5" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/5.png" alt=""></p>
 <p>很明显的可以看出来，表示followpos函数的有向图几乎就是相应的正则表达式不包含空转换的NFA。</p>
 <h2 id="三、根据正则表达式构建DFA"><a href="#三、根据正则表达式构建DFA" class="headerlink" title="三、根据正则表达式构建DFA"></a>三、根据正则表达式构建DFA</h2><p>要从一个正则表达式构造一个DFA的大致步骤如下：</p>
 <ul>
@@ -239,16 +239,16 @@
 <li>6、如果经过各个转换之后没有新状态就停止。否则重复执行4~6步；</li>
 </ul>
 <p>看一下例子能够更加清晰地认识到如何根据正则表达式构建DFA。</p>
-<p><img src="/uploads/compiler_regular2nfa/2" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/2.png" alt=""></p>
 <p>图中蓝色表示firstpos集合，而橙色表示lastpos集合。</p>
 <p>1）、对于正则表达式 <code>(a|b)*abb</code>，我们构造得到的抽象语法树，已经对应的firstpos/lastpos都在上图中;</p>
 <p>2）、我们将根节点的firstpos = {1,2,3} 作为DFA的开始状态：</p>
 <p>3）、该正则表达式中存在的转换有<code>a, b</code>，开始状态集合为{1,2,3}，此时我们将状态集合{1,2,3}相同状态的followpos合并到一个集合中。<br>集合{1,2,3}中对应转换a的位置有1，3；对应转换b的位置有{2}。<br>转换a的 <code>followpos(1)={1,2,3}, followpos(3)={4}</code>，将两个集合合并起来为 <code>{1,2,3,4}</code>，由于该状态是新状态，因此将状态集合{1,2,3,4}添加到DFA中；<br>转换b的<code>followpos(2)={1,2,3}</code>，由于该状态并不是新状态。因此只是一个简单转换即可。</p>
 <p>重复执行第三步，得到的最终结果为：</p>
-<p><img src="/uploads/compiler_regular2nfa/6" alt="基于抽象语法树得到的DFA"></p>
+<p><img src="/uploads/compiler_regular2nfa/6.png" alt="基于抽象语法树得到的DFA"></p>
 <h2 id="四、最小化DFA的状态数"><a href="#四、最小化DFA的状态数" class="headerlink" title="四、最小化DFA的状态数"></a>四、最小化DFA的状态数</h2><p>对于同一个语言，可以存在多个识别此语言的DFA。例如上图和上一节中由NFA通过子集构造法得到的DFA都能够识别正则表达式 <code>(a|b)*abb</code>。可以看出来它们的个数也不一样。因此如果让我们使用DFA来实现词法分析器，我们肯定是希望使用状态数量尽量少的DFA了。</p>
 <p>首先我们先看看区分状态的概念： <strong>区分状态</strong>，如果从状态s和t出发，沿着标号为x的路径到达的两个状态中只有一个是接受状态，那么我们就说串x区分状态s和t。状态s和t是可区分的。<br>空串ε可以区分任何一个接受状态和非接受状态。</p>
-<p><img src="/uploads/compiler_regular2nfa/7" alt="子集构造法得到的DFA"></p>
+<p><img src="/uploads/compiler_regular2nfa/7.png" alt="子集构造法得到的DFA"></p>
 <p>上图中串 <code>bb</code> 可以区分状态A和B，这是因为从A出发经过标号为bb的路径到达会接受状态C，而状态B经过标号bb的路径到达状态E接受状态。</p>
 <p>其次还有一个重要的结论：<strong>任何正则语言都有一个唯一的状态数目最少的DFA</strong>。而且从任意一个接受相同语言的DFA出发，通过 分组、合并等价的状态，我们总是可以构建得到这个状态数量最少的DFA。</p>
 <p>因此DFA状态最小化算法的工作原理是：</p>
@@ -258,12 +258,12 @@
 <p>然后将每个组中的状态合并成状态最少DFA的一个状态。</p>
 <p>最初，划分两个组：<strong>接受状态组和非接受状态组</strong>。基本步骤是从当前划分中取一个状态组，比如 A = {s<sub>1</sub>, s<sub>2</sub>, … , s<sub>k</sub>}，并选定某个输入符号a，检查a是否可以用于区分A组中的某些状态。查看s<sub>1</sub>, s<sub>2</sub>, … , s<sub>k</sub>在a上的转换，如果这些转换的到达的状态落入当前划分的两个或多个组中，我们就将A分割成多个组。</p>
 <p>我们以上图为例来看看DFA状态最小化算法：<br>1）、首先划分两组：接受状态组合非接受状态组，这里我们分别给他们起名为组1和组2。</p>
-<p><img src="/uploads/compiler_regular2nfa/8" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/8.png" alt=""></p>
 <p>2）、在上图看到DFA仅有a、b两种转换。由于组2只包含了一个状态，并且该状态为接受状态而不能再被分割，所以组2原封不动。因此我们继续看组1。<br>组1中的状态A、B、C、D针对a的转换，得到的状态均为状态B，因此串a无法区分状态A、B、C、D。</p>
 <p>3）、组1中的状态A、B、C、D针对b的转换，状态A、B、C都是到达组内某个成员上，这显然是无法区分的（前面提到过组内各个状态之间互不可区分）。但状态D到达的是组2成员对应的状态，很明显状态D可以和A、B、C区分开来。因此我们可以继续将组1划分更小的组：</p>
-<p><img src="/uploads/compiler_regular2nfa/9" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/9.png" alt=""></p>
 <p>4）、类似于第三步，组3的状态A、B、C针对b的转换可以划分为两个不同的组。这是因为状态A、C经过转换b之后均为组内状态；而状态B经过转换b得到的组4成员对应的状态：</p>
-<p><img src="/uploads/compiler_regular2nfa/10" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/10.png" alt=""></p>
 <p>由于组5中各个状态，无论是针对转换a，还是转换b而言，得到的状态均相同。因此我们不能讲组5进行更细粒度的划分。那么上图就是最终的划分结果。</p>
 <p>现在我们根据上面的信息画出对应的状态转换表，由于状态A和状态C经过转换得到的状态是一样的，因此集合{A,C}这里以状态A表示：</p>
 <table>
@@ -298,11 +298,11 @@
 </tbody>
 </table>
 <p>我们画出对应的DFA，并将其与上面我们用抽象语法树构造得到的DFA进行对比：</p>
-<p><img src="/uploads/compiler_regular2nfa/11" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/11.png" alt=""></p>
 <p>很明显能够对比出来，上面两个DFA除了赋予各个状态的名称不一样之外，各个转换以及转换后的状态都是一样的。我们称这两个状态机是同构的。<strong>同构</strong>是指对于两个不同的自动机，如果某个自动只是通过更改状态的名字就可以转换为另一个自动机。</p>
 <h2 id="五、DFA模拟中的时间和空间的权衡"><a href="#五、DFA模拟中的时间和空间的权衡" class="headerlink" title="五、DFA模拟中的时间和空间的权衡"></a>五、DFA模拟中的时间和空间的权衡</h2><p>最简单和最快捷的表示一个DFA的转换函数的方法是：使用一个以状态和字符为下标的二维表。给定一个状态和下一个输入字符，我们访问这个数组就可以找出下一个状态以及我们必须要执行的特殊动作。<br>但是我们知道对于二维表而言，各个状态针对某些字符并没有对应转换。如果数量变多了之后就会存在大量的空间浪费问题。</p>
 <p>我们可以使用一个带有四个数组的数据结构，如下图所示：</p>
-<p><img src="/uploads/compiler_regular2nfa/12" alt=""></p>
+<p><img src="/uploads/compiler_regular2nfa/12.png" alt=""></p>
 <p>1）、base数组用于确定状态s条目的基准位置；<br>2）、next和check数组存放的正式对应状态条目；<br>3）、数组check用于确定base[s]给出的基准位置是否正确，如果错误则使用default数组来确定另一个基准位置；</p>
 <p>在计算状态s在输入a的后继状态时，我们首先查看数组next和check中在位置 <code>index = base[s] + a</code> （a指当前输入字符，其对应于ascii码表上固定数字）上的状态条目。<br>a、如果check[index] == s，那么该状态条目有效（该状态指的是经过转换a之后得到的后续状态）；<br>b、如果check[index] != s，那我们则得到另一个状态条目t = default[s]。并将状态t设置为当前状态重复上诉过程获取下一个状态；</p>
 <p>下面是对应的伪代码：</p>
