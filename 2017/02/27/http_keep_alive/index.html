@@ -63,7 +63,7 @@
 <p>大部分操作系统都会将这种情况作为严重错误来处理，<strong>删除对端还未读去的所有缓存数据</strong>。但是这样做对于管道化来说简直就是噩梦，因为:比如你已经在一条持久连接上发送了10条管道式请求，响应已经收到了，正在操作系统的缓存区中存着。但是你发送了第11条请求，但是服务器认为你使用这条连接的时间太长，决定将其关闭，这个重置信息会清空你的缓冲区。</p>
 </blockquote>
 <h6 id="正常关闭"><a href="#正常关闭" class="headerlink" title="正常关闭"></a>正常关闭</h6><p>实现正常关闭的应用程序首先应该关闭它们的输出信道，然后等待另一端的对等实体关闭它的输出信道。当两端都告诉对方它们不会再发送任何数据之后，连接就会被完全关闭，而不会有重置风险。如果在一定的时间区间内对端没有关闭输入信道，应用程序可以强制关闭连接。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2017/03/02/bluepill/" class="prev">上一篇</a><a href="/2017/02/22/c_and_pointer_note_case4/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2017/03/02/bluepill/" class="prev">PREV</a><a href="/2017/02/22/c_and_pointer_note_case4/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2017/02/27/http_keep_alive/';
 var disqus_title = 'HTTP持久连接';
 var disqus_url = 'http://yoursite.com/2017/02/27/http_keep_alive/';

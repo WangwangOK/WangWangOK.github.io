@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/</loc>
+    
+    <lastmod>2019-10-28T06:43:28.202Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2019/10/28/compiler_regular2dfa/</loc>
     
     <lastmod>2019-10-28T06:06:41.856Z</lastmod>

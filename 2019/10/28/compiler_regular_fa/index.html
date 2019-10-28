@@ -282,7 +282,7 @@
 <p><img src="/uploads/compiler_regular_fa/24.png" alt=""></p>
 <p>上图是词法单元IF的模式，在这个模式中我们使用了向前看运算符。状态6表明了关键字IF的出现，因为如果只是单单的空转换之前的模式（r<sub>1</sub>）将无法准确的识别是关键字if，还是一个带有if前缀的标识符。<br>当进入了状态6时，我们需要向回扫描到最晚出现的状态2，此时我们找到了对应词法单元的词素。</p>
 <h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>在本篇文章中，我们认识到了NFA（不确定的有穷自动机）和DFA（确定的有穷自动机），以及它们与状态转换图之间的差异。DFA和NFA最明显的差异莫过于对于每一个状态s，对于同一个输入符号而言有且只有一条离开该状态的边。<br>其次我们知道了如何通过正则表达式构造NFA，大致的操作有连接、并、闭包和简单的括号操作操作。其中并和闭包操作会引入新状态（使用空转换进行连接）。<br>然后我们通过子集构造法可以将NFA转换为对应的DFA。其中包括有三种操作，分别是：某一指定状态的空转换；某一指定集合执行空转换；某一指定集合执行特定转换a。通过这三种操作我们构造出NFA对应DFA的转换表。<br>最后我们了解了一点词法分析器生成工具的设计，以及向前看运算符的作用。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_regular2dfa/" class="prev">上一篇</a><a href="/2019/10/28/compiler_stateGraph_kmp/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2019/10/28/compiler_regular2dfa/" class="prev">PREV</a><a href="/2019/10/28/compiler_stateGraph_kmp/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2019/10/28/compiler_regular_fa/';
 var disqus_title = '词法分析——从正则表达式到有穷自动机';
 var disqus_url = 'http://yoursite.com/2019/10/28/compiler_regular_fa/';
