@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2019-10-28T07:52:06.612Z</updated>
+  <updated>2020-01-05T15:19:21.905Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/"/>
     <id>http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/</id>
     <published>2019-10-28T06:29:13.863Z</published>
-    <updated>2019-10-28T07:52:06.612Z</updated>
+    <updated>2020-01-05T15:19:21.905Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
 <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>语法分析通常用于编译器中。在我们的编译器模型中，语法分析器从词法分析器获得一个词法单元组成的串，并验证这个串可以由源语言的文法（比如上下文无关文法，在后面会详细解释）生成。</p>
@@ -91,20 +91,20 @@
 <p>一颗语法分析树的叶子结点既可以是非终结符号，也可以是终结符号。从左到右排列这些符号就可以得到一个句型，它成为这颗树的 <strong>结果</strong>。在这里我们从左到右读取每一个叶子结点并排列起来，得到的结果是：<code>- ( id + id )</code> 。</p>
 <p><strong>二义性文法</strong> ，如果一个文法可以为某个句子生成多颗语法分析树，那么它就是二义性的。换句话说，二义性文法就是对同一个句子有多个最左推导或者最右推导的文法。</p>
 <p>到这儿，我们可以先看一个例子。</p>
-<h4 id="例一"><a href="#例一" class="headerlink" title="例一"></a>例一</h4><p>对于文法 $S \rightarrow\ a\ S\ b\ S\ |\ b\ S\ a\ S\ |\ ε$，有一串<code>aabbab</code>。尝试写出最左推导和最右推导出该的语法分析树。</p>
+<h4 id="例一"><a href="#例一" class="headerlink" title="例一"></a>例一</h4><p>对于文法 <script type="math/tex">S \rightarrow\ a\ S\ b\ S\ |\ b\ S\ a\ S\ |\ ε</script>，有一串<code>aabbab</code>。尝试写出最左推导和最右推导出该的语法分析树。</p>
 <p>最左推导语法分析树：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/10.png" alt=""></p>
 <p>最右推导语法分析树：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/11.png" alt=""></p>
 <p>从语法分析的结构，我们不难看出来该文法是二义性文法。</p>
 <h3 id="3、上下文无关文法和正则表达式"><a href="#3、上下文无关文法和正则表达式" class="headerlink" title="3、上下文无关文法和正则表达式"></a>3、上下文无关文法和正则表达式</h3><p>文法是比正则表达式表达能力更强的表示方法。即每个可以使用正则表达式描述的构造都可以使用文法来描述，但反之则不成立。我们可以根据正则表达式构造出对应的文法，下面则是从正则表达式构造对应文法的大致步骤。如下：</p>
-<p>1）、对于NFA的每个状态i，创建一个非终结符 $A_{i}$ ；</p>
-<p>2）、如果状态i有一个在输入a上到达状态j的转换，则加入产生式 $A_{i} \rightarrow a A_{j}$。如果状态i在输入 ε 上到达状态j，则加入产生式 $A_{i} \rightarrow A_{j}$；</p>
-<p>3）、如果i是一个接受状态，则加入产生式 $A_{i} \rightarrow ε$；</p>
-<p>4）、如果i是自动机的开始状态，令 $A_{i}$为所得文法的开始符号；</p>
+<p>1）、对于NFA的每个状态i，创建一个非终结符A<sub>i</sub>；</p>
+<p>2）、如果状态i有一个在输入a上到达状态j的转换，则加入产生式 <script type="math/tex">A_{i} \rightarrow a A_{j}</script> 如果状态i在输入 ε 上到达状态j，则加入产生式 <script type="math/tex">A_{i} \rightarrow A_{j}</script>；</p>
+<p>3）、如果i是一个接受状态，则加入产生式 <script type="math/tex">A_{i} \rightarrow ε</script>；</p>
+<p>4）、如果i是自动机的开始状态，令 A<sub>i</sub>为所得文法的开始符号；</p>
 <p>比如正则表达式 <strong>$(a|b)^{*}abb$</strong> ，它对应的DFA为：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/9.png" alt=""></p>
-<p>从上面步骤我们可以得到一共有4个状态，因此对于对应文法则有4个非终结符，分别为 $A_{0},A_{1},A_{2},A_{3}$ 。根据上图的转换我们得到文法为：</p>
+<p>从上面步骤我们可以得到一共有4个状态，因此对于对应文法则有4个非终结符，分别为 <script type="math/tex">A_{0},A_{1},A_{2},A_{3}</script> 。根据上图的转换我们得到文法为：</p>
 <p><img src="/uploads/SyntaxParser_context_free_grammar/12.png" alt=""></p>
 <hr>
 <h2 id="二、设计文法"><a href="#二、设计文法" class="headerlink" title="二、设计文法"></a>二、设计文法</h2><p>如果前面看到的，任何能够使用正则表达式描述的东西都可以使用文法来描述。因此在这儿来列举4点关于正则表达式和文法的异同：</p>
@@ -140,12 +140,10 @@
 <li><p>1）、首先将文法的所有非终结符，从开始符号按出现顺序，依次对它们进行编号为A<sub>1</sub>, A<sub>2</sub>, A<sub>3</sub>, …,A<sub>n</sub>；</p>
 </li>
 <li><p>2）、从A<sub>1</sub>开始依次读取每一个非终结符到A<sub>n</sub>，我们称作A<sub>i</sub>；</p>
-<p>同时又从A<sub>1</sub>开始读取非终结符号到A<sub>i-1</sub>，我们称作A<sub>j</sub> 。如果存在形如$A_{i} \rightarrow A_{j}\gamma$，那我们就将其替换为产生式组：</p>
+<p>同时又从A<sub>1</sub>开始读取非终结符号到A<sub>i-1</sub>，我们称作A<sub>j</sub> 。如果存在形如<script type="math/tex">A_{i} \rightarrow A_{j}\gamma</script> 那我们就将其替换为产生式组：</p>
 <script type="math/tex; mode=display">
-\begin{equation}
-A_{i} \rightarrow \sigma _{1} \gamma\ |\ \sigma _{2} \gamma\ |\ ...\ |\ \sigma _{k} \gamma \tag{1}\\
-A_{j} \rightarrow \sigma _{1} \ |\ \sigma _{2} \ |\ ...\ |\ \sigma _{k} \tag{2}\\
-\end {equation}</script><p>这样我们就可以尽最大的可能构造立即左递归了。</p>
+A_{i} \rightarrow \sigma _{1} \gamma\ |\ \sigma _{2} \gamma\ |\ ...\ |\ \sigma _{k} \gamma \\
+A_{j} \rightarrow \sigma _{1} \ |\ \sigma _{2} \ |\ ...\ |\ \sigma _{k} \\</script><p>这样我们就可以尽最大的可能构造立即左递归了。</p>
 </li>
 <li><p>3）、如果此时存在立即左递归，则使用上面提到的消除立即左递归的方式来消除；</p>
 </li>
