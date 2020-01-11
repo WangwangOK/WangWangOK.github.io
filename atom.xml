@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-01-11T15:12:40.954Z</updated>
+  <updated>2020-01-11T15:18:12.290Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2020/01/11/two_three_four_red_black_tree/"/>
     <id>http://yoursite.com/2020/01/11/two_three_four_red_black_tree/</id>
     <published>2020-01-11T13:45:28.000Z</published>
-    <updated>2020-01-11T15:12:40.954Z</updated>
+    <updated>2020-01-11T15:18:12.290Z</updated>
     
     <content type="html"><![CDATA[<p>在这篇文章中，我主要是将数据结构中的2-3树、2-3-4树、红黑树进行了整理。由于本篇字数、图片以及代码较多，可选择自己比较在于的部分阅读，但我建议是从上往下依次阅读。</p>
 <p>毕竟大部分人可能比较关心红黑树。但是怎么是从2-3到红黑树的，这个过程是很值得了解的。而在文章的最后，我也大致手撸了一套2-3树相关操作的代码。</p>
@@ -238,7 +238,7 @@
 <ul>
 <li>第三步、如果此时树中出现两个连续的红色指针时，则需要类似AVL树的LL、LR、RL、RR旋转操作；</li>
 </ul>
-<p><img src="/uploads/two_three_four_red_blackage/35.png" alt=""></p>
+<p><img src="/uploads/two_three_four_red_black/35.png" alt=""></p>
 <p>由于前面有了2-3-4树的基础知识，我们以2-3-4树的2节点、3节点、4节点，来总结红黑树插入时旋转和变色的规律：</p>
 <p>每插入一个元素时，我们自顶向下遍历每一个节点:</p>
 <p>1）、如果是2节点、或者3节点，则保持它们性质不发生改变（至于怎么判断红黑树中当前节点是2节点，还是3节点。请看“从2-3-4树到红黑树”一节）；</p>
@@ -259,7 +259,7 @@
 <p>4）、<strong>RR</strong>: q作为p的右子节点，r作为q的右子节点；</p>
 <p>现在假设s作为q的兄弟（如果s不为空，即存在兄弟节点），</p>
 <h4 id="变色"><a href="#变色" class="headerlink" title="变色"></a>变色</h4><p>当s节点（q的兄弟节点）为红色节点时需要做变色操作：</p>
-<p><img src="/uploads/two_three_four_red_blacke/37.png" alt=""></p>
+<p><img src="/uploads/two_three_four_red_black/37.png" alt=""></p>
 <p>节点p变为红色节点；节点q，s变为黑色节点；节点r不变。这样做变色操作可能会导致红色指针冲突沿着树向上传播，所以颜色调整过程需要多次重复。</p>
 <blockquote>
 <p><strong>颜色调整不会影响从根节点到外部节点路径上黑色指针的个数</strong>；</p>
