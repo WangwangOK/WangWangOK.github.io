@@ -757,7 +757,7 @@ F \rightarrow (E)\ |\ \mathbf{id}</script><p>举例：</p>
     <link href="http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/"/>
     <id>http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/</id>
     <published>2019-10-28T06:29:13.863Z</published>
-    <updated>2020-01-05T15:25:28.772Z</updated>
+    <updated>2020-06-29T16:21:19.909Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在语法分析一章中会出现很多的专业术语，我会在这一节将语法分析涉及到的术语都大致捋一遍。这些专业术语是学习语法分析的必备技能，务必记住并理解，下面我们进入正题。</p>
 <h2 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h2><p>语法分析通常用于编译器中。在我们的编译器模型中，语法分析器从词法分析器获得一个词法单元组成的串，并验证这个串可以由源语言的文法（比如上下文无关文法，在后面会详细解释）生成。</p>
