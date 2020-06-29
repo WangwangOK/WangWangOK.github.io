@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-06-29T17:10:35.295Z</updated>
+  <updated>2020-06-29T17:14:04.682Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2020/04/20/top2bottom_syntax_parser/"/>
     <id>http://yoursite.com/2020/04/20/top2bottom_syntax_parser/</id>
     <published>2020-04-20T15:47:58.000Z</published>
-    <updated>2020-06-29T17:10:35.295Z</updated>
+    <updated>2020-06-29T17:14:04.682Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自顶向下语法分析可以被看作是为输入串构造语法分析树的问题，它从语法分析的根节点开始，按照深度优先的规则创建这棵语法分析树的各个结点，自顶向下语法分析也可以被看作寻找输入串最左推导的过程。</p>
 <p>本文的行文以下面的顺序展开：</p>
@@ -81,7 +81,9 @@ A \rightarrow ab\ |\ a</script><p>对于输入串 <code>w = cad</code>，其递�
 <p>由于回溯不是很高效，我们可以使用动态规划算法，构造基于表格的的方法。我会在单独的一篇文章来介绍一下动态规划。</p>
 <h2 id="二、🍺🍺🍺-FIRST和FOLLOW集合（终结符号）"><a href="#二、🍺🍺🍺-FIRST和FOLLOW集合（终结符号）" class="headerlink" title="二、🍺🍺🍺 FIRST和FOLLOW集合（终结符号）"></a>二、🍺🍺🍺 FIRST和FOLLOW集合（终结符号）</h2><p>关于FIRST集合和FOLLOW集合一定要弄懂，因为这是在后续进行预测分析时必备的技能。在自顶向下的语法分析过程中，FIRST和FOLLOW使得我们可以根据下一个输入符号来选择应用哪个产生式。</p>
 <h3 id="Ⅰ、FIRST"><a href="#Ⅰ、FIRST" class="headerlink" title="Ⅰ、FIRST"></a>Ⅰ、FIRST</h3><p><code>FIRST(α)</code> ：从 α 可以推导出一个串集合，而FIRST为这些串首个符号组成的集合；</p>
-<p>如果 <script type="math/tex">\alpha \overset{*}{\rightarrow} \epsilon</script> (箭头上方的星号 <em> 表示 α 可以通过多个步骤之后得到 ε )，那么 ε 就在 FIRST(α) 中。又或者存在推导 $$\alpha \overset{</em>}{\rightarrow} c\gamma $$ ，那么终结符号 c 也在 FIRST(α) 中。</p>
+<p>如果 <script type="math/tex">\alpha \overset{*}{\rightarrow} \epsilon</script> (箭头上方的星号 * 表示 α 可以通过多个步骤之后得到 ε )，那么 ε 就在 FIRST(α) 中。又或者存在推导 </p>
+<script type="math/tex; mode=display">
+\alpha \overset{*}{\rightarrow} c\gamma</script><p>那么终结符号 c 也在 FIRST(α) 中。</p>
 <p>计算文法符号X的FIRST(X)时，不断应用下面的规则，直到再没有新的 <strong>终结符号或者ε</strong> 可以被加入到任何FIRST集合中为止：</p>
 <ul>
 <li>1）、如果X是终结符号，那么FIRST(X) = X；</li>
