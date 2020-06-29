@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-06-29T17:19:46.404Z</updated>
+  <updated>2020-06-29T17:22:38.424Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,7 +20,7 @@
     <link href="http://yoursite.com/2020/04/20/top2bottom_syntax_parser/"/>
     <id>http://yoursite.com/2020/04/20/top2bottom_syntax_parser/</id>
     <published>2020-04-20T15:47:58.000Z</published>
-    <updated>2020-06-29T17:19:46.404Z</updated>
+    <updated>2020-06-29T17:22:38.424Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自顶向下语法分析可以被看作是为输入串构造语法分析树的问题，它从语法分析的根节点开始，按照深度优先的规则创建这棵语法分析树的各个结点，自顶向下语法分析也可以被看作寻找输入串最左推导的过程。</p>
 <p>本文的行文以下面的顺序展开：</p>
@@ -131,7 +131,7 @@ F \rightarrow (E)\ |\ \mathbf{id}</script><p>首先我们以非终结符号出�
 <p>FOLLOW(T)的计算从上述的文法中可以看出，非终结符号T出现在产生式体中的有 <script type="math/tex">TE^{'},\ +TE^{'}</script> ，也就是在其后面的均为非终结符号E’。因此FOLLOW(T)包含FIRST(E’)；</p>
 <p>由于E’可以推导出空串ε，而且根据产生式 <script type="math/tex">E \rightarrow TE^{'}</script> 。我们可以知道FOLLOW(T)同样等于FOLLOW(E)。因此求出上面两个的并集为：</p>
 <p>FOLLOW(T) = { +, ), $ }。</p>
-<p>4）、 <strong>非终结符号T‘</strong>：<br>FIRST(T’) = { <em>, “$“ }，其推导过程为：$$T^{‘} \rightarrow </em>FT^{‘}$$；</p>
+<p>4）、 <strong>非终结符号T‘</strong>：<br>FIRST(T’) = { <em>, ￥（将他看做美元符号，由于博客的math渲染问题，所以用羊角符号进行了替换） }，其推导过程为：$$T^{‘} \rightarrow </em>FT^{‘}$$；</p>
 <p>FOLLOW(T’) = { +, ), $ }。这是因为根据产生式 <script type="math/tex">T \rightarrow FT^{'}</script> 可知，FOLLOW(T’)和FOLLOW(T)是相同的；</p>
 <p>5）、 <strong>非终结符号F</strong>：<br>FIRST(F) = { (, <strong>id</strong> }，其推导过程为 <script type="math/tex">F \rightarrow (E)\ |\ \mathbf{id}</script> ；</p>
 <p>FOLLOW(F)的计算和非终结符号T是类似的，首先我们根据产生式 <script type="math/tex">T \rightarrow FT^{'},\ T^{'} \rightarrow *FT^{'}</script>可知，非终结符号F其后紧跟着非终结符号T’，因此FOLLOW(F)则包含了FIRST(T’)；</p>
