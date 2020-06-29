@@ -45,7 +45,7 @@ A \rightarrow ab\ |\ a</script><p>对于输入串 <code>w = cad</code>，其递�
 <ul>
 <li>4、现在我们将输入指针移动到 <code>d</code> ，并且把语法分析树的当前结点移动到结点 <code>b</code> 。很明显可以看出来 d 和 b 并不匹配。</li>
 </ul>
-<p><img src="/uploads/top2bottom_syntax_parser/image/5.png" alt=""></p>
+<p><img src="/uploads/top2bottom_syntax_parser/5.png" alt=""></p>
 <ul>
 <li>5、此时我们需要查看对于非终结符号A，是否存在尚未尝试过的产生式。在回到A时，我们需要将输入指针回退到上一个位置处，并且使用产生式 <script type="math/tex">A \rightarrow a</script> 进行推导：</li>
 </ul>
@@ -57,7 +57,7 @@ A \rightarrow ab\ |\ a</script><p>对于输入串 <code>w = cad</code>，其递�
 <p>由于回溯不是很高效，我们可以使用动态规划算法，构造基于表格的的方法。我会在单独的一篇文章来介绍一下动态规划。</p>
 <h2 id="二、🍺🍺🍺-FIRST和FOLLOW集合（终结符号）"><a href="#二、🍺🍺🍺-FIRST和FOLLOW集合（终结符号）" class="headerlink" title="二、🍺🍺🍺 FIRST和FOLLOW集合（终结符号）"></a>二、🍺🍺🍺 FIRST和FOLLOW集合（终结符号）</h2><p>关于FIRST集合和FOLLOW集合一定要弄懂，因为这是在后续进行预测分析时必备的技能。在自顶向下的语法分析过程中，FIRST和FOLLOW使得我们可以根据下一个输入符号来选择应用哪个产生式。</p>
 <h3 id="Ⅰ、FIRST"><a href="#Ⅰ、FIRST" class="headerlink" title="Ⅰ、FIRST"></a>Ⅰ、FIRST</h3><p><code>FIRST(α)</code> ：从 α 可以推导出一个串集合，而FIRST为这些串首个符号组成的集合；</p>
-<p>如果 <script type="math/tex">\alpha \overset{*}{\rightarrow} \epsilon</script> (箭头上方的星号 <em> 表示 α 可以通过多个步骤之后得到 ε )，那么 ε 就在 FIRST(α) 中。又或者存在推导 $$\alpha \overset{</em>}{\rightarrow} c\ \gamma $$ ，那么终结符号 c 也在 FIRST(α) 中。</p>
+<p>如果 <script type="math/tex">\alpha \overset{*}{\rightarrow} \epsilon</script> (箭头上方的星号 <em> 表示 α 可以通过多个步骤之后得到 ε )，那么 ε 就在 FIRST(α) 中。又或者存在推导 $$\alpha \overset{</em>}{\rightarrow} c\ \gamma  $$ ，那么终结符号 c 也在 FIRST(α) 中。</p>
 <p>计算文法符号X的FIRST(X)时，不断应用下面的规则，直到再没有新的 <strong>终结符号或者ε</strong> 可以被加入到任何FIRST集合中为止：</p>
 <ul>
 <li>1）、如果X是终结符号，那么FIRST(X) = X；</li>
@@ -105,7 +105,7 @@ F \rightarrow (E)\ |\ \mathbf{id}</script><p>首先我们以非终结符号出�
 <p>FOLLOW(T)的计算从上述的文法中可以看出，非终结符号T出现在产生式体中的有 <script type="math/tex">TE^{'},\ +TE^{'}</script> ，也就是在其后面的均为非终结符号E’。因此FOLLOW(T)包含FIRST(E’)；</p>
 <p>由于E’可以推导出空串ε，而且根据产生式 <script type="math/tex">E \rightarrow TE^{'}</script> 。我们可以知道FOLLOW(T)同样等于FOLLOW(E)。因此求出上面两个的并集为：</p>
 <p>FOLLOW(T) = { +, ), $ }。</p>
-<p>4）、 <strong>非终结符号T‘</strong>：<br>FIRST(T’) = { <em>, $ }，其推导过程为：$$T^{‘} \rightarrow </em>FT^{‘}$$；</p>
+<p>4）、 <strong>非终结符号T‘</strong>：<br>FIRST(T’) = { <em>, $ }，其推导过程为：$$ T^{‘} \rightarrow </em>FT^{‘} $$；</p>
 <p>FOLLOW(T’) = { +, ), $ }。这是因为根据产生式 <script type="math/tex">T \rightarrow FT^{'}</script> 可知，FOLLOW(T’)和FOLLOW(T)是相同的；</p>
 <p>5）、 <strong>非终结符号F</strong>：<br>FIRST(F) = { (, <strong>id</strong> }，其推导过程为 <script type="math/tex">F \rightarrow (E)\ |\ \mathbf{id}</script> ；</p>
 <p>FOLLOW(F)的计算和非终结符号T是类似的，首先我们根据产生式 <script type="math/tex">T \rightarrow FT^{'},\ T^{'} \rightarrow *FT^{'}</script>可知，非终结符号F其后紧跟着非终结符号T’，因此FOLLOW(F)则包含了FIRST(T’)；</p>
@@ -366,10 +366,10 @@ F \rightarrow (E)\ |\ \mathbf{id}</script><p>举例：</p>
 </tr>
 <tr>
 <td style="text-align:center">E’</td>
-<td style="text-align:center">$E^{‘} \rightarrow +TE^{‘}$</td>
+<td style="text-align:center"><script type="math/tex">E^{'} \rightarrow +TE^{'}</script></td>
 <td style="text-align:center"></td>
 <td style="text-align:center"></td>
-<td style="text-align:center">$E^{‘} \rightarrow \epsilon$</td>
+<td style="text-align:center"><script type="math/tex">E^{'} \rightarrow \epsilon</script></td>
 <td style="text-align:center"></td>
 <td style="text-align:center"><script type="math/tex">E^{'} \rightarrow \epsilon</script></td>
 </tr>
@@ -414,7 +414,7 @@ F \rightarrow (E)\ |\ \mathbf{id}</script><p>举例：</p>
 <p>下面是表驱动的预测分析方法伪代码，其中输入为待匹配的字符串，和一个预测分析表；上图中栈第一个元素值为文法的开始符号，栈底存在一个哨兵，用于判断当前栈是否为空：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div></pre></td><td class="code"><pre><div class="line">bool ll_syntax::syntax() &#123;</div><div class="line">    Symbol *ended = const_cast&lt;Symbol *&gt;(Symbol::EndedSymbolPtr());</div><div class="line">    char* ip = &amp;input_string[0];</div><div class="line">    </div><div class="line">    for (Symbol *sym = stack.back(); sym-&gt;identifier() != ended-&gt;identifier(); sym = stack.back())</div><div class="line">    &#123;</div><div class="line">            if (sym-&gt;identifier() == *ip)</div><div class="line">        &#123;</div><div class="line">            stack.pop_back();</div><div class="line">            ip++;  </div><div class="line">            continue;  </div><div class="line">        &#125;</div><div class="line">        if (sym-&gt;isTerminal())</div><div class="line">        &#123;</div><div class="line">            return false; /// 语法错误</div><div class="line">        &#125;</div><div class="line">        Terminal ip_sym(*ip);</div><div class="line">        int status = 0;</div><div class="line">        Production prodction = table.objectForPair(make_pair(sym, &amp;ip_sym), &amp;status);</div><div class="line">        if (status != 0)</div><div class="line">        &#123;</div><div class="line">            return false; /// 语法错误</div><div class="line">        &#125;</div><div class="line">        /// 移除栈顶元素，然后将产生式体加入到栈中</div><div class="line">        stack.pop_back();</div><div class="line">        vector&lt;Symbol *&gt; bodies = prodction.bodies;</div><div class="line">        for (vector&lt;Symbol *&gt;::const_reverse_iterator itr = bodies.rbegin; itr != bodies.rend(); ++itr)</div><div class="line">        &#123;</div><div class="line">            stack.push_back(*itr);</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    return true;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
 <p>这儿我用代码简单地实现了一下，到这儿我们基本上把LL语法分析初步学习完了。 本篇文章中最主要部分还是对产生式求解FIRST集合和FOLLOW集合，这个是务必要掌握的，切记切记！！！</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2020/01/11/two_three_four_red_black_tree/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2020/01/11/two_three_four_red_black_tree/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2020/04/20/top2bottom_syntax_parser/';
 var disqus_title = '语法分析——自顶向下语法分析';
 var disqus_url = 'http://yoursite.com/2020/04/20/top2bottom_syntax_parser/';
