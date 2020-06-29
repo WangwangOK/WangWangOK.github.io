@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/04/20/top2bottom_syntax_parser/</loc>
+    
+    <lastmod>2020-06-29T15:38:15.587Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/01/11/two_three_four_red_black_tree/</loc>
     
     <lastmod>2020-01-11T15:18:12.290Z</lastmod>
