@@ -1,4 +1,4 @@
-<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 语法分析——自顶向下语法分析 · 凌云壮志幾多愁</title><meta name="description" content="语法分析——自顶向下语法分析 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">语法分析——自顶向下语法分析</h1><div class="post-info">Apr 28, 2020</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇文章主要来看看SLR语法分析，他是一个LR语法分析。其中L表示最左向右扫描，R表示最右推导序列。<br>在本篇文章中，我们会接触 移入-归约 技术。并且还会接触到LR文法类，它是最大的、可以构造出相应移入-归约语法分析器的文法类。</p>
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 语法分析——自底向上语法分析中的SLR · 凌云壮志幾多愁</title><meta name="description" content="语法分析——自底向上语法分析中的SLR - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">语法分析——自底向上语法分析中的SLR</h1><div class="post-info">Apr 28, 2020</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇文章主要来看看SLR语法分析，他是一个LR语法分析。其中L表示最左向右扫描，R表示最右推导序列。<br>在本篇文章中，我们会接触 移入-归约 技术。并且还会接触到LR文法类，它是最大的、可以构造出相应移入-归约语法分析器的文法类。</p>
 <h2 id="一、归约"><a href="#一、归约" class="headerlink" title="一、归约"></a>一、归约</h2><p>我们可以将自底向上语法分析过程看成将一个符号串“归约”为文法开始符号的过程。<strong>一个与某产生式体相匹配的特定子串被替换为该产生式头部的非终结符号</strong> 。</p>
 <blockquote>
 <p>在自底向上的语法分析过程中，关键问题是 <strong>何时进行归约以及用哪个产生式进行归约</strong></p>
@@ -180,16 +180,16 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>移入-归约步骤：</p>
 <h2 id="二、SLR（简单LR技术）"><a href="#二、SLR（简单LR技术）" class="headerlink" title="二、SLR（简单LR技术）"></a>二、SLR（简单LR技术）</h2><p>目前最流行的自底向上语法分析器都是基于所谓的LR(k)语法分析概念。 <strong>其中“L”表示对输入进行从左到右的扫描，“R”表示反向构造出一个最右推导序列，k表示在做出语法分析决定时向前看k个输入符号</strong>。目前我们只考虑k小于等于1的清空。</p>
 <p>我们一共有三种LR技术：SLR、规范LR、LALR。本节主要讲SLR，下一篇文章讲规范LR和LALR。</p>
 <h3 id="项（item）和LR-0-自动机"><a href="#项（item）和LR-0-自动机" class="headerlink" title="项（item）和LR(0)自动机"></a>项（item）和LR(0)自动机</h3><p>一个LR语法分析器通过维护一些状态，用这些状态来表明我们在语法分析过程中所处的位置，从而做出移入-归约决定。这些状态代表了“项”（item）的集合。</p>
-<p>一个文法G的一个LR(0)项是G的一个产生式再加上一个位于它产生式体中某处的点。比如对于产生式 $A \rightarrow XYZ$ 的四个项为：</p>
+<p>一个文法G的一个LR(0)项是G的一个产生式再加上一个位于它产生式体中某处的点。比如对于产生式 <script type="math/tex">A \rightarrow XYZ</script> 的四个项为：</p>
 <script type="math/tex; mode=display">
 A \rightarrow \cdot XYZ \\
 A \rightarrow X \cdot YZ \\
 A \rightarrow XY\cdot Z \\
 A \rightarrow XYZ\cdot \\</script><blockquote>
-<p>产生式$A \rightarrow \epsilon$ 只生成一个项 $A\rightarrow \cdot$</p>
+<p>产生式<script type="math/tex">A \rightarrow \epsilon</script> 只生成一个项 <script type="math/tex">A\rightarrow \cdot</script></p>
 </blockquote>
 <p>一个项可以表示为 <strong>一对整数</strong>，第一个整数是基础文法的产生式编号，第二个整数是点的位置。</p>
-<p>项指明了在语法分析过程中，我们已经看到了产生式的哪些部分（由点号来区分）。比如对于项 $A\rightarrow \cdot XYZ$ 表明我们希望接下来在输入中看到一个从XYZ推导得到的串；项 $A\rightarrow X\cdot YZ$ 表明我们刚刚从输入中看到了一个可以由X推导得到的串，并且希望接下来能从YZ中推导得到串；项 $A\rightarrow XYZ \cdot$ 表明我们已经看到了产生式体XYZ，已经可以将其归约为A了。</p>
+<p>项指明了在语法分析过程中，我们已经看到了产生式的哪些部分（由点号来区分）。比如对于项 <script type="math/tex">A\rightarrow \cdot XYZ</script> 表明我们希望接下来在输入中看到一个从XYZ推导得到的串；项 <script type="math/tex">A\rightarrow X\cdot YZ</script> 表明我们刚刚从输入中看到了一个可以由X推导得到的串，并且希望接下来能从YZ中推导得到串；项 <script type="math/tex">A\rightarrow XYZ \cdot</script> 表明我们已经看到了产生式体XYZ，已经可以将其归约为A了。</p>
 <p>LR(0)自动机的每个状态代表了规范LR(0)项集族中的一个项集（而项集又由多个项组合而成）。对于文法：</p>
 <script type="math/tex; mode=display">
 E \rightarrow E + T\ |\ T \\
@@ -200,7 +200,7 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如�
 <blockquote>
 <p>引入新的增广产生式的目的是 <strong>告诉语法分析器何时应该停止语法分析并宣称接受输入符号串</strong> 。</p>
 </blockquote>
-<p>也就是说当且仅当语法分析器要使用规则 $S^{‘} \rightarrow S$ 进行归约时，输入符号串被接受。</p>
+<p>也就是说当且仅当语法分析器要使用规则 <script type="math/tex">S^{'} \rightarrow S</script> 进行归约时，输入符号串被接受。</p>
 <p>这儿我归纳三个概念：</p>
 <ul>
 <li>项：单一的个体，在SLR中用一对整数表示（第一个整数是文法的产生式编号，第二个整数是点号在产生式的位置）；</li>
@@ -245,7 +245,7 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如�
 <p><code>ACTION(i,a)</code> 存在两个参数，分别是表示状态的i，以及 <strong>终结符号</strong> a（下面我已经把ACTION函数的伪代码实现已列出）。而ACTION函数的返回值有四种可能，分别是：</p>
 <ul>
 <li><strong>移入</strong>：语法分析器采取的动作是把输入符号 a 高效的移入栈中；</li>
-<li><strong>归约</strong>：语法分析器的动作是把栈顶元素高效地归约为对应产生式的头部（比如产生式$A \rightarrow \beta$，将β归约为A）；</li>
+<li><strong>归约</strong>：语法分析器的动作是把栈顶元素高效地归约为对应产生式的头部（比如产生式<script type="math/tex">A \rightarrow \beta</script>，将β归约为A）；</li>
 <li><strong>接受</strong>：语法分析器接受输入并完成语法分析过程；</li>
 <li><strong>报错</strong>：语法分析器在它的输入中发现了一个错误，并执行某个纠正错误动作；</li>
 </ul>
@@ -299,9 +299,9 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如�
 <p>而可行前缀的作用是：可行前缀信息可以帮助我们决定是进行归约还是移入操作。比如当我们遇到了可行前缀之后，很明显目前还不能进行归约操作，因为进行归约操作的句柄还不完整。因此遇到可行前缀之后大多数情况下是要进行移入操作的；只有当句柄的最右端为空串时，此时应该做归约操作。</p>
 <h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>在这篇文章中，我们主要是接触了一些LR语法分析的基本概念。以及最简单的SLR语法分析技术，并且给出了相应的伪代码，包括有CLOSURE\GOTO\ACTION等等（关于相关类之间的关系在我的Github上能找到）。最后介绍了一个很重要的概念——可行前缀，这在后续的两个LR语法分析器中都有涉及。</p>
 <p>说个题外话，之前在学习这方面知识的时候一直在思考这个产生式（包括对应的语法分析树）具体的作用是什么，体现在了什么地方。很显然在日常开发工作中基本上是不需要关心的。直到最近我在看<a href="http://clang.llvm.org/docs/ObjectiveCLiterals.html#grammar-additions" target="_blank" rel="external">clang文档-Grammar Additions</a>时，里面看到了关于”@”相关语法的产生式，瞬间感觉到了亲切感：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">objc-at-expression : &apos;@&apos; (string-literal | encode-literal | selector-literal | protocol-literal | object-literal)</div><div class="line">                   ;</div><div class="line"></div><div class="line">object-literal : (&apos;+&apos; | &apos;-&apos;)? numeric-constant</div><div class="line">               | character-constant</div><div class="line">               | boolean-constant</div><div class="line">               | array-literal</div><div class="line">               | dictionary-literal</div><div class="line">               ;</div><div class="line"></div><div class="line">boolean-constant : &apos;__objc_yes&apos; | &apos;__objc_no&apos; | &apos;true&apos; | &apos;false&apos;  /* boolean keywords. */</div><div class="line">                 ;</div><div class="line"></div><div class="line">array-literal : &apos;[&apos; assignment-expression-list &apos;]&apos;</div><div class="line">              ;</div><div class="line"></div><div class="line">assignment-expression-list : assignment-expression (&apos;,&apos; assignment-expression-list)?</div><div class="line">                           | /* empty */</div><div class="line">                           ;</div><div class="line"></div><div class="line">dictionary-literal : &apos;&#123;&apos; key-value-list &apos;&#125;&apos;</div><div class="line">                   ;</div><div class="line"></div><div class="line">key-value-list : key-value-pair (&apos;,&apos; key-value-list)?</div><div class="line">               | /* empty */</div><div class="line">               ;</div><div class="line"></div><div class="line">key-value-pair : assignment-expression &apos;:&apos; assignment-expression</div><div class="line">               ;</div></pre></td></tr></table></figure></p>
-</div></article></div></main><footer><div class="paginator"><a href="/2020/05/05/bottom2top_syntax_parser_lalr/" class="prev">上一篇</a><a href="/2020/04/20/top2bottom_syntax_parser/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2020/05/05/bottom2top_syntax_parser_lalr/" class="prev">PREV</a><a href="/2020/04/20/top2bottom_syntax_parser/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2020/04/28/bottom2top_syntax_parser_basic/';
-var disqus_title = '语法分析——自顶向下语法分析';
+var disqus_title = '语法分析——自底向上语法分析中的SLR';
 var disqus_url = 'http://yoursite.com/2020/04/28/bottom2top_syntax_parser_basic/';
 (function() {
     var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;

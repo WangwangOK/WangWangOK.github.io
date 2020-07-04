@@ -126,11 +126,11 @@ C \rightarrow cC\ |\ d</script><p>下图是对应的项集族：</p>
   </entry>
   
   <entry>
-    <title>语法分析——自顶向下语法分析</title>
+    <title>语法分析——自底向上语法分析中的SLR</title>
     <link href="http://yoursite.com/2020/04/28/bottom2top_syntax_parser_basic/"/>
     <id>http://yoursite.com/2020/04/28/bottom2top_syntax_parser_basic/</id>
     <published>2020-04-28T15:26:16.000Z</published>
-    <updated>2020-07-04T04:40:24.994Z</updated>
+    <updated>2020-07-04T04:46:08.212Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇文章主要来看看SLR语法分析，他是一个LR语法分析。其中L表示最左向右扫描，R表示最右推导序列。<br>在本篇文章中，我们会接触 移入-归约 技术。并且还会接触到LR文法类，它是最大的、可以构造出相应移入-归约语法分析器的文法类。</p>
 <h2 id="一、归约"><a href="#一、归约" class="headerlink" title="一、归约"></a>一、归约</h2><p>我们可以将自底向上语法分析过程看成将一个符号串“归约”为文法开始符号的过程。<strong>一个与某产生式体相匹配的特定子串被替换为该产生式头部的非终结符号</strong> 。</p>
@@ -314,16 +314,16 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>移入-归约步骤：</p>
 <h2 id="二、SLR（简单LR技术）"><a href="#二、SLR（简单LR技术）" class="headerlink" title="二、SLR（简单LR技术）"></a>二、SLR（简单LR技术）</h2><p>目前最流行的自底向上语法分析器都是基于所谓的LR(k)语法分析概念。 <strong>其中“L”表示对输入进行从左到右的扫描，“R”表示反向构造出一个最右推导序列，k表示在做出语法分析决定时向前看k个输入符号</strong>。目前我们只考虑k小于等于1的清空。</p>
 <p>我们一共有三种LR技术：SLR、规范LR、LALR。本节主要讲SLR，下一篇文章讲规范LR和LALR。</p>
 <h3 id="项（item）和LR-0-自动机"><a href="#项（item）和LR-0-自动机" class="headerlink" title="项（item）和LR(0)自动机"></a>项（item）和LR(0)自动机</h3><p>一个LR语法分析器通过维护一些状态，用这些状态来表明我们在语法分析过程中所处的位置，从而做出移入-归约决定。这些状态代表了“项”（item）的集合。</p>
-<p>一个文法G的一个LR(0)项是G的一个产生式再加上一个位于它产生式体中某处的点。比如对于产生式 $A \rightarrow XYZ$ 的四个项为：</p>
+<p>一个文法G的一个LR(0)项是G的一个产生式再加上一个位于它产生式体中某处的点。比如对于产生式 <script type="math/tex">A \rightarrow XYZ</script> 的四个项为：</p>
 <script type="math/tex; mode=display">
 A \rightarrow \cdot XYZ \\
 A \rightarrow X \cdot YZ \\
 A \rightarrow XY\cdot Z \\
 A \rightarrow XYZ\cdot \\</script><blockquote>
-<p>产生式$A \rightarrow \epsilon$ 只生成一个项 $A\rightarrow \cdot$</p>
+<p>产生式<script type="math/tex">A \rightarrow \epsilon</script> 只生成一个项 <script type="math/tex">A\rightarrow \cdot</script></p>
 </blockquote>
 <p>一个项可以表示为 <strong>一对整数</strong>，第一个整数是基础文法的产生式编号，第二个整数是点的位置。</p>
-<p>项指明了在语法分析过程中，我们已经看到了产生式的哪些部分（由点号来区分）。比如对于项 $A\rightarrow \cdot XYZ$ 表明我们希望接下来在输入中看到一个从XYZ推导得到的串；项 $A\rightarrow X\cdot YZ$ 表明我们刚刚从输入中看到了一个可以由X推导得到的串，并且希望接下来能从YZ中推导得到串；项 $A\rightarrow XYZ \cdot$ 表明我们已经看到了产生式体XYZ，已经可以将其归约为A了。</p>
+<p>项指明了在语法分析过程中，我们已经看到了产生式的哪些部分（由点号来区分）。比如对于项 <script type="math/tex">A\rightarrow \cdot XYZ</script> 表明我们希望接下来在输入中看到一个从XYZ推导得到的串；项 <script type="math/tex">A\rightarrow X\cdot YZ</script> 表明我们刚刚从输入中看到了一个可以由X推导得到的串，并且希望接下来能从YZ中推导得到串；项 <script type="math/tex">A\rightarrow XYZ \cdot</script> 表明我们已经看到了产生式体XYZ，已经可以将其归约为A了。</p>
 <p>LR(0)自动机的每个状态代表了规范LR(0)项集族中的一个项集（而项集又由多个项组合而成）。对于文法：</p>
 <script type="math/tex; mode=display">
 E \rightarrow E + T\ |\ T \\
@@ -334,7 +334,7 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如�
 <blockquote>
 <p>引入新的增广产生式的目的是 <strong>告诉语法分析器何时应该停止语法分析并宣称接受输入符号串</strong> 。</p>
 </blockquote>
-<p>也就是说当且仅当语法分析器要使用规则 $S^{‘} \rightarrow S$ 进行归约时，输入符号串被接受。</p>
+<p>也就是说当且仅当语法分析器要使用规则 <script type="math/tex">S^{'} \rightarrow S</script> 进行归约时，输入符号串被接受。</p>
 <p>这儿我归纳三个概念：</p>
 <ul>
 <li>项：单一的个体，在SLR中用一对整数表示（第一个整数是文法的产生式编号，第二个整数是点号在产生式的位置）；</li>
@@ -379,7 +379,7 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如�
 <p><code>ACTION(i,a)</code> 存在两个参数，分别是表示状态的i，以及 <strong>终结符号</strong> a（下面我已经把ACTION函数的伪代码实现已列出）。而ACTION函数的返回值有四种可能，分别是：</p>
 <ul>
 <li><strong>移入</strong>：语法分析器采取的动作是把输入符号 a 高效的移入栈中；</li>
-<li><strong>归约</strong>：语法分析器的动作是把栈顶元素高效地归约为对应产生式的头部（比如产生式$A \rightarrow \beta$，将β归约为A）；</li>
+<li><strong>归约</strong>：语法分析器的动作是把栈顶元素高效地归约为对应产生式的头部（比如产生式<script type="math/tex">A \rightarrow \beta</script>，将β归约为A）；</li>
 <li><strong>接受</strong>：语法分析器接受输入并完成语法分析过程；</li>
 <li><strong>报错</strong>：语法分析器在它的输入中发现了一个错误，并执行某个纠正错误动作；</li>
 </ul>
