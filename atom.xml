@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-07-04T04:54:55.425Z</updated>
+  <updated>2020-07-04T05:43:24.997Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>语法分析——自底向上规范LR和LALR语法分析</title>
+    <title>语法分析——自底向上语法分析中的规范LR和LALR</title>
     <link href="http://yoursite.com/2020/05/05/bottom2top_syntax_parser_lalr/"/>
     <id>http://yoursite.com/2020/05/05/bottom2top_syntax_parser_lalr/</id>
     <published>2020-05-05T14:58:26.000Z</published>
-    <updated>2020-07-04T04:54:55.425Z</updated>
+    <updated>2020-07-04T05:43:24.997Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在这篇文章中主要看两种LR语法分析技术，相对于上一篇中SLR，本篇文章的两种LR技术对它进行了扩展，<strong>在输入中向前看一个符号</strong>。这两种技术分别是：</p>
 <ul>
