@@ -1,0 +1,310 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 语法分析——自顶向下语法分析 · 凌云壮志幾多愁</title><meta name="description" content="语法分析——自顶向下语法分析 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">语法分析——自顶向下语法分析</h1><div class="post-info">Apr 28, 2020</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>这篇文章主要来看看SLR语法分析，他是一个LR语法分析。其中L表示最左向右扫描，R表示最右推导序列。<br>在本篇文章中，我们会接触 移入-归约 技术。并且还会接触到LR文法类，它是最大的、可以构造出相应移入-归约语法分析器的文法类。</p>
+<h2 id="一、归约"><a href="#一、归约" class="headerlink" title="一、归约"></a>一、归约</h2><p>我们可以将自底向上语法分析过程看成将一个符号串“归约”为文法开始符号的过程。<strong>一个与某产生式体相匹配的特定子串被替换为该产生式头部的非终结符号</strong> 。</p>
+<blockquote>
+<p>在自底向上的语法分析过程中，关键问题是 <strong>何时进行归约以及用哪个产生式进行归约</strong></p>
+</blockquote>
+<p>对于文法：</p>
+<script type="math/tex; mode=display">
+E \rightarrow E + T\ |\ T \\
+T \rightarrow T * F \ |\ F \\
+F \rightarrow (E) \ |\ \mathbf{id}</script><p>词法单元序列 <strong>id * id</strong> 机型自底向上的分析过程：</p>
+<p><img src="/uploads/bottom2top_syntax_parser/1.png" alt="自底向上分析过程"></p>
+<p>这个序列中从输入串 <strong>id * id</strong> 开始，第一次归约使用产生式 <script type="math/tex">F\rightarrow id</script>，将最左边的id归约为F，得到串 F <em> id。第二次归约将F归约为T，生成 T </em> id。</p>
+<p>现在（上图中的第四步）我们可以选择是对串T，还是对第二个id进行归约，其中T是产生式 <script type="math/tex">E \rightarrow T</script> 的体，而第二个id是产生式 <script type="math/tex">F \rightarrow id</script> 的体。在这里我们并没有将T归约为E，而是将id归约为F，得到了串 <strong>T * F</strong> 。然后这个串被归约为T。最后则是将T归约为E，由于E是文法的开始符号，因此整个归约过程便结束了。</p>
+<p>因此自底向上的语法分析目的就是反向构造一个推到过程，而 <strong>归约正是最右推到的反向过程</strong>：</p>
+<script type="math/tex; mode=display">
+E \Rightarrow T \Rightarrow T * F \Rightarrow T * id \Rightarrow F * id \Rightarrow id * id</script><blockquote>
+<p>对输入进行从左到右的扫描，并在扫描过程中进行自底向上的语法分析，就可以反向构造出一个最右推到。</p>
+</blockquote>
+<h3 id="句柄剪枝"><a href="#句柄剪枝" class="headerlink" title="句柄剪枝"></a>句柄剪枝</h3><p>非正式的讲，“句柄”是和某个产生式体匹配的子串.<br>比如上面的归约过程：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">最右句型</th>
+<th style="text-align:left">归约目标子串</th>
+<th style="text-align:left">归约用的产生式</th>
+<th style="text-align:left">句柄</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left"><script type="math/tex">id_{1}*id_{2}</script></td>
+<td style="text-align:left"><script type="math/tex">id_{1}</script></td>
+<td style="text-align:left"><script type="math/tex">F \rightarrow id</script></td>
+<td style="text-align:left"><script type="math/tex">id_{1}</script></td>
+</tr>
+<tr>
+<td style="text-align:left"><script type="math/tex">F*id_{2}</script></td>
+<td style="text-align:left"><script type="math/tex">F</script></td>
+<td style="text-align:left"><script type="math/tex">T\rightarrow F</script></td>
+<td style="text-align:left"><script type="math/tex">F</script></td>
+</tr>
+<tr>
+<td style="text-align:left"><script type="math/tex">T*id_{2}</script></td>
+<td style="text-align:left"><script type="math/tex">id_{2}</script></td>
+<td style="text-align:left"><script type="math/tex">F\rightarrow id</script></td>
+<td style="text-align:left"><script type="math/tex">id_{2}</script></td>
+</tr>
+<tr>
+<td style="text-align:left"><script type="math/tex">T * F</script></td>
+<td style="text-align:left"><script type="math/tex">T*F</script></td>
+<td style="text-align:left"><script type="math/tex">T\rightarrow T * F</script></td>
+<td style="text-align:left"><script type="math/tex">T*F</script></td>
+</tr>
+<tr>
+<td style="text-align:left"><script type="math/tex">T</script></td>
+<td style="text-align:left"><script type="math/tex">T</script></td>
+<td style="text-align:left"><script type="math/tex">E\rightarrow T</script></td>
+<td style="text-align:left"><script type="math/tex">T</script></td>
+</tr>
+<tr>
+<td style="text-align:left"><script type="math/tex">E</script></td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+<td style="text-align:left">-</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>在上表中，虽然T是产生式<script type="math/tex">E\rightarrow T</script>的体，但符号T并不是句型<script type="math/tex">T*id_{2}</script>的句柄。如果我们把T替换为E之后，发现E为开始符号，那我们也就不能从单一的开始符号推导得到<script type="math/tex">E * id_{2}</script> 。</p>
+<p>因此：</p>
+<blockquote>
+<p>和某个产生式体匹配的最左子串不一定是句柄。</p>
+</blockquote>
+<p>正式的对句柄下一个定义：<br>如果存在产生式 <script type="math/tex">S\Rightarrow \alpha A \omega \Rightarrow \alpha \beta \omega</script>，最右句型<script type="math/tex">\gamma</script> 的一个句柄满足如下条件：</p>
+<p>将该句型中的子串<script type="math/tex">\beta</script>替换为A之后得到的串 <script type="math/tex">\mu</script> ，串<script type="math/tex">\mu</script>是最右句型<script type="math/tex">\gamma</script>所处最右推导序列中位于<script type="math/tex">\gamma</script>之前的最右句型（稍微转一下弯，这里说的是最右推导的最右句型序列之前，那也就是上面所说的处于归约序列之后的子串）。</p>
+<p>同时为了方便起见，我们就把产生式 <script type="math/tex">A\rightarrow \beta</script> 的体<script type="math/tex">\beta</script> 称作句柄。</p>
+<p>由于文法存在二义性，因此对于同一个最右句型可能存在多个句柄；而对于无二义性的文法而言，那么该文法的每个最右句型有且只有一个句柄。</p>
+<p>而这里提到的句柄剪枝的目的，便是寻找合适的句柄。使得我们可以按照这个过程得到一个 <strong>只包含开始符号</strong> 的最右句型，因此我们就可以说语法分析过程结束。</p>
+<p>而将归约过程中用的产生式反向排序，我们就可以得到输入串的一个最右推导。</p>
+<h3 id="移入-归约语法分析技术"><a href="#移入-归约语法分析技术" class="headerlink" title="移入-归约语法分析技术"></a>移入-归约语法分析技术</h3><p>它使用一个栈来保存文法符号，并用一个输入缓冲区来存放将要进行语法分析的其余符号。<strong>句柄在被识别之前，总是出现在栈的顶部</strong>。</p>
+<p><img src="/uploads/bottom2top_syntax_parser/2.png" alt="输入串和栈"></p>
+<p>在对输入串的一次从左到右扫描过程中，语法分析器将零个或多个输入符号移动到栈的顶端，直到它可以对栈顶的一个文法符号串（比如<script type="math/tex">\beta</script>）进行归约为止。将 <script type="math/tex">\beta</script> 归约为某个产生式的头部（即 <script type="math/tex">A\rightarrow \beta</script>，归约为A）。</p>
+<p>语法分析器不断重复这个循环，直到它检测到一个语法错误，或者栈中包含了开始符号且输入缓冲区为空。</p>
+<p>下表是对输入串“id*id”进行语法分析时，对应的文法符号为：</p>
+<script type="math/tex; mode=display">
+E \rightarrow E + T\ |\ T \\
+T \rightarrow T * F \ |\ F \\
+F \rightarrow (E) \ |\ \mathbf{id}</script><p>移入-归约步骤：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">栈</th>
+<th style="text-align:right">输入</th>
+<th style="text-align:left">动作</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">$</td>
+<td style="text-align:right"><script type="math/tex">id_{1}*id_{2}</script> $</td>
+<td style="text-align:left">移入（栈中）</td>
+</tr>
+<tr>
+<td style="text-align:left">$ $$id_{1}$</td>
+<td style="text-align:right">$*id_{2}$$ $</td>
+<td style="text-align:left">按照<script type="math/tex">F\rightarrow id</script>进行归约</td>
+</tr>
+<tr>
+<td style="text-align:left">$ F</td>
+<td style="text-align:right"><script type="math/tex">*id_{2}</script> $</td>
+<td style="text-align:left">按照<script type="math/tex">T\rightarrow F</script>进行归约</td>
+</tr>
+<tr>
+<td style="text-align:left">$ T</td>
+<td style="text-align:right"><script type="math/tex">*id_{2}</script> $</td>
+<td style="text-align:left">移入（栈中）</td>
+</tr>
+<tr>
+<td style="text-align:left">$ T*</td>
+<td style="text-align:right"><script type="math/tex">id_{2}</script> $</td>
+<td style="text-align:left">移入（栈中）</td>
+</tr>
+<tr>
+<td style="text-align:left">$ <script type="math/tex">T*id_{2}</script></td>
+<td style="text-align:right">$</td>
+<td style="text-align:left">按照<script type="math/tex">F\rightarrow id</script>进行归约</td>
+</tr>
+<tr>
+<td style="text-align:left">$T*F</td>
+<td style="text-align:right">$</td>
+<td style="text-align:left">按照<script type="math/tex">T\rightarrow T*F</script>进行归约</td>
+</tr>
+<tr>
+<td style="text-align:left">$T</td>
+<td style="text-align:right">$</td>
+<td style="text-align:left">按照<script type="math/tex">E \rightarrow T</script>进行归约</td>
+</tr>
+<tr>
+<td style="text-align:left">$E</td>
+<td style="text-align:right">$</td>
+<td style="text-align:left">接受</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>最后一行我们看到了开始符号E，并且此时输入缓冲区为空。因此我们认为此次移入归约过程结束。</p>
+<p>移入-归约语法分析器一共有4种可能的动作：</p>
+<ul>
+<li>1、移入：将下一个输入符号移入到栈中（句柄）；</li>
+<li>2、归约：语法分析器在栈中确定适当的产生式；</li>
+<li>3、接受：栈中包含开始符号，并且输入缓冲区为空；</li>
+<li>4、报错：发现语法错误；</li>
+</ul>
+<blockquote>
+<p>句柄总是出现在栈的顶端，绝不会出现在栈的中间。</p>
+</blockquote>
+<h3 id="移入-归约语法分析中的冲突"><a href="#移入-归约语法分析中的冲突" class="headerlink" title="移入-归约语法分析中的冲突"></a>移入-归约语法分析中的冲突</h3><p>假如知道了栈中的所有内容，以及接下来输入串中的k个输入符号：</p>
+<ul>
+<li><p>移入/归约冲突：当无法判断是进行移入，还是进行归约操作时出现冲突；</p>
+<p>  对于产生式集合：</p>
+<script type="math/tex; mode=display">
+  stmt \rightarrow \mathbf{if}\ expr\ \mathbf{then}\ stmt\\
+  stmt \rightarrow \mathbf{if}\ expr\ \mathbf{then}\ stmt\ \mathbf{else}\ stmt\\
+  stmt \rightarrow \mathbf{other}\\</script><p>  当栈中元素为<code>$$ if expr then stmt``，而输入串为 ``else ... $$</code>。此时我们都无法确认句柄，因为我们既可以使用第一个产生式进行归约操作，又可以以第二个产生式进行移入操作，这就是移入-归约冲突。</p>
+</li>
+</ul>
+<ul>
+<li><p>归约/归约冲突：无法在多个可能的归约方法中选择正确的归约动作；</p>
+<p>  对于产生式集合：</p>
+<script type="math/tex; mode=display">
+  ...\\
+  parameter \rightarrow id\\
+  expr \rightarrow id\\
+  ...</script><p>  此时栈中元素为<code>...id(id</code>，此时id明显需要被归约，但是我们却无法确定使用哪个产生式作为句柄。</p>
+</li>
+</ul>
+<p>在这一节中，我们主要学习了句柄，以及移入-归约的相关知识点。</p>
+<h2 id="二、SLR（简单LR技术）"><a href="#二、SLR（简单LR技术）" class="headerlink" title="二、SLR（简单LR技术）"></a>二、SLR（简单LR技术）</h2><p>目前最流行的自底向上语法分析器都是基于所谓的LR(k)语法分析概念。 <strong>其中“L”表示对输入进行从左到右的扫描，“R”表示反向构造出一个最右推导序列，k表示在做出语法分析决定时向前看k个输入符号</strong>。目前我们只考虑k小于等于1的清空。</p>
+<p>我们一共有三种LR技术：SLR、规范LR、LALR。本节主要讲SLR，下一篇文章讲规范LR和LALR。</p>
+<h3 id="项（item）和LR-0-自动机"><a href="#项（item）和LR-0-自动机" class="headerlink" title="项（item）和LR(0)自动机"></a>项（item）和LR(0)自动机</h3><p>一个LR语法分析器通过维护一些状态，用这些状态来表明我们在语法分析过程中所处的位置，从而做出移入-归约决定。这些状态代表了“项”（item）的集合。</p>
+<p>一个文法G的一个LR(0)项是G的一个产生式再加上一个位于它产生式体中某处的点。比如对于产生式 $A \rightarrow XYZ$ 的四个项为：</p>
+<script type="math/tex; mode=display">
+A \rightarrow \cdot XYZ \\
+A \rightarrow X \cdot YZ \\
+A \rightarrow XY\cdot Z \\
+A \rightarrow XYZ\cdot \\</script><blockquote>
+<p>产生式$A \rightarrow \epsilon$ 只生成一个项 $A\rightarrow \cdot$</p>
+</blockquote>
+<p>一个项可以表示为 <strong>一对整数</strong>，第一个整数是基础文法的产生式编号，第二个整数是点的位置。</p>
+<p>项指明了在语法分析过程中，我们已经看到了产生式的哪些部分（由点号来区分）。比如对于项 $A\rightarrow \cdot XYZ$ 表明我们希望接下来在输入中看到一个从XYZ推导得到的串；项 $A\rightarrow X\cdot YZ$ 表明我们刚刚从输入中看到了一个可以由X推导得到的串，并且希望接下来能从YZ中推导得到串；项 $A\rightarrow XYZ \cdot$ 表明我们已经看到了产生式体XYZ，已经可以将其归约为A了。</p>
+<p>LR(0)自动机的每个状态代表了规范LR(0)项集族中的一个项集（而项集又由多个项组合而成）。对于文法：</p>
+<script type="math/tex; mode=display">
+E \rightarrow E + T\ |\ T \\
+T \rightarrow T * F \ |\ F \\
+F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如下（此时看不懂并不重要，因为这里面涉及到的闭包和GOTO尚未学习，在下面学习了闭包和GOTO函数之后可以对照着看看该自动机）：</p>
+<p><img src="/uploads/bottom2top_syntax_parser/3.png" alt="LR(0)有穷自动机"></p>
+<p>为了构造一个文法的规范LR(0)项集族，我们需要定一个 <strong>增广文法和两个函数：CLOSURE和GOTO</strong> 。如果文法G的开始符号为S，那么G的增广文法<script type="math/tex">G^{'}</script>就是在文法G的基础上新增一个产生式 <script type="math/tex">S^{'} \rightarrow S</script> 。</p>
+<blockquote>
+<p>引入新的增广产生式的目的是 <strong>告诉语法分析器何时应该停止语法分析并宣称接受输入符号串</strong> 。</p>
+</blockquote>
+<p>也就是说当且仅当语法分析器要使用规则 $S^{‘} \rightarrow S$ 进行归约时，输入符号串被接受。</p>
+<p>这儿我归纳三个概念：</p>
+<ul>
+<li>项：单一的个体，在SLR中用一对整数表示（第一个整数是文法的产生式编号，第二个整数是点号在产生式的位置）；</li>
+<li>项集：多个项的集合称为项集；</li>
+<li>项集族：多个项集的集合称为项集族；</li>
+</ul>
+<h4 id="项集的闭包"><a href="#项集的闭包" class="headerlink" title="项集的闭包"></a>项集的闭包</h4><p>如果 I 是 文法G 的一个项集（项的集合，其数量大于等于1个）。那么构造CLOSURE(I)的规则如下：</p>
+<ul>
+<li>1、将I中各个项加入到CLOSURE(I)中；</li>
+<li><p>2、如果CLOSURE(I)中存在一个项 <script type="math/tex">A \rightarrow \alpha \cdot B \beta</script>，并存在产生式<script type="math/tex">B \rightarrow \gamma</script>。如果该产生式的项 <script type="math/tex">B \rightarrow \cdot \gamma</script> 不存在与CLOSURE(I)中，则将项<script type="math/tex">B \rightarrow \cdot \gamma</script> 加入到 CLOSURE(I)中。<br>  一直循环下去，直到没有新的项可以加入到CLOSURE(I)中。</p>
+<p>  <img src="/uploads/bottom2top_syntax_parser/4.png" alt="I0"></p>
+</li>
+</ul>
+<p>这个可能比较抽象，可以对照上图 <script type="math/tex">I_{0}</script> 项集来理解这两个规则，<script type="math/tex">I_{0}</script> 中白色部分即规则1的方式添加到CLOSURE( <script type="math/tex">I_{0}</script> )中；而灰色部分则是因为点号右边存在非终结符，并且有对应的产生式，那么我们就可以应用规则2 循环将其添加到CLOSURE( <script type="math/tex">I_{0}</script> ) 中。 </p>
+<p>使用项集闭包的目的就是为了希望能够找到对应的产生式可以推导出点号右边的符号，而项集就是收集所有可能出现的产生式集合。从归约的角度来看，比如对于产生式 <script type="math/tex">A \rightarrow \alpha \cdot B \beta</script> ，此时我们希望能够出现对应的产生式（ <script type="math/tex">B\rightarrow \gamma</script> ）能够归约点号右边即将出现的符号。 反过来看，比如id可以归约为F，F可以归约T，T可以归约为E，而最后E可以归约为 <script type="math/tex">E^{'}</script> ，则归约过程结束。</p>
+<p>下面是一个简单的closure函数实现：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div></pre></td><td class="code"><pre><div class="line">SetOfItems SLR::CanonicalLR::closure(SetOfItems&amp; set) &#123;</div><div class="line">    SLR::ContextFreeGrammar grammer = this-&gt;grammer;</div><div class="line">    SetOfItems result(set);</div><div class="line">    /// SLR::SetOfItems::items_iterator</div><div class="line">    /// 循环当前项集，需要注意的是是result集合自己在发生变动，同时也是该集合在循环。也就是说如果有新的项被添加到集合内之后，还会继续查看这个新项的产生式情况</div><div class="line">    for (SLR::items_iterator itr = result.begin(); itr != result.end(); ++itr)</div><div class="line">    &#123;</div><div class="line">       Item item = *itr;</div><div class="line">       /// 在书中我们知道项的表示方式是：数对</div><div class="line">       /// item.id: 一个数表示当前项在产生式集合中和的下标（第几个具体的产生式）</div><div class="line">       /// item.position: 另一个数是表示点号在产生式体中的下标</div><div class="line">       SLR::Production production = grammer.productions[item.id]; /// 没有做越界保护</div><div class="line">       vector&lt;Symbol *&gt;bodies = production.bodies;</div><div class="line">       if (item.position &gt;= bodies.size())</div><div class="line">       &#123; /// 说明此时点号在产生式的最右边，也就是说此时我们已经可以把产生式体归约为产生式头部了，无需继续添加</div><div class="line">           continue;</div><div class="line">       &#125;</div><div class="line">       Symbol* symbol = production.bodies[item.position];</div><div class="line">       bool isTerminal = symbol-&gt;isTerminal();</div><div class="line">       if (isTerminal)</div><div class="line">       &#123;</div><div class="line">           continue;</div><div class="line">       &#125;</div><div class="line">       /// 此时点号右边是非终结符，需要查看该非终结符是否有对应的产生式</div><div class="line">       int id = symbol-&gt;identifier();</div><div class="line">       vector&lt;Production&gt; productions = grammer.productions;</div><div class="line">       bool contain_grammer = false;</div><div class="line">       for (vector&lt;Production&gt;::iterator itr = productions.begin(); itr != productions.end(); ++itr)</div><div class="line">       &#123;</div><div class="line">           int idx = itr-productions.begin();</div><div class="line">           if ((itr-&gt;header).identifier() == id)</div><div class="line">           &#123;</div><div class="line">                Item new_item(idx,0);</div><div class="line">                result.push_back(new_item);</div><div class="line">           &#125;</div><div class="line">       &#125;</div><div class="line">    &#125;</div><div class="line">    return result; </div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>我们通过观察上图可以知道，如果点在最左边的某个产生式（比如上面的 <script type="math/tex">E^{'}\rightarrow \cdot\ E</script> ）被加入到项集族 I 中，那么该产生式所有依据<code>closure</code>函数添加到项集中的项（比如上图中灰色区域部分的项）我们是没有必要全部列出来的，因此我们将上图中白色区域中的项称为 <strong>内核项</strong>，灰色区域的项称为 <strong>非内核项</strong>。</p>
+<ul>
+<li><strong>内核项</strong>：包括初始项<script type="math/tex">E{'} \rightarrow \cdot E</script>，以及<strong>所有点不在最左边的项</strong>；</li>
+<li><strong>非内核项</strong>：除了初始项之外，所有<strong>点在最左边的项</strong>；</li>
+</ul>
+<p>通过求闭包时加入的项不可能是内核项，因此我们抛弃所有非内核项，就可以用很少的内存来表示真正感兴趣项的集合。</p>
+<h4 id="GOTO函数"><a href="#GOTO函数" class="headerlink" title="GOTO函数"></a>GOTO函数</h4><p>函数<code>GOTO(I,X)</code>，其中 I 是项集族中的一个项集，X为一个文法符号。该函数用于定义一个文法的LR(0)自动机中的转换，这个自动机的状态对应于项集族中的项集，而GOTO函数描述了当输入为X时，离开状态X的转换。</p>
+<p>比如我截取了上面大图中的一个部分 ：<br><img src="/uploads/bottom2top_syntax_parser/5.png" alt="GOTO(I_{1}, +)"></p>
+<p>它就表示了函数 <script type="math/tex">GOTO(I_{1},\ +)</script> 。 下面的代码大致的实现了一下GOTO函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div></pre></td><td class="code"><pre><div class="line">SetOfItems SLR::CanonicalLR::lr_goto(SetOfItems&amp; set, Symbol *symbol, int *offset) &#123;</div><div class="line"></div><div class="line">    int index = set.cacheForSymbol(symbol-&gt;identifier);</div><div class="line">    if (index &gt;= 0)</div><div class="line">    &#123;</div><div class="line">        if (offset != nullptr)</div><div class="line">        &#123;</div><div class="line">           *offset = index;</div><div class="line">        &#125;    </div><div class="line">        return item_set[index];</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    ContextFreeGrammar grammer = this-&gt;grammer;</div><div class="line">    SetOfItems result;</div><div class="line">    for (SLR::items_iterator itr = set.begin(); itr != set.end(); ++itr) </div><div class="line">    &#123;</div><div class="line">        Item item = *itr;</div><div class="line">        /// 在书中我们知道项的表示方式是：数对</div><div class="line">        /// item.id: 一个数表示当前项在产生式集合中和的下标（第几个具体的产生式）</div><div class="line">        /// item.position: 另一个数是表示点号在产生式体中的下标</div><div class="line">        uint idx = item.id;</div><div class="line">        if (idx &gt;= grammer.productions.size())</div><div class="line">        &#123;</div><div class="line">            return set; /// 异常</div><div class="line">        &#125;</div><div class="line">        Production production = grammer.productions[idx];</div><div class="line">        vector&lt;Symbol *&gt; bodies = production.bodies;</div><div class="line">        if (item.position &gt;= bodies.size())</div><div class="line">        &#123;</div><div class="line">            continue; /// 点号在产生式的最右边；</div><div class="line">        &#125;</div><div class="line">        Symbol *current_sym = bodies[item.position];</div><div class="line">        if (current_sym-&gt;identifier() != symbol-&gt;identifier())</div><div class="line">        &#123;</div><div class="line">            continue;</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">        Item new_item(idx,item.position+1); /// 点号右移</div><div class="line">        int index = contain_item(new_item);</div><div class="line">        if (index &gt;= 0)</div><div class="line">        &#123; /// 如果生成的item已经存在于某一个项集中，则返回当前项集</div><div class="line">            return item_set[index];</div><div class="line">        &#125;</div><div class="line">        /// 新生成的item并未存在，将该项放入新的项集中</div><div class="line">        std::string key  = format(&quot;%d_%d&quot;,item.id,item.position);</div><div class="line">        item_map.insert(make_pair(key, item_set.size()));</div><div class="line">        result.push_back(new_item);</div><div class="line">    &#125;</div><div class="line">    if (result.count() &gt; 0)</div><div class="line">    &#123;</div><div class="line">        if (offset)</div><div class="line">        &#123;</div><div class="line">            *offset = item_set.size();</div><div class="line">            item_set.push_back(result);</div><div class="line">            set.setCache(*offset, symbol-&gt;identifier());</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    return result;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="LR-0-自动机的用法（帮助我们进行移入-归约操作）"><a href="#LR-0-自动机的用法（帮助我们进行移入-归约操作）" class="headerlink" title="LR(0)自动机的用法（帮助我们进行移入-归约操作）"></a>LR(0)自动机的用法（帮助我们进行移入-归约操作）</h4><p>下面是通过使用CLOSURE函数和GOTO函数构造规范LR(0)项集族的方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div></pre></td><td class="code"><pre><div class="line">void SLR::CanonicalLR::items() &#123;</div><div class="line">    /// 获取增广文法的初始化产生式，并构造初始的项集</div><div class="line">    SetOfItems set;</div><div class="line">    Item augmented_item(0,0);</div><div class="line">    set.push_back(augmented_item);</div><div class="line">    (this-&gt;item_set).push_back(set); /// 初始项集族</div><div class="line">    /// 遍历每一个项集</div><div class="line">    for (vector&lt;SetOfItems&gt;::iterator vitr = (this-&gt;item_set).begin(); vitr != (this-&gt;item_set).end(); ++vitr)</div><div class="line">    &#123;</div><div class="line">        /// 遍历当前文法所有的符号</div><div class="line">        for (vector&lt;SLR::Symbol *&gt;::iterator itr = grammer.symbols.begin(); itr != grammer.symbols.end() ++itr)</div><div class="line">        &#123;</div><div class="line">            SetOfItems result = lr_goto(*vitr, *itr);</div><div class="line">            int contain = contain_set(result);</div><div class="line">            if (contain == -1)</div><div class="line">            &#123;</div><div class="line">                item_set.push_back(result);</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<p>SLR的中心思想是根据文法构造出LR(0)自动机。这个自动机的状态是规范LR(0)项集族中的元素，而它的转换由GOTO函数给出。我们再来看看LR(0)自动机</p>
+<p><img src="/uploads/bottom2top_syntax_parser/3.png" alt="LR(0)有穷自动机"></p>
+<p>LR(0)自动机可以帮助我们决定何时进行移入，何时进行规约操作。 假设文法符号串 γ 使得LR(0)自动机从开始状态0运行到某个状态 j 。此时如果下一个输入符号为 a，并且状态 j 有一个在 a 上的转换（即存在GOTO(j, a)），那么此时我们就 <strong>移入</strong> a；否则我们就选择 <strong>归约</strong> 动作。我们可以通过查看状态 j （项集）内各个项点号的位置，来决定如何进行归约操作（具体可以看本节开头部分关于点号存在不同位置所表达的含义）。</p>
+<p>比如，<script type="math/tex">E^{'} \rightarrow E\cdot</script> 的点号在最右边，它的意思是说我们已经收到期望归约所需的全部符号，可以进行归约了；<br>而 <script type="math/tex">E\rightarrow E\cdot+T</script> 的点号右边存在符号”+”，说明此时我们收到了符号E，如果想要以该产生式进行归约的话，我期望下一个输入串是”+”。因此当输入“+”号，LR(0)自动机认为此时需要做移入操作；而当输入为非”+”号时，LR(0)将以项集中第一个项进行归约操作。</p>
+<p><img src="/uploads/bottom2top_syntax_parser/5.png" alt="GOTO(I_{1}, +)"></p>
+<h4 id="ACTION函数"><a href="#ACTION函数" class="headerlink" title="ACTION函数"></a>ACTION函数</h4><p>在前面我们已经知道如何编写和使用GOTO函数，但是并不知道ACTION函数是如何实现的。那么现在我们就来具体的看看是如何构造ACTION函数的:</p>
+<ul>
+<li>1）、如果项 <script type="math/tex">[A \rightarrow \alpha \cdot a \beta]</script> 在状态i中。并且GOTO(Ii, a) 为新状态 j，那么 ACTION(i,a) 函数对应的输出值为 <strong>“移入 j”</strong>；</li>
+<li>2）、如果项 <script type="math/tex">[A \rightarrow \alpha \cdot]</script> 在状态i中，那么对于FOLLOW(A)中所有的a，将 ACTION(i,a) 的输出值为 <strong>“归约 A -&gt; α”</strong>。这里A不是增广文法的开始符号；</li>
+<li>3）、如果增广文法的开始项，比如 <script type="math/tex">[S' \rightarrow S]</script> 在状态i中，那么 ACTION(i, $) 输出值为 <strong>“接受”</strong>；</li>
+</ul>
+<p>如果使用上诉规则时，发生了任何冲突动作。我们就说这个文法不是SLR(1)的。</p>
+<p><code>ACTION(i,a)</code> 存在两个参数，分别是表示状态的i，以及 <strong>终结符号</strong> a（下面我已经把ACTION函数的伪代码实现已列出）。而ACTION函数的返回值有四种可能，分别是：</p>
+<ul>
+<li><strong>移入</strong>：语法分析器采取的动作是把输入符号 a 高效的移入栈中；</li>
+<li><strong>归约</strong>：语法分析器的动作是把栈顶元素高效地归约为对应产生式的头部（比如产生式$A \rightarrow \beta$，将β归约为A）；</li>
+<li><strong>接受</strong>：语法分析器接受输入并完成语法分析过程；</li>
+<li><strong>报错</strong>：语法分析器在它的输入中发现了一个错误，并执行某个纠正错误动作；</li>
+</ul>
+<p>下面是Action函数的一个伪代码：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div></pre></td><td class="code"><pre><div class="line">SLR::LR_Action* SLR::CanonicalLR::action(SetOfItems&amp; set, SLR::Symbol *symbol) &#123;</div><div class="line">    if (symbol-&gt;isTerminal() == false) /// 非终结符直接返回</div><div class="line">    &#123;</div><div class="line">        return nullptr;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    LR_Action *action = set.actionForSymbol(symbol-&gt;identifier());</div><div class="line">    if (action != nullptr)</div><div class="line">    &#123;</div><div class="line">        return action;</div><div class="line">    &#125;</div><div class="line">    </div><div class="line">    int offset = -1;</div><div class="line">    SetOfItems result = lr_goto(set,symbol, &amp;offset);</div><div class="line">    if (result != set) /// 不同的两个状态，说明goto函数有效，此时应该做移入操作</div><div class="line">    &#123;</div><div class="line">        action = new ShiftAction(offset);</div><div class="line">        set.setActionForSymbol(symbol-&gt;identifier(), action);</div><div class="line">        return action;</div><div class="line">    &#125;</div><div class="line">    ContextFreeGrammar grammer = this-&gt;grammer;</div><div class="line">    SetOfItems result;</div><div class="line">    for (SLR::items_iterator itr = set.begin(); itr != set.end(); ++itr) </div><div class="line">    &#123;</div><div class="line">        Item item = *itr;</div><div class="line">        /// 在书中我们知道项的表示方式是：数对</div><div class="line">        /// item.id: 一个数表示当前项在产生式集合中和的下标（第几个具体的产生式）</div><div class="line">        /// item.position: 另一个数是表示点号在产生式体中的下标</div><div class="line">        uint idx = item.id;</div><div class="line">        if (idx &gt;= grammer.productions.size())</div><div class="line">        &#123;</div><div class="line">            continue; /// 异常</div><div class="line">        &#125;</div><div class="line"></div><div class="line">        Production production = grammer.productions[idx];</div><div class="line">        vector&lt;Symbol *&gt; bodies = production.bodies;</div><div class="line">        if (item.position != bodies.size())</div><div class="line">        &#123;</div><div class="line">            continue; </div><div class="line">        &#125;</div><div class="line">        /// 点号在最左边，并且当前产生式为产生式集合中的第一个，即增广文法的产生式</div><div class="line">        if (idx == 0)</div><div class="line">        &#123;</div><div class="line">            action = new AcceptAction();</div><div class="line">            set.setActionForSymbol(symbol-&gt;identifier(), action);</div><div class="line">            return action;</div><div class="line">        &#125;</div><div class="line">        </div><div class="line">        /// 点号在产生式的最右边的一般情况</div><div class="line">        vector&lt;Symbol *&gt; syms = grammer.FOLLOW(&amp;(production.header));</div><div class="line">        for (vector&lt;Symbol *&gt;::iterator itr = syms.begin(); itr != syms.end(); ++itr)</div><div class="line">        &#123;</div><div class="line">            if (symbol -&gt; identifier() == (*itr)-&gt;identifier()) </div><div class="line">            &#123;</div><div class="line">                action = new ReduceAction(&amp;production);</div><div class="line">                set.setActionForSymbol(symbol-&gt;identifier(), action);</div><div class="line">                return action;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">    &#125;</div><div class="line">    action = new ErrorAction();</div><div class="line">    set.setActionForSymbol(symbol-&gt;identifier(), action);</div><div class="line">    return action;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
+<h4 id="LR语法分析算法"><a href="#LR语法分析算法" class="headerlink" title="LR语法分析算法"></a>LR语法分析算法</h4><p>下图是一个LR语法分析器的示意图，它由一个输入、一个输出、一个栈、一个驱动程序和一个语法分析表组成，其中语法分析表包括了两个部分，分别是ACTION和GOTO：</p>
+<p><img src="/uploads/bottom2top_syntax_parser/6.png" alt="LR语法分析器示意图"></p>
+<ul>
+<li>1）、栈中保存的是LR(0)自动机中的状态，<strong>各个状态都和某个项集对应</strong>；</li>
+<li>2）、语法分析表是随着语法分析器的不同而变化的。GOTO对应于自动机的转换；而ACTION则表示当前的动作；</li>
+</ul>
+<p>我们定义LR语法分析器的配置如下：</p>
+<script type="math/tex; mode=display">
+(s_{0}s_{1}...s_{m},\ a_{i}a_{i+1}...a_{n},\ \$);</script><p>其中第一个分量表示栈中的内容（上图中左侧的栈，其中s<sub>m</sub> 为栈顶 ），第二个分量是余下的输入串。我们可以来看看ACTION函数和LR语法分析器配置是如何配合使用的：</p>
+<ul>
+<li><script type="math/tex">ACTION[s_{m},a_{i}]=移入\ s</script> ：那么语法分析器就执行一次移入动作，将下一个状态s移入栈中，此时的配置为：</li>
+</ul>
+<script type="math/tex; mode=display">
+(s_{0}s_{1}...s_{m}s,\ a_{i+1}...a_{n},\ \$);</script><ul>
+<li><p><script type="math/tex">ACTION[s_{m},a_{i}] = 归约 A\rightarrow \beta</script> ：那么语法分析器执行一次归约动作，其中r是β的长度，$s = GOTO[s_{m-r}, A]$</p>
+<p>  语法分析器首先将r个状态符号弹出栈，使得状态 s<sub>m-r</sub> 位于栈顶，然后语法分析器将 s 压入栈中。 <strong>在一个归约动作中，当前输入符号不发生改变</strong> 。</p>
+</li>
+</ul>
+<script type="math/tex; mode=display">
+(s_{0}s_{1}...s_{m-r}s,\ a_{i}a_{i+1}...a_{n},\ \$);</script><ul>
+<li><p><script type="math/tex">ACTION[s_{m},a_{i}] = 接受</script> ： 表示语法分析过程完成；</p>
+</li>
+<li><p><script type="math/tex">ACTION[s_{m},a_{i}] = 报错</script> ： 表明语法分析器发生了一个语法错误；</p>
+</li>
+</ul>
+<blockquote>
+<p>两个LR语法分析器之间唯一的区别是他们的语法分析表ACTION表项和GOTO表项中包含的信息不同；</p>
+</blockquote>
+<p>现在我们可以综合上面已有的知识来写一个简单的SLR语法分析程序：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div><div class="line">30</div><div class="line">31</div><div class="line">32</div><div class="line">33</div><div class="line">34</div><div class="line">35</div><div class="line">36</div><div class="line">37</div><div class="line">38</div><div class="line">39</div><div class="line">40</div><div class="line">41</div><div class="line">42</div><div class="line">43</div><div class="line">44</div><div class="line">45</div><div class="line">46</div><div class="line">47</div><div class="line">48</div><div class="line">49</div><div class="line">50</div><div class="line">51</div><div class="line">52</div><div class="line">53</div><div class="line">54</div><div class="line">55</div><div class="line">56</div><div class="line">57</div><div class="line">58</div><div class="line">59</div><div class="line">60</div><div class="line">61</div><div class="line">62</div><div class="line">63</div><div class="line">64</div><div class="line">65</div><div class="line">66</div><div class="line">67</div><div class="line">68</div><div class="line">69</div><div class="line">70</div><div class="line">71</div><div class="line">72</div><div class="line">73</div><div class="line">74</div><div class="line">75</div><div class="line">76</div><div class="line">77</div><div class="line">78</div><div class="line">79</div><div class="line">80</div><div class="line">81</div><div class="line">82</div><div class="line">83</div><div class="line">84</div><div class="line">85</div></pre></td><td class="code"><pre><div class="line">class CanonicalLR &#123;</div><div class="line">private:</div><div class="line">    ContextFreeGrammar grammer;</div><div class="line">    vector &lt;SetOfItems&gt; item_set;</div><div class="line">    map&lt;string,int&gt; item_map; /// key: item.id+item.position; value: item_set index</div><div class="line">public:</div><div class="line">    SetOfItems closure(SetOfItems&amp; set);</div><div class="line">    SetOfItems lr_goto(SetOfItems&amp; set, SLR::Symbol *symbol, int *offset);</div><div class="line">    SLR::LR_Action* SLR::CanonicalLR::action(SetOfItems&amp; set, SLR::Symbol *symbol);</div><div class="line">    void items();</div><div class="line">    int contain_set(SetOfItems&amp; set); /// 不包含返回-1，包含返回非负数</div><div class="line">    int contain_item(Item&amp; item); /// 不包含返回-1，包含返回非负数</div><div class="line">    friend class SLRAnalyser;</div><div class="line">&#125;;</div><div class="line"></div><div class="line">class SLRAnalyser &#123;</div><div class="line">    vector&lt;Symbol *&gt; inputTokens; /// 输入串</div><div class="line">    stack&lt;int&gt; stack_;</div><div class="line">    CanonicalLR lr;</div><div class="line">public:</div><div class="line">    /// 出现错误时，信息记录</div><div class="line">    struct Error&#123;</div><div class="line">        Symbol *sym;</div><div class="line">        stack&lt;int&gt; stck;</div><div class="line">        Error(Symbol *s, stack&lt;int&gt;&amp; sk):sym(s),stck(sk)&#123;&#125;</div><div class="line">        Error() &#123;</div><div class="line">            sym = nullptr;</div><div class="line">        &#125;</div><div class="line">    &#125;;</div><div class="line">private:</div><div class="line">    Error error;</div><div class="line">public:   </div><div class="line">    SLRAnalyser() &#123;</div><div class="line">        stack_.push(0);</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    SLRAnalyser::Error slrError() &#123; /// 当出现异常时，获取错误信息</div><div class="line">        return error;</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    vector&lt;Production&gt; start() &#123;</div><div class="line">        vector&lt;Production&gt; result;</div><div class="line">        int i = 0;</div><div class="line">        Symbol *input_sym = inputTokens[i];</div><div class="line">        while (1)</div><div class="line">        &#123;</div><div class="line">            int idx = stack_.top();</div><div class="line">            SetOfItems set = lr.item_set[idx];  </div><div class="line">            LR_Action *action = lr.action(set, input_sym);</div><div class="line">            if (action-&gt;isShiftAction()) /// 移入</div><div class="line">            &#123;</div><div class="line">                ShiftAction *shift_action = dynamic_cast&lt;ShiftAction *&gt;(action);</div><div class="line">                int dst = shift_action-&gt;opNum;</div><div class="line">                stack_.push(dst);</div><div class="line">                i++;</div><div class="line">                input_sym = inputTokens[i];</div><div class="line">            &#125;</div><div class="line">            else if (action-&gt;isReduceAction()) /// 归约</div><div class="line">            &#123;</div><div class="line">                stack_.pop();</div><div class="line">                ReduceAction *reduce_action = dynamic_cast&lt;ReduceAction *&gt;(action);</div><div class="line">                Symbol *sym = &amp;(reduce_action-&gt;production-&gt;header);</div><div class="line">                SetOfItems c_set = lr.item_set[stack_.top()];</div><div class="line">                int dst;</div><div class="line">                lr.lr_goto(c_set, sym, &amp;dst);</div><div class="line">                stack_.push(dst);</div><div class="line">                result.push_back(reduce_action-&gt;production);</div><div class="line">            &#125;</div><div class="line">            else if (action-&gt;isAcceptAction()) /// 接受</div><div class="line">            &#123;</div><div class="line">                error.sym = nullptr;</div><div class="line">                stack&lt;int&gt; sk;</div><div class="line">                error.stck = sk;</div><div class="line">                break;</div><div class="line">            &#125;</div><div class="line">            else /// 报错</div><div class="line">            &#123; </div><div class="line">                SLRAnalyser::Error err(input_sym, stack_);</div><div class="line">                error = err;</div><div class="line">                break;</div><div class="line">            &#125;</div><div class="line">        &#125;</div><div class="line">        return result;</div><div class="line">    &#125;</div><div class="line">&#125;;</div></pre></td></tr></table></figure>
+<h4 id="可行前缀"><a href="#可行前缀" class="headerlink" title="可行前缀"></a>可行前缀</h4><p>在结束SLR相关内容之前，我们来看看“可行前缀”。可以出现在移入-归约语法分析器栈中的最右句型前缀被称为 <strong>可行前缀</strong> ，详细定义为：</p>
+<blockquote>
+<p>一个可行前缀是一个最右句型的前缀，并且该前缀没有越过该句型最右句柄的右端。</p>
+</blockquote>
+<p>因此我们可以在可行前缀之后增加一些终结符号来得到一个最右句型。这里再说一下上面的提到的几个概念：</p>
+<ul>
+<li><p><strong>最右句型</strong>：从开始符号推导得到终结符的过程中出现的产生式，我们说这就叫句型。而最右句型指的是使用最右推导时出现的句型（最右推导，总是选择最右边的非终结符号）；</p>
+<p>  句子是不包含非终结符号的特殊句型；</p>
+</li>
+<li><strong>最右句柄</strong>：在本篇文章的开头有讲，简单来说在最右句型归约时选择的产生式，而句柄正式该产生式的产生式体；</li>
+</ul>
+<p>比如对于一个推导过程 <script type="math/tex">S \rightarrow \alpha A w \rightarrow \alpha \beta_{1}\beta_{2}w</script>，对于产生式<script type="math/tex">A\rightarrow\beta_{1}\beta_{2}</script> ，我们就可以说前缀 <script type="math/tex">\alpha\beta_{1}</script> 对于句柄 <script type="math/tex">\beta_{1}\beta_{2}</script> 是有效的，因为前缀 <script type="math/tex">\alpha\beta_{1}</script> 并未包含 <script type="math/tex">\beta_{2}</script> ，所以<script type="math/tex">\alpha \beta_{1}</script>是一个可行前缀。</p>
+<p>这里的<script type="math/tex">\alpha \beta_{1}\beta_{2}w</script>称为最右句型（因为对于句型<script type="math/tex">\alpha A w</script>而言，w为终结符号，最右边的非终结符号为A）；</p>
+<p>这里 <script type="math/tex">\beta_{1}\beta_{2}</script> 作为产生式 <script type="math/tex">A\rightarrow\beta_{1}\beta_{2}</script> 的产生式体，而w不能进行归约，而最右边可以进行的只有<script type="math/tex">\beta_{1}\beta_{2}</script>，因此它就是该句型的最右句柄。而<script type="math/tex">\beta_{2}</script>是作为该句柄的最右端。</p>
+<p>现在综合上面所有的信息来看可行前缀，即该前缀是最右句型的一个前缀，而且该前缀没有包含完整的句柄，因为如果包含了完整的句柄之后，那么该最右句型就可以将产生式体归约为产生式头。</p>
+<p>而可行前缀的作用是：可行前缀信息可以帮助我们决定是进行归约还是移入操作。比如当我们遇到了可行前缀之后，很明显目前还不能进行归约操作，因为进行归约操作的句柄还不完整。因此遇到可行前缀之后大多数情况下是要进行移入操作的；只有当句柄的最右端为空串时，此时应该做归约操作。</p>
+<h2 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h2><p>在这篇文章中，我们主要是接触了一些LR语法分析的基本概念。以及最简单的SLR语法分析技术，并且给出了相应的伪代码，包括有CLOSURE\GOTO\ACTION等等（关于相关类之间的关系在我的Github上能找到）。最后介绍了一个很重要的概念——可行前缀，这在后续的两个LR语法分析器中都有涉及。</p>
+<p>说个题外话，之前在学习这方面知识的时候一直在思考这个产生式（包括对应的语法分析树）具体的作用是什么，体现在了什么地方。很显然在日常开发工作中基本上是不需要关心的。直到最近我在看<a href="http://clang.llvm.org/docs/ObjectiveCLiterals.html#grammar-additions" target="_blank" rel="external">clang文档-Grammar Additions</a>时，里面看到了关于”@”相关语法的产生式，瞬间感觉到了亲切感：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div><div class="line">19</div><div class="line">20</div><div class="line">21</div><div class="line">22</div><div class="line">23</div><div class="line">24</div><div class="line">25</div><div class="line">26</div><div class="line">27</div><div class="line">28</div><div class="line">29</div></pre></td><td class="code"><pre><div class="line">objc-at-expression : &apos;@&apos; (string-literal | encode-literal | selector-literal | protocol-literal | object-literal)</div><div class="line">                   ;</div><div class="line"></div><div class="line">object-literal : (&apos;+&apos; | &apos;-&apos;)? numeric-constant</div><div class="line">               | character-constant</div><div class="line">               | boolean-constant</div><div class="line">               | array-literal</div><div class="line">               | dictionary-literal</div><div class="line">               ;</div><div class="line"></div><div class="line">boolean-constant : &apos;__objc_yes&apos; | &apos;__objc_no&apos; | &apos;true&apos; | &apos;false&apos;  /* boolean keywords. */</div><div class="line">                 ;</div><div class="line"></div><div class="line">array-literal : &apos;[&apos; assignment-expression-list &apos;]&apos;</div><div class="line">              ;</div><div class="line"></div><div class="line">assignment-expression-list : assignment-expression (&apos;,&apos; assignment-expression-list)?</div><div class="line">                           | /* empty */</div><div class="line">                           ;</div><div class="line"></div><div class="line">dictionary-literal : &apos;&#123;&apos; key-value-list &apos;&#125;&apos;</div><div class="line">                   ;</div><div class="line"></div><div class="line">key-value-list : key-value-pair (&apos;,&apos; key-value-list)?</div><div class="line">               | /* empty */</div><div class="line">               ;</div><div class="line"></div><div class="line">key-value-pair : assignment-expression &apos;:&apos; assignment-expression</div><div class="line">               ;</div></pre></td></tr></table></figure></p>
+</div></article></div></main><footer><div class="paginator"><a href="/2020/05/05/bottom2top_syntax_parser_lalr/" class="prev">上一篇</a><a href="/2020/04/20/top2bottom_syntax_parser/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2020/04/28/bottom2top_syntax_parser_basic/';
+var disqus_title = '语法分析——自顶向下语法分析';
+var disqus_url = 'http://yoursite.com/2020/04/28/bottom2top_syntax_parser_basic/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>关注微博<a href="http://weibo.com/wwloading" target="_blank">@凌云壮志幾多愁</a>，让我们有更多的联系。</p><p>© 2016 - 2020 <a href="http://yoursite.com">王望</a>, Powered By <a href="https://hexo.io/" target="_blank">Hexo</a></p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>

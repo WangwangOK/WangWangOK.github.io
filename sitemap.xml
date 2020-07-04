@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/04/28/bottom2top_syntax_parser_basic/</loc>
+    
+    <lastmod>2020-07-04T04:40:24.994Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/04/20/top2bottom_syntax_parser/</loc>
     
-    <lastmod>2020-06-29T17:25:55.153Z</lastmod>
+    <lastmod>2020-07-04T04:24:11.741Z</lastmod>
     
   </url>
   
@@ -12,6 +19,13 @@
     <loc>http://yoursite.com/2019/10/28/SyntaxParser_context_free_grammar/</loc>
     
     <lastmod>2020-06-29T16:21:19.909Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>http://yoursite.com/2020/05/05/bottom2top_syntax_parser_lalr/</loc>
+    
+    <lastmod>2020-05-05T14:58:26.000Z</lastmod>
     
   </url>
   
