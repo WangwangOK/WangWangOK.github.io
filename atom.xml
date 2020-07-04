@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-05-05T14:58:26.000Z</updated>
+  <updated>2020-07-04T04:54:55.425Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,21 +16,21 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title></title>
+    <title>语法分析——自底向上规范LR和LALR语法分析</title>
     <link href="http://yoursite.com/2020/05/05/bottom2top_syntax_parser_lalr/"/>
     <id>http://yoursite.com/2020/05/05/bottom2top_syntax_parser_lalr/</id>
     <published>2020-05-05T14:58:26.000Z</published>
-    <updated>2020-05-05T14:58:26.000Z</updated>
+    <updated>2020-07-04T04:54:55.425Z</updated>
     
-    <content type="html"><![CDATA[<h1 id="语法分析——规范LR和LALR语法分析"><a href="#语法分析——规范LR和LALR语法分析" class="headerlink" title="语法分析——规范LR和LALR语法分析"></a>语法分析——规范LR和LALR语法分析</h1><p>在这篇文章中主要看两种LR语法分析技术，相对于上一篇中SLR，本篇文章的两种LR技术对它进行了扩展，<strong>在输入中向前看一个符号</strong>。这两种技术分别是：</p>
+    <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>在这篇文章中主要看两种LR语法分析技术，相对于上一篇中SLR，本篇文章的两种LR技术对它进行了扩展，<strong>在输入中向前看一个符号</strong>。这两种技术分别是：</p>
 <ul>
 <li>“规范LR”：也可以直接叫做”LR”方法，这个方法会使用很大的一个项集，称为LR(1)项集；</li>
 <li>“向前看LR”：也可以直接叫做”LALR”方法，它基于LR(0)项集（比LR(1)项集状态要少很多）。<strong>很多情况下LALR是最合适的选择</strong>；</li>
 </ul>
-<h2 id="一、规范LR-1"><a href="#一、规范LR-1" class="headerlink" title="一、规范LR(1)"></a>一、规范LR(1)</h2><p>我们来看个情况，在SLR方法中，如果项集 $I_{i}$ 包含项 $[A\rightarrow \alpha\ \ \cdot\ ]$，如果当前输入符号 a 存在于FOLLOW(A)中。如果基于SLR来说，那么我们肯定会将 α 归约为A。然而在某些情况下，当状态 i 出现在栈顶时，栈中的可行前缀是 βα ，并且最右句型中 a 都不可能跟在 βA 之后，也就是说我们肯定不能简单就将 α 归约为 A 。</p>
-<p>因此我们可以在项中新增一个分量，这个分量为一个终结符号。比如现在项可以表示为 $[A\rightarrow\alpha\cdot \beta,\ a]$，其中 $A\rightarrow\alpha\beta$ 是一个产生式，而a是一个终结符号或者右端结束标记$。我们称这样的项为 <strong>LR(1)项</strong> 。其中的1指的是第二个分量的长度。</p>
+<h2 id="一、规范LR-1"><a href="#一、规范LR-1" class="headerlink" title="一、规范LR(1)"></a>一、规范LR(1)</h2><p>我们来看个情况，在SLR方法中，如果项集 <script type="math/tex">I_{i}</script> 包含项 <script type="math/tex">[A\rightarrow \alpha\ \ \cdot\ ]</script>，如果当前输入符号 a 存在于FOLLOW(A)中。如果基于SLR来说，那么我们肯定会将 α 归约为A。然而在某些情况下，当状态 i 出现在栈顶时，栈中的可行前缀是 βα ，并且最右句型中 a 都不可能跟在 βA 之后，也就是说我们肯定不能简单就将 α 归约为 A 。</p>
+<p>因此我们可以在项中新增一个分量，这个分量为一个终结符号。比如现在项可以表示为 <script type="math/tex">[A\rightarrow\alpha\cdot \beta,\ a]</script>，其中 <script type="math/tex">A\rightarrow\alpha\beta</script> 是一个产生式，而a是一个终结符号或者右端结束标记$。我们称这样的项为 <strong>LR(1)项</strong> 。其中的1指的是第二个分量的长度。</p>
 <p>第二个分量称为 <strong>向前看符号</strong> 。</p>
-<p>正式的说，LR(1)项$[A\rightarrow\alpha \cdot \beta,\ a]$对于可行前缀 γ 有效的条件是存在推导$S\rightarrow xAw\rightarrow x\alpha\beta w$，其中：</p>
+<p>正式的说，LR(1)项<script type="math/tex">[A\rightarrow\alpha \cdot \beta,\ a]</script>对于可行前缀 γ 有效的条件是存在推导<script type="math/tex">S\rightarrow xAw\rightarrow x\alpha\beta w</script>，其中：</p>
 <ul>
 <li>可行前缀为 xα；</li>
 <li>要么 a 是 w 的第一个符号，要么w为空串且a对于结束符；</li>
@@ -44,13 +44,13 @@
 S' \rightarrow S\\
 S \rightarrow CC\\
 C \rightarrow cC\ |\ d</script><p>下图是对应的项集族：</p>
-<p><img src="./img/7.png" alt=""></p>
+<p><img src="/uploads/bottom2top_syntax_parser/7.png" alt=""></p>
 <p>这个项集中的和上一篇文章中看到的项是不仅仅有了点号位置区分，还有向前看运算符的区分。</p>
 <p>下面我们来看一下规范LR中ACTION函数的具体行为：</p>
 <ul>
-<li>1）、如果 $[A\rightarrow \alpha \cdot a \beta, b]$ 在 $I_{i}$ 中，并且 $GOTO[I_{i}, a] = I_{j}$，那么将 <code>ACTION[i, a]</code> 设置为“移入j”。这里 a 必须是一个终结符号；</li>
-<li>2）、如果 $[A\rightarrow \alpha \cdot, a]$ 在 $I_{i}$ 中且 $A \neq S’$ （即当前产生式头部的非终结符，不是产生式集合中的增广文法的开始符号），那么将 <code>ACTION[i, a]</code> 设置为“归约A -&gt; α”；</li>
-<li>3）、如果 $[S’ \rightarrow S \cdot , $]$ 在 $I_{i}$ 中，那么将 <code>ACTION[i, a]</code> 设置为“接受”；</li>
+<li>1）、如果 <script type="math/tex">[A\rightarrow \alpha \cdot a \beta, b]</script> 在 <script type="math/tex">I_{i}</script> 中，并且 <script type="math/tex">GOTO[I_{i}, a] = I_{j}</script>，那么将 <code>ACTION[i, a]</code> 设置为“移入j”。这里 a 必须是一个终结符号；</li>
+<li>2）、如果 <script type="math/tex">[A\rightarrow \alpha \cdot, a]</script> 在 <script type="math/tex">I_{i}</script> 中且 <script type="math/tex">A \neq S'</script> （即当前产生式头部的非终结符，不是产生式集合中的增广文法的开始符号），那么将 <code>ACTION[i, a]</code> 设置为“归约A -&gt; α”；</li>
+<li>3）、如果 <script type="math/tex">[S' \rightarrow S \cdot , \$]</script> 在 <script type="math/tex">I_{i}</script> 中，那么将 <code>ACTION[i, a]</code> 设置为“接受”；</li>
 <li>4）、不满足上诉规则的，都设置为“报错”；</li>
 </ul>
 <p>现在我们根据上面的四个规则，写出规范LR对应的ACTION函数：</p>
@@ -61,15 +61,15 @@ C \rightarrow cC\ |\ d</script><p>下图是对应的项集族：</p>
 </blockquote>
 <h2 id="二、LALR"><a href="#二、LALR" class="headerlink" title="二、LALR"></a>二、LALR</h2><p>现在来看最后一个语法分析器LALR语法分析器。在实践中，用这种方法得到的分析表比规范LR分析表 <strong>小很多</strong>，而且大部分常见的程序设计语言构造都可以方便地使用一个LALR文法表示。</p>
 <p>现在我们再来看看下面这张图：</p>
-<p><img src="./img/7.png" alt=""></p>
-<p>图中 $I_{4} 和 I_{7}$ 中项的第一个分量是相同，不同的是向前看符号不同。现在我们将 $I_{4}和I_{7}$ 替换为 $I_{47}$ （即$I_{4} 和 I_{7}$的并集），这个项集中的元素为：$[C \rightarrow d\ \cdot \ ,\ c/d/$ ]$。</p>
-<p>原来在从$I_{0}, I_{2}, I_{3}$经过b到达$I_{4}, I_{7}$的转换，都转向为 $I_{47}$ 。这个经过修改之后的语法分析器行为在本质上和原分析器一样。</p>
+<p><img src="/uploads/bottom2top_syntax_parser/7.png" alt=""></p>
+<p>图中 <script type="math/tex">I_{4} 和 I_{7}</script> 中项的第一个分量是相同，不同的是向前看符号不同。现在我们将 <script type="math/tex">I_{4}和I_{7}</script> 替换为 <script type="math/tex">I_{47}</script> （即<script type="math/tex">I_{4} 和 I_{7}</script>的并集），这个项集中的元素为：<script type="math/tex">[C \rightarrow d\ \cdot \ ,\ c/d/\$ ]</script>。</p>
+<p>原来在从<script type="math/tex">I_{0}, I_{2}, I_{3}</script>经过b到达<script type="math/tex">I_{4}, I_{7}</script>的转换，都转向为 <script type="math/tex">I_{47}</script> 。这个经过修改之后的语法分析器行为在本质上和原分析器一样。</p>
 <p>在这里：</p>
 <blockquote>
 <p>我们将项第一个分量称为 <strong>核心</strong> 。</p>
 </blockquote>
 <p>因此上诉的步骤就是在寻找具有相同核心的LR(1)项集，并将这些 “项的集合” 合并为一个项集。关于项、项集、项集族的关系在上一篇文章中有进行说明。</p>
-<p>比如$T_{3}和I_{6}$就具有相同的核心 $[C\rightarrow c \cdot C,\ C\rightarrow \cdot cC,\ C\rightarrow \cdot d\ ]$。</p>
+<p>比如<script type="math/tex">T_{3}和I_{6}</script>就具有相同的核心 <script type="math/tex">[C\rightarrow c \cdot C,\ C\rightarrow \cdot cC,\ C\rightarrow \cdot d\ ]</script>。</p>
 <p>一般而言，一个核心就是当前正在处理文法的 <strong>LR(0)</strong> 项集，一个LR(1)文法可能产生多个具有相同核心的项集。</p>
 <blockquote>
 <p>合并具有相同核心的状态不会产生出原有状态中没有出现的移入\归约冲突。因为移入动作仅有核心决定，不考虑向前看运算符。</p>
@@ -78,8 +78,8 @@ C \rightarrow cC\ |\ d</script><p>下图是对应的项集族：</p>
 <h4 id="简单地构造LALR分析器"><a href="#简单地构造LALR分析器" class="headerlink" title="简单地构造LALR分析器"></a>简单地构造LALR分析器</h4><p>构造语法分析器主要是从三个方面入手，分别是：确定项集，确定GOTO函数和确定ACTION函数。</p>
 <ul>
 <li>1）、我们从上面看出，我们可以先构造一个规范LR项集族，然后寻找具有相同核心的项集进行合并；</li>
-<li><p>2）、然后根据核心来确定GOTO函数的关系。如果J是一个或多个LR(1)项集的并集，即 $J = I_{1} \bigcup I_{2} \bigcup\ …\ \bigcup I_{n}$，它们能组成并集也就侧面反映了它们具有相同的核心。</p>
-<p>  由于它们有相同的核心，那么$GOTO(I_{1},X),\ …,\ GOTO(I_{n},X)$的核心也是相同的。令K是所有和 $GOTO(I_{1},X)$ 具有相同核心项集的并集，那么 <strong>GOTO(J,X) = K</strong> 。</p>
+<li><p>2）、然后根据核心来确定GOTO函数的关系。如果J是一个或多个LR(1)项集的并集，即 <script type="math/tex">J = I_{1} \bigcup I_{2} \bigcup\ ...\ \bigcup I_{n}</script>，它们能组成并集也就侧面反映了它们具有相同的核心。</p>
+<p>  由于它们有相同的核心，那么<script type="math/tex">GOTO(I_{1},X),\ ...,\ GOTO(I_{n},X)</script>的核心也是相同的。令K是所有和 <script type="math/tex">GOTO(I_{1},X)</script> 具有相同核心项集的并集，那么 <strong>GOTO(J,X) = K</strong> 。</p>
 </li>
 <li>3）、关于ACTION函数的逻辑和实现规范LR的类似的（移入、归约、接受）；</li>
 </ul>
@@ -94,34 +94,39 @@ C \rightarrow cC\ |\ d</script><p>下图是对应的项集族：</p>
 </li>
 <li>3）、当有了内核之后，就可以使用CLOSURE函数对各个内核求其余项，最后生成语法分析表；</li>
 </ul>
-<p>现在我们需要给LR(0)内核加上正确地向前看符号，创建出正确地LALR(1)内核。现在来看一个内核项 $A \rightarrow \alpha \cdot B \beta,\ a$，以及存在对应产生式 $B\rightarrow \gamma  \theta$ ，我们先来看CLOSURE和GOTO：</p>
-<p>其CLOSURE函数结果为： $[A \rightarrow \alpha \cdot B \beta,\ a], [B\rightarrow \cdot\gamma\theta,\ FIRST(\beta a)]$</p>
-<p>其中GOTO函数的结果为：GOTO(I, B) = $A \rightarrow \alpha B\cdot \beta,\ a$ ; $GOTO(I, \theta) = B\rightarrow \gamma \cdot \theta,\ FIRST(\beta a)$</p>
+<p>现在我们需要给LR(0)内核加上正确地向前看符号，创建出正确地LALR(1)内核。现在来看一个内核项 <script type="math/tex">A \rightarrow \alpha \cdot B \beta,\ a</script>，以及存在对应产生式 <script type="math/tex">B\rightarrow \gamma  \theta</script> ，我们先来看CLOSURE和GOTO：</p>
+<p>其CLOSURE函数结果为： <script type="math/tex">[A \rightarrow \alpha \cdot B \beta,\ a], [B\rightarrow \cdot\gamma\theta,\ FIRST(\beta a)]</script></p>
+<p>其中GOTO函数的结果为：GOTO(I, B) = <script type="math/tex">A \rightarrow \alpha B\cdot \beta,\ a</script> ; <script type="math/tex">GOTO(I, \theta) = B\rightarrow \gamma \cdot \theta,\ FIRST(\beta a)</script></p>
 <p>这儿我为什么要求这两个函数的值呢？因为它们和“传播和自生成”关系密切，对于GOTO函数之后得到的项集而言：</p>
 <ul>
 <li>如果<strong>FIRST(βa) == a</strong> 也就是说明FISRT(β)为空，也就是说我们不能在GOTO(I, θ)中自己生成一个向前看符号，因此我们将原来内核项的向前看符号 <strong>传播</strong> 到新的内核项；</li>
 <li>如果<strong>FIRST(βa) != a</strong> 也就是说明FISRT(β)不为空，那么我们就可以通过FISRT(β) <strong>自生成</strong> 一个向前看符号；</li>
 </ul>
 <p>有了上面的基础之后，我相信下面这段话应该就可以看懂了：</p>
-<p>令#为一个不在当前文法中的符号，令 $A\rightarrow \alpha \cdot \beta$ 为内核LR(0)项。对于每个 X(文法符号) 计算 $J = GOTO(CLOSURE(\{[A\rightarrow \alpha \cdot \beta, #]\}),\ X)$ 。 对于J中的每个内核项，我们检查它的向前看符号集合：</p>
-<p>1、如果#是它的向前看符号，那么向前看符号就是从 $A\rightarrow\alpha\cdot\beta$ 传播到这个项的；</p>
+<p>令#为一个不在当前文法中的符号，令 <script type="math/tex">A\rightarrow \alpha \cdot \beta</script> 为内核LR(0)项。对于每个 X(文法符号) 计算 <script type="math/tex">J = GOTO(CLOSURE(\{[A\rightarrow \alpha \cdot \beta, \#]\}),\ X)</script> 。 对于J中的每个内核项，我们检查它的向前看符号集合：</p>
+<p>1、如果#是它的向前看符号，那么向前看符号就是从 <script type="math/tex">A\rightarrow\alpha\cdot\beta</script> 传播到这个项的；</p>
 <p>2、除此之外其他的向前看符号都是自发生成的；</p>
 <blockquote>
-<p>向前看符号 $ (结束符号) 对于初始项集中的项 $S’\rightarrow \cdot S$ 而言是自发生成的</p>
+<p>向前看符号 $ (结束符号) 对于初始项集中的项 <script type="math/tex">S'\rightarrow \cdot S</script> 而言是自发生成的</p>
 </blockquote>
 <p>伪代码如下：</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div></pre></td><td class="code"><pre><div class="line">for (K中的每个项 A -&gt; α·β)</div><div class="line">&#123;</div><div class="line">    J = CLOSURE(&#123;[A -&gt; α·β, #]&#125;);</div><div class="line">    if ([B -&gt; γ·Xδ, a]在J中，并且a不等于#)</div><div class="line">    &#123;</div><div class="line">        那么GOTO(I,X)中的项B -&gt; γX·δ向前看符号a是自生成的；</div><div class="line">    &#125;</div><div class="line"></div><div class="line">    if ([B -&gt; γ·Xδ, a]在J中)</div><div class="line">    &#123;</div><div class="line">        那么向前看符号从I中的项A -&gt; α·β传播到了B -&gt; γX·δ上；</div><div class="line">    &#125;</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>那么到这儿应该就在想，这个传播的最初源头在哪儿呢？很明显这个源头就是增广文法的初始项集$[S’\rightarrow \cdot S, $]$。</p>
+<p>那么到这儿应该就在想，这个传播的最初源头在哪儿呢？很明显这个源头就是增广文法的初始项集<script type="math/tex">[S'\rightarrow \cdot S, \$]</script>。</p>
 <p>这块儿主要是理解传播和自生成向前看运算符。</p>
 <p>到这儿我们也把规范LR和LALR大致了解了一下，在实际的运用中主要还是使用LALR的语法分析。其原因是它可以通过向前看一个符号来解决移入归约冲突，还有就是可以减少语法分析过程中出现的状态数量。</p>
+<p>题外话，后面一段时间我可能不会更新编译原理相关的文章了，回归时间待定了。</p>
 ]]></content>
     
     <summary type="html">
     
-      &lt;h1 id=&quot;语法分析——规范LR和LALR语法分析&quot;&gt;&lt;a href=&quot;#语法分析——规范LR和LALR语法分析&quot; class=&quot;headerlink&quot; title=&quot;语法分析——规范LR和LALR语法分析&quot;&gt;&lt;/a&gt;语法分析——规范LR和LALR语法分析&lt;/h1&gt;&lt;p&gt;在这
+      &lt;h2 id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h2&gt;&lt;p&gt;在这篇文章中主要看两种LR语法分析技术，相对于上一篇中SLR，本篇文章的两种LR技术对它进行了扩展，&lt;strong&gt;在输入中向前看一个符号&lt;
     
     </summary>
     
+      <category term="编译原理" scheme="http://yoursite.com/categories/%E7%BC%96%E8%AF%91%E5%8E%9F%E7%90%86/"/>
+    
+    
+      <category term="语法分析" scheme="http://yoursite.com/tags/%E8%AF%AD%E6%B3%95%E5%88%86%E6%9E%90/"/>
     
   </entry>
   
@@ -453,7 +458,7 @@ F \rightarrow (E) \ |\ \mathbf{id}</script><p>我们构造的LR(0)自动机如�
     <link href="http://yoursite.com/2020/04/20/top2bottom_syntax_parser/"/>
     <id>http://yoursite.com/2020/04/20/top2bottom_syntax_parser/</id>
     <published>2020-04-20T15:47:58.000Z</published>
-    <updated>2020-07-04T04:24:11.741Z</updated>
+    <updated>2020-07-04T04:48:04.620Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>自顶向下语法分析可以被看作是为输入串构造语法分析树的问题，它从语法分析的根节点开始，按照深度优先的规则创建这棵语法分析树的各个结点，自顶向下语法分析也可以被看作寻找输入串最左推导的过程。</p>
 <p>本文的行文以下面的顺序展开：</p>
