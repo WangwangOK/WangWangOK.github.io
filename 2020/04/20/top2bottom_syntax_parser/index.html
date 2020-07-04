@@ -107,7 +107,7 @@ F \rightarrow (E)\ |\ \mathbf{id}</script><p>首先我们以非终结符号出�
 <p>FOLLOW(T)的计算从上述的文法中可以看出，非终结符号T出现在产生式体中的有 <script type="math/tex">TE^{'},\ +TE^{'}</script> ，也就是在其后面的均为非终结符号E’。因此FOLLOW(T)包含FIRST(E’)；</p>
 <p>由于E’可以推导出空串ε，而且根据产生式 <script type="math/tex">E \rightarrow TE^{'}</script> 。我们可以知道FOLLOW(T)同样等于FOLLOW(E)。因此求出上面两个的并集为：</p>
 <p>FOLLOW(T) = { +, ), $ }。</p>
-<p>4）、 <strong>非终结符号T‘</strong>：<br>FIRST(T’) = { <em>, $ }，其推导过程为：$$ T’\rightarrow </em>FT’$$；</p>
+<p>4）、 <strong>非终结符号T‘</strong>：<br>FIRST(T’) = { <em>, $ }，其推导过程为：<script type="math/tex">T’\rightarrow FT^{'}</script> ；</p>
 <p>FOLLOW(T’) = { +, ), $ }。这是因为根据产生式 <script type="math/tex">T \rightarrow FT^{'}</script> 可知，FOLLOW(T’)和FOLLOW(T)是相同的；</p>
 <p>5）、 <strong>非终结符号F</strong>：<br>FIRST(F) = { (, <strong>id</strong> }，其推导过程为 <script type="math/tex">F \rightarrow (E)\ |\ \mathbf{id}</script> ；</p>
 <p>FOLLOW(F)的计算和非终结符号T是类似的，首先我们根据产生式 <script type="math/tex">T \rightarrow FT^{'},\ T^{'} \rightarrow *FT^{'}</script>可知，非终结符号F其后紧跟着非终结符号T’，因此FOLLOW(F)则包含了FIRST(T’)；</p>
