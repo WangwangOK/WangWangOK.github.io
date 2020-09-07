@@ -1,0 +1,220 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> OpenGL投影变换矩阵 · 凌云壮志幾多愁</title><meta name="description" content="OpenGL投影变换矩阵 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">OpenGL投影变换矩阵</h1><div class="post-info">Sep 7, 2020</div><div class="post-content"><h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文是对<a href="http://www.songho.ca/opengl/gl_projectionmatrix.html" target="_blank" rel="external">OpenGL Projection Matrix</a>一文的中文翻译，初衷是因为自己学习OpenGL时，对投影变形的数学推导比较感兴趣，因此找到了该文章。而本文并不是对该一对一的翻译，其中会增加一些易于理解的内容。</p>
+<h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><p>计算机显示器是2D平面的。如果3D场景通过OpenGL来渲染，那么就需要以2D图像的方式投影到计算机屏幕上。其中GL_PROJECTION矩阵就是用作投影变换。首先它将所有的顶点数据从观察（View）坐标变换到裁剪坐标；然后裁剪坐标还需要变换为归一化坐标（NDC，Normalized Device Coordinates），具体的方法就是裁剪坐标除以其w分量（默认是4分量向量，即x，y，z，w）。</p>
+<p><img src="/uploads/opengl_projection_matrix/1.png" alt=""></p>
+<p>因此需要注意的是裁剪（视锥剔除）和NDC变换都已经集成在了GL_PROJECTION矩阵中。而下面的内容主要就是描述如何从 left, right, bottom, top, near 和 far 这个6个值来构建投影矩阵。下图标明了这六个值：</p>
+<p><img src="/uploads/opengl_projection_matrix/4.png" alt=""></p>
+<p>这里要注意一下的是对于视锥剔除（也就是裁剪）是在裁剪坐标执行（即除以w分量）之前进行。在裁剪坐标中x、y、z分量都会尝试和w分量进行比较，如果其小于-w（注意这里是负数）或者大于w（这里是正数）都会认为这些顶点是无效的。即：</p>
+<script type="math/tex; mode=display">-w < x,y,z < w</script><p>然后OpenGl会在发生裁剪的地方重建多边形的边缘。</p>
+<h2 id="透视投影（Perspective-Projection）"><a href="#透视投影（Perspective-Projection）" class="headerlink" title="透视投影（Perspective Projection）"></a>透视投影（Perspective Projection）</h2><p><img src="/uploads/opengl_projection_matrix/2.png" alt=""></p>
+<p>在透视投影中，处于视锥（上图左边，观察坐标）中的3D坐标会映射到立方体（上图右边，NDC坐标）中。x轴上[l,r]范围内的点映射到[-1,1]范围内；y轴上[b,t]范围内的点映射到[-1,1]范围内；z轴上[-n,-f]范围内的点映射到[-1,1]范围内。</p>
+<blockquote>
+<p>注意：观察坐标使用的是右手坐标系，归一化坐标（NDC）使用的左手坐标系。</p>
+</blockquote>
+<p><img src="/uploads/opengl_projection_matrix/3.jpeg" alt=""></p>
+<p>因此在观察空间中，处于原点的相机是望向-z轴方向，但是在NDC中却是望向+z轴方向。<code>glFrustum()</code>只接受为负数的near和far值（第二幅图中有标明），所以在构建GL_PROJECTION矩阵时需要对它们进行取反。</p>
+<p>因此为了求得观察坐标到归一化坐标的变换矩阵，大致需要两步：首先需要将观察坐标$（x_{e}, y_{e}, z_{e}）$ 投影到近平面上的点 $（x_{p}, y_{p}, z_{p}）$。其次是将$（x_{p}, y_{p}, z_{p}）$转换为$（x_{n}, y_{n}, z_{n}）$。</p>
+<h4 id="观察坐标到近平面的投影"><a href="#观察坐标到近平面的投影" class="headerlink" title="观察坐标到近平面的投影"></a>观察坐标到近平面的投影</h4><p>在OpenGl中，观察空间中的3D坐标都会投影到近平面（near plane）中，下面两幅图展示了如何将观察空间中的某一个点$（x_{e}, y_{e}, z_{e}）$ 投影到近平面上的点 $（x_{p}, y_{p}, z_{p}）$ 。</p>
+<p>俯视图： </p>
+<p><img src="/uploads/opengl_projection_matrix/5.png" alt=""></p>
+<p>侧视图： </p>
+<p><img src="/uploads/opengl_projection_matrix/6.png" alt=""></p>
+<p>从视锥俯视图来看，$x_{e}$ 映射到 $x_{p}$。通过相似三角形比例：</p>
+<script type="math/tex; mode=display">
+\frac{x_{p}}{x_{e}} = \frac{-n}{z_{e}} \rightarrow
+x_{p} =  \frac{-n* x_{e}}{z_{e}}  =  \frac{n* x_{e}}{-z_{e}} （等式一）</script><p>从侧视图来看，$y_{p}$可以使用类似的方法求得：</p>
+<script type="math/tex; mode=display">
+\frac{y_{p}}{y_{e}} = \frac{-n}{z_{e}} \rightarrow
+y_{p} =  \frac{-n* y_{e}}{z_{e}}  =  \frac{n* y_{e}}{-z_{e}}  （等式二）</script><p>也就是说，无论$x_{e}$和$y_{p}$都是依赖于$z_{e}$，即它们和$-z_{e}$相反。换句话说，它们都会除以$-z_{e}$。这是作为构造GL_PROJECTION矩阵非常重要的线索。在观察坐标在通过乘以GL_PROJECTION矩阵转换后，裁剪坐标依然是一个齐次坐标：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+x_{clip}\\
+y_{clip}\\
+z_{clip}\\
+w_{clip}
+\end{pmatrix} = M_{projection} \cdot
+\begin{pmatrix}
+x_{eye}\\
+y_{eye}\\
+z_{eye}\\
+w_{eye}
+\end{pmatrix}</script><p>最后通过除以裁剪坐标的w分量变成归一化坐标（NDC）：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+x_{ndc}\\
+y_{ndc}\\
+z_{ndc}\\
+\end{pmatrix} =
+\begin{pmatrix}
+x_{clip}/w_{clip}\\
+y_{clip}/w_{clip}\\
+z_{clip}/w_{clip}\\
+\end{pmatrix}</script><p>因此我们可以设置裁剪坐标的w分量为$-z_{e}$，GL_PROJECTION矩阵的第4行就变为(0, 0, -1, 0)，并有如下的等式成立：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+x_{clip}\\
+y_{clip}\\
+z_{clip}\\
+w_{clip}
+\end{pmatrix} =  \begin{pmatrix}
+. & . & . & . \\
+. & . & . & . \\
+. & . & . & . \\
+0 & 0 & -1 & 0
+\end{pmatrix} \cdot \begin{pmatrix}
+x_{e}\\
+y_{e}\\
+z_{e}\\
+w_{e}
+\end{pmatrix} , \rightarrow w_{c} = -z_{e}</script><p>下一步根据线性关系，我们将$x_{p}, y_{p}$ 映射到 $x_{n}, y_{n}$ （即NDC坐标）：</p>
+<script type="math/tex; mode=display">
+[l, r] \Rightarrow [-1, 1],\ [b, t] \Rightarrow [-1, 1]</script><h4 id="x-p-到-x-n-的映射"><a href="#x-p-到-x-n-的映射" class="headerlink" title="$x_{p}$到$x_{n}$的映射"></a>$x_{p}$到$x_{n}$的映射</h4><p>将$x_{p}$ 映射到 $x_{n}$：</p>
+<p><img src="/uploads/opengl_projection_matrix/7.png" alt=""></p>
+<script type="math/tex; mode=display">
+x_{n} = \frac{1 - (-1)}{r - l} \cdot x_{p} + \beta</script><p>然后用(r, 1) 来替换 ($x_{p}, x_{n}$)，也就是在直线上取的特殊点：</p>
+<script type="math/tex; mode=display">
+1 = \frac{2r}{r - l} + \beta \Rightarrow \beta = 1 - \frac{2r}{r - l} = \frac{r-l}{r - l} - \frac{2r}{r - l} = \frac{-r-l}{r - l} = - \frac{r+l}{r - l}</script><p>将β带入等式一得到：</p>
+<script type="math/tex; mode=display">
+x_{n} = \frac{2}{r - l} \cdot x_{p} - \frac{r+l}{r - l} （等式三）</script><p>同理我们可以将$y_{p}$ 映射到 $y_{n}$：</p>
+<p><img src="/uploads/opengl_projection_matrix/8.png" alt=""> </p>
+<h4 id="y-p-到-y-n-的映射"><a href="#y-p-到-y-n-的映射" class="headerlink" title="$y_{p}$到$y_{n}$的映射"></a>$y_{p}$到$y_{n}$的映射</h4><p>最后得到的等式为：</p>
+<script type="math/tex; mode=display">
+y_{n} = \frac{2}{t - b} \cdot y_{p} - \frac{t+b}{t - b} （等式四）</script><p>然后我们将前面得到$x_{p}$（即等式一）带入到等式三中，我们的目的是要推导出和$z_{e}$的关系：</p>
+<script type="math/tex; mode=display">
+x_{n} = \frac{2*\frac{n*x_{e}}{-z_{e}}}{r-l} - \frac{r+l}{r-l}</script><script type="math/tex; mode=display">
+x_{n} = \frac{2*n*x_{e}}{(r-l)*-z_{e}} - \frac{r+l}{r-l}</script><script type="math/tex; mode=display">
+x_{n} = \frac{\frac{2*n*x_{e}}{r-l}}{-z_{e}} - \frac{r+l}{r-l}</script><script type="math/tex; mode=display">
+x_{n} = \frac{\frac{2n}{r-l}}{-z_{e}} *x_{e} + \frac{\frac{r+l}{r-l}* z_{e}}{-z_{e}}</script><script type="math/tex; mode=display">
+x_{n} = (\frac{2n}{r-l} * x_{e} + \frac{r+l}{r-l} * z_{e})/-z_{e} （等式五）</script><p>将前面得到$y_{p}$（即等式二）带入到等式四中，同样也是要推导出和$z_{e}$的关系：</p>
+<script type="math/tex; mode=display">
+y_{n} = \frac{2*\frac{n*y_{e}}{-z_{e}}}{t-b} - \frac{t+b}{t-b}</script><script type="math/tex; mode=display">
+y_{n} = \frac{2*n*y_{e}}{(t-b)*-z_{e}} - \frac{t+b}{t-b}</script><script type="math/tex; mode=display">
+y_{n} = \frac{\frac{2*n*y_{e}}{t-b}}{-z_{e}} - \frac{t+b}{t-b}</script><script type="math/tex; mode=display">
+y_{n} = \frac{\frac{2n}{t-b}}{-z_{e}} *y_{e} + \frac{\frac{t+b}{t-b}* z_{e}}{-z_{e}}</script><script type="math/tex; mode=display">
+y_{n} = (\frac{2n}{t-b} * y_{e} + \frac{t+b}{t-b} * z_{e})/-z_{e}（等式六）</script><p>上面我们为了进行透视划分$(x_{c}/w_{c}, y_{c}/w_{c})$，将等式的每一项都除以$-z_{e}$，在前面我们有$w_{c} = -z_{e}$。因此对于等式五和等式六我们可以将括号内的设为$x_{c}、y_{c}$，具体如下：</p>
+<script type="math/tex; mode=display">
+x_{c} = (\frac{2n}{r-l} * x_{e} + \frac{r+l}{r-l} * z_{e})</script><script type="math/tex; mode=display">
+y_{c} = (\frac{2n}{t-b} * y_{e} + \frac{t+b}{t-b} * z_{e})</script><p>有了上面的关系之后，我们就可以求得变换矩阵GL_PROJECTION的对应项（第一行，第二行）了：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+x_{c}\\
+y_{c}\\
+z_{c}\\
+w_{c}
+\end{pmatrix} = \begin{pmatrix}
+\frac{2n}{r-l} & 0 & \frac{r+l}{r-l} & 0\\
+0 & \frac{2n}{t-b} & \frac{t+b}{t-b} & 0\\
+\cdot  & \cdot  & \cdot  & \cdot \\
+0 & 0 & -1 & 0
+\end{pmatrix} \begin{pmatrix}
+x_{e}\\
+y_{e}\\
+z_{e}\\
+w_{e}
+\end{pmatrix}</script><h4 id="z-e-到-z-n-的映射"><a href="#z-e-到-z-n-的映射" class="headerlink" title="$z_{e}$到$z_{n}$的映射"></a>$z_{e}$到$z_{n}$的映射</h4><p>现在我们仅仅只有GL_PROJECTION矩阵3行（第1、2、4行）。寻找$z_{n}$（归一化坐标中的z值）相对于其他来说是有点不一样的，这是因为在观察坐标中的$z_{e}$总是投影在-n的近平面（near plane）上面（回想一下上面的那几张图）。但我们需要唯一的z值用于裁剪和深度测试，我们可以使用逆变换进行反投影。</p>
+<p>我们知道z并不依赖于x和y的值，我们可以借用w分量来找到$z_{n}、z_{e}$之间的关系。因此我们可以对上面矩阵的第3行指定为如下形式：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+x_{c}\\ 
+y_{c}\\ 
+z_{c}\\ 
+w_{c}
+\end{pmatrix} = \begin{pmatrix}
+\frac{2n}{r-l} & 0 & \frac{r+l}{r-l} & 0\\ 
+0 & \frac{2n}{t-b} & \frac{t+b}{t-b} & 0\\ 
+\cdot  & \cdot  & A  & B \\ 
+0 & 0 & -1 & 0 
+\end{pmatrix} \begin{pmatrix}
+x_{e}\\ 
+y_{e}\\ 
+z_{e}\\ 
+w_{e}
+\end{pmatrix}</script><p>我们可以得到下面的等式，等式的前半部分是我们前面提到的基础，对于归一化坐标而言，是用裁剪坐标除以其w分量：</p>
+<script type="math/tex; mode=display">
+z_{n} = z_{c}/w_{c} = \frac{A*z_{e} + B*w_{e}}{w_c} （等式七）</script><p>由于$w_{c} = -z_{e}$，所以进一步替换上面的等式：</p>
+<script type="math/tex; mode=display">
+z_{n} = \frac{A*z_{e} + B*w_{e}}{-z_{e}}</script><p>在观察空间中w分量为1，也即是$w_{e} = 1$，因此等式可以进一步化简为：</p>
+<script type="math/tex; mode=display">
+z_{n} = \frac{A*z_{e} + B}{-z_{e}}</script><p>为了找到系数，A和B我们使用$(z_{e}, z_{n})$之间的关系：-n对应-1，即（-n，-1）；-f对应1，即（-f，1）。让这两个特殊的值带入到上面的等式中得到：</p>
+<script type="math/tex; mode=display">
+\left\{\begin{matrix}
+\frac{-An+B}{-n} = -1\\
+\frac{-Af+B}{f} = 1
+\end{matrix}\right. \rightarrow \left\{\begin{matrix}
+-An+B = -n\\
+-Af+B = f
+\end{matrix}\right.</script><p>得出$B = An - n$，然后将该等式带入到$-Af+B = f$中，得到：</p>
+<script type="math/tex; mode=display">
+A = -\frac{f+n}{f-n}</script><script type="math/tex; mode=display">
+B = \frac{-2fn}{f-n}</script><h4 id="透视投影矩阵"><a href="#透视投影矩阵" class="headerlink" title="透视投影矩阵"></a>透视投影矩阵</h4><p>将A和B的值带入到矩阵中得到完整的透视投影矩阵：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+\frac{2n}{r-l} & 0 & \frac{r+l}{r-l} & 0\\
+0 & \frac{2n}{t-b} & \frac{t+b}{t-b} & 0\\
+0  & 0  & -\frac{f+n}{f-n}  & \frac{-2fn}{f-n} \\
+0 & 0 & -1 & 0
+\end{pmatrix} (矩阵一)</script><p>这个矩阵是通用的视锥投影矩阵。如果说观察的是对称的话，即$r=-l、t=-b$，上面的矩阵可以化简为：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+\frac{n}{r} & 0 & 0 & 0\\
+0 & \frac{n}{t} & 0 & 0\\
+0  & 0  & -\frac{f+n}{f-n}  & \frac{-2fn}{f-n} \\
+0 & 0 & -1 & 0
+\end{pmatrix} (矩阵二)</script><p>同样的我们也可以根据等式七求出$z_{n}$的值</p>
+<script type="math/tex; mode=display">
+z_{n} = \frac{-1\frac{f+n}{f-n}*z_{e} - \frac{2fn}{f-n}}{-z_{e}} （等式八）</script><p>在我们继续后面的内容之前，我们先仔细看看上面$z_{n}、z_{e}$之间的关系。我们注意到它们是非线性关系的合理函数。这意味在近平面（near plane）上有着非常高的精度，但在远平面（far plane）上的精度却很低。如果<code>[-n, -f]</code>变大，那么就会导致深度（depth）的精度问题（z-fighting）。$z_{e}$在远平面附近小的变化不会影响到${z_{n}}$值（这里可以简单地将$z_{e} = -n$代入到上面等式中）。n和f之间的距离应尽可能地短，以最大程度地减小深度缓冲区的精度问题。</p>
+<p><img src="/uploads/opengl_projection_matrix/9.png" alt=""></p>
+<h2 id="正交投影（Orthographic-Projection）"><a href="#正交投影（Orthographic-Projection）" class="headerlink" title="正交投影（Orthographic Projection）"></a>正交投影（Orthographic Projection）</h2><p>构建<code>GL_PROJECTION</code>的正投影矩阵要比透视投影要简单许多，观察坐标的$x_{e}、y_{e}、z_{e}$分量都是线性映射到归一化坐标中。因此我们只需要将长方形体积缩放到立方体中将其移动到原点即可。</p>
+<p><img src="/uploads/opengl_projection_matrix/10.png" alt=""></p>
+<p>现在我们可以根据线性关系求得GL_PROJECTION矩阵的各个元素。</p>
+<h4 id="x-e-到-x-n-的映射"><a href="#x-e-到-x-n-的映射" class="headerlink" title="$x_e$到$x_n$的映射"></a>$x_e$到$x_n$的映射</h4><p>将$x_{e}$映射到$x_{n}$：</p>
+<p><img src="/uploads/opengl_projection_matrix/11.png" alt=""></p>
+<script type="math/tex; mode=display">
+x_{n} = \frac{1-(-1)}{r-l} * x_{e} + \beta</script><p>然后用点(r, +1) 替换 $(x_{e}, x_{n})$：</p>
+<script type="math/tex; mode=display">
+1 = \frac{2r}{r-l} + \beta \Rightarrow \beta = 1 - \frac{2r}{r-l} = - \frac{r+l}{r-l}</script><p>将 β 代入到方程中得到：</p>
+<script type="math/tex; mode=display">
+x_{n} = \frac{2}{r-l} * x_{e} - \frac{r+l}{r-l}</script><h4 id="y-e-到-y-n-的映射"><a href="#y-e-到-y-n-的映射" class="headerlink" title="$y_e$到$y_n$的映射"></a>$y_e$到$y_n$的映射</h4><p><img src="/uploads/opengl_projection_matrix/12.png" alt=""></p>
+<p>同理我们也可以求出$y_{n}$对应的函数表示：</p>
+<script type="math/tex; mode=display">
+y_{n} = \frac{1-(-1)}{t-b} * y_{e} + \beta</script><p>然后用点(t, +1) 替换 $(y_{e}, y_{n})$：</p>
+<script type="math/tex; mode=display">
+1 = \frac{2t}{t-b} + \beta \Rightarrow \beta = 1 - \frac{2t}{t-b} = - \frac{t+b}{t-b}</script><p>将 β 代入到方程中得到：</p>
+<script type="math/tex; mode=display">
+y_{n} = \frac{2}{t-b} * y_{e} - \frac{t+b}{t-b}</script><h4 id="z-e-到-z-n-的映射-1"><a href="#z-e-到-z-n-的映射-1" class="headerlink" title="$z_e$到$z_n$的映射"></a>$z_e$到$z_n$的映射</h4><p><img src="/uploads/opengl_projection_matrix/13.png" alt=""></p>
+<p>这里需要注意的是它们都是取的负数。</p>
+<script type="math/tex; mode=display">
+z_{n} = \frac{1-(-1)}{-f-(-n)} * z_{e} + \beta</script><p>将(-f, 1)替换$(z_{e}, z_{n})$：</p>
+<script type="math/tex; mode=display">
+1 = \frac{2f}{f-n} + \beta \Rightarrow \beta = 1 - \frac{2f}{f-n} = - \frac{f+n}{f-n}</script><p>将 β 代入到方程中得到：</p>
+<script type="math/tex; mode=display">
+z_{n} = \frac{-2}{f-n} * z_{e} - \frac{f+n}{f-n}</script><h4 id="正交投影矩阵"><a href="#正交投影矩阵" class="headerlink" title="正交投影矩阵"></a>正交投影矩阵</h4><p>对于正交投影来说，w分量不是必须的。我们将GL_PROJECTION的中第4行设置为<code>(0,0,0,1)</code>。因此GL_PROJECTION完整的正交投影矩阵为：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+\frac{2}{r-l} & 0 & 0 & -\frac{r+l}{r-l}\\
+0 & \frac{2}{t-b} & 0 & -\frac{t+b}{t-b}\\
+0 & 0 & \frac{-2}{f-n} & -\frac{f+n}{f-n}\\
+0 & 0 & 0 & 1
+\end{pmatrix}</script><p>如果观察空间是对称的，即$r = -l, t=-b$。我们可以进一步的简化：</p>
+<script type="math/tex; mode=display">
+\left\{\begin{matrix}
+r + l = 0\\
+r - l = 2r
+\end{matrix}\right. ，\left\{\begin{matrix}
+t + b = 0\\
+t - b = 2t
+\end{matrix}\right.</script><p>将上的等式代入到原矩阵中，化简之后的矩阵为：</p>
+<script type="math/tex; mode=display">
+\begin{pmatrix}
+\frac{1}{r} & 0 & 0 & 0\\
+0 & \frac{1}{t} & 0 & 0\\
+0 & 0 & \frac{-2}{f-n} & -\frac{f+n}{f-n}\\
+0 & 0 & 0 & 1
+\end{pmatrix}</script></div></article></div></main><footer><div class="paginator"><a href="/2020/05/05/bottom2top_syntax_parser_lalr/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2020/09/07/opengl_ projection_matrix/';
+var disqus_title = 'OpenGL投影变换矩阵';
+var disqus_url = 'http://yoursite.com/2020/09/07/opengl_ projection_matrix/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>关注微博<a href="http://weibo.com/wwloading" target="_blank">@凌云壮志幾多愁</a>，让我们有更多的联系。</p><p>© 2016 - 2020 <a href="http://yoursite.com">王望</a>, Powered By <a href="https://hexo.io/" target="_blank">Hexo</a></p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
