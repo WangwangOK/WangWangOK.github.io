@@ -1,0 +1,119 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 辅助存储管理 · 凌云壮志幾多愁</title><meta name="description" content="辅助存储管理 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">辅助存储管理</h1><div class="post-info">Sep 9, 2020</div><div class="post-content"><p>存储器的层次结构这里就不细述了，主要来看看存储器层次间传输数据。对于磁盘来说，它被划分成磁盘块（逻辑层面上的划分，并不是实际存在的），每块大小大约为4~64kb。整个块在从缓冲区中移进移出，因此</p>
+<blockquote>
+<p>加速数据库操作的关键技术是 <strong>安排好数据</strong> ，使得当某一个磁盘块中有数据访问的时候，大约同时很有可能该块上的其他数据也需要被访问。</p>
+</blockquote>
+<p>而对于主存储器和高速缓存来说，它们之间的传输是以 <strong>高速缓存线</strong> 为基本单元。一般是32个连续的字节。同样的我们希望整个高速缓存线的数据能够被一起使用。就比如说，如果一条高速缓存线存储着一个程序的连续指令，我们希望当第一条指令被请求时，接下来的指令也会随之执行。高速缓存也分是全相联，还是分多路组相联。比如下图的可以叫做E路组相联：</p>
+<p><img src="./uploads/StorageManagement/1.png" alt=""></p>
+<h2 id="一、虚拟存储器"><a href="#一、虚拟存储器" class="headerlink" title="一、虚拟存储器"></a>一、虚拟存储器</h2><p>虚拟存储器，我们也称之为虚拟内存，它一部分留在内存中，剩下的保存在磁盘中。在Linux中对内存寻址划分的粒度比较细，它引入了多个概念：逻辑地址、线性地址、物理地址。下面我画一个图来阐述它们之间的联系，以及转换关系：</p>
+<p><img src="./uploads/StorageManagement/2.png" alt=""></p>
+<h2 id="二、磁盘"><a href="#二、磁盘" class="headerlink" title="二、磁盘"></a>二、磁盘</h2><p>我们先来看看磁盘的结构：</p>
+<p><img src="./uploads/StorageManagement/3.png" alt=""></p>
+<p>从上图可以看出：</p>
+<ul>
+<li>1、<strong>盘片</strong>：磁盘由多个盘片组成，它们围绕着 <strong>“转轴”</strong> 旋转。</li>
+<li>2、<strong>盘面</strong>：每个盘片又有两个盘面；</li>
+<li>3、<strong>磁道</strong>：盘面被划分为多个 <strong>磁道</strong>（track），也就是单个盘片上的同心圆。</li>
+<li>4、<strong>柱面</strong>：所有盘面上半径相同的磁盘构成了 <strong>柱面</strong>（cylinder）。</li>
+<li>5、<strong>扇区</strong>：磁盘被分割为多个扇区，分割扇区的间隙没有存储数据；</li>
+<li>6、<strong>磁头</strong>：每个盘面都对应一个磁头，磁头读出经过它下面盘面的磁方向，同样的为了能够在磁盘上写数据，磁头也能改变磁方向；</li>
+</ul>
+<blockquote>
+<p><strong>扇区是不可分割的单位</strong>；</p>
+</blockquote>
+<h3 id="磁盘控制器"><a href="#磁盘控制器" class="headerlink" title="磁盘控制器"></a>磁盘控制器</h3><p>磁盘控制器是一个小处理器，它能够完成以下功能：</p>
+<ul>
+<li>1、选择柱面：移动磁头组合，让磁头定位到一个特定的半径位置，<strong>使得某一柱面任何磁道都可以被读写</strong>；</li>
+<li>2、选择扇区：从磁头所在柱面的扇区中选择一个扇区；</li>
+<li>3、读取数据：将扇区中的二进制数据传送到计算机的主存储器中；</li>
+<li>4、缓存磁道：将一整条或更多磁道缓存与磁盘控制器的内存中；</li>
+</ul>
+<p>下图是简单的示意图：</p>
+<p><img src="./uploads/StorageManagement/4.png" alt=""></p>
+<p>这里是一个磁盘控制器控制了3个磁盘。</p>
+<h3 id="磁盘存取"><a href="#磁盘存取" class="headerlink" title="磁盘存取"></a>磁盘存取</h3><p>存取一般分为3步，而每一步都有相应的延迟：</p>
+<ul>
+<li>1、<strong>寻道时延</strong>：磁盘控制器将磁头组合定位到磁盘块所在磁道的柱面上所需的时间（确定园的半径）；</li>
+<li>2、<strong>旋转时延</strong>：磁盘控制器将待访问的扇区旋转到磁头下方所需的时间；</li>
+<li>3、<strong>传输时延</strong>：数据所在扇区和扇区间的空隙经过磁头的时间（也就是从扇区的起始部分，到该扇区与下一个扇区间的间隙部分所需的时长）；</li>
+</ul>
+<p>因此磁盘延迟：</p>
+<script type="math/tex; mode=display">
+磁盘延迟(latency) = 寻道时延（seek\ time） + 旋转时延（ratational\ lantency） + 传输时延（transfer\ time）；</script><p>读取所需的 <strong>最小时间仅仅为传输时延</strong>，即磁头已经定位在块所在的磁道上，并且第一个扇区即将从磁头下面经过。读取数据的最长时间为，待读取的数据处于最外层，磁头处于最内层无数据的启停区，并且此时磁头刚好经过待读取数据所处的扇区。</p>
+<h2 id="三、加速对辅助存储器的访问"><a href="#三、加速对辅助存储器的访问" class="headerlink" title="三、加速对辅助存储器的访问"></a>三、加速对辅助存储器的访问</h2><p>下面是一些加速数据库访问磁盘的技术：</p>
+<ul>
+<li>1、 <strong>将要一起访问的块放在同一个柱面上</strong>，这样可以避免寻道时间和旋转延迟；</li>
+<li>2、 <strong>将数据分割存储在几个相对较小的磁盘上而不是放在一个大的磁盘上</strong>，可以增减单位时间内磁头访问的磁盘块数量；</li>
+<li>3、 <strong>“镜像”磁盘</strong>，使得同时可以访问多个磁盘块。但是，写磁盘的速率却没有任何提高，原因是一个新的磁盘块必须被写到n个磁盘的每一个上；</li>
+<li>4、 <strong>预先将预期被访问的磁盘块读取到主存储器中</strong>；</li>
+</ul>
+<h3 id="电梯算法"><a href="#电梯算法" class="headerlink" title="电梯算法"></a>电梯算法</h3><p>调度大量块请求的一个简单有效的方法称为 <strong>电梯算法（elevator algorithm）</strong>。它能够很有效的减少寻道时间。</p>
+<p>首先，将磁盘柱面的最内圈和最外圈，分别比作电梯房的1楼和32楼（顶层）。那么我们可以将磁头从最内圈到最外圈的过程，看作是电梯从1楼到32楼的过程往返运动。</p>
+<p>当磁头通过柱面（电梯途径某一楼）时，如果有一个或多个对该柱面上块的请求（在某一楼有乘客需要乘坐电梯），那么磁头（电梯）会停下来。根据请求所有这些块被读或者写。</p>
+<p>然后磁头沿着它原有的方向继续移动，直到遇到下一个包含待请求的柱面（下一位乘客在另一层楼按了电梯）。当磁头到达其行进方向上的某一个位置时，该位置的前方不再有访问请求，磁头就朝着反方向移动。</p>
+<h2 id="四、磁盘故障"><a href="#四、磁盘故障" class="headerlink" title="四、磁盘故障"></a>四、磁盘故障</h2><ul>
+<li><strong>间断性故障</strong>：指读或者写一个扇区的某次尝试没有成功，但是经过反复尝试，又能成功地读或写；</li>
+<li><strong>介质损坏</strong>：一个或者多个二进制位永久的损坏；</li>
+<li><strong>写故障</strong>：当我们企图写一个扇区时，既不能正确地写，也不能检索先前写入的扇区；</li>
+<li><strong>磁盘崩溃</strong>：整个磁盘永久不可读；</li>
+</ul>
+<h3 id="校验和"><a href="#校验和" class="headerlink" title="校验和"></a>校验和</h3><p>每个扇区有若干个附加位，称为 <strong>校验和</strong> 。附加位的设置取决于存储在那个扇区的数据位的值。读取时，如果我们发现校验和对数据位不合适，那么就知道有读错误。</p>
+<blockquote>
+<p>校验和的一种简单形式是基于扇区内所有位的 <strong>奇偶性</strong></p>
+</blockquote>
+<p>下面我们先看一个例子，然后根据例子来整理一个方法出来。</p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>先阐述一下奇偶位的定义：它和普通的数据位一样。就是一个bit（值有0或者1），0表示原数据有偶数个“1”，1表示原数据有奇数个“1”；</p>
+<p>如果扇区中二进制位序列为 <code>01101000</code> ，那么这儿有奇数个 “1”，所以奇偶位为1。我们在原数据的末尾追加上奇偶位，得到新的二进制序列为 <code>011010001</code>；<br>如果扇区中二进制位序列为 <code>11101110</code> ，那么这儿有偶数个 “1”，所以奇偶位为0。我们在原数据的末尾追加上奇偶位，得到新的二进制序列为 <code>111011100</code>；</p>
+<p>综上所述：如果二进制集合中有奇数个1，我们将奇偶位设置为1，并追加到原数据后面；如果二进制集合中有偶数个1，我们将奇偶位设置为0，并追加到原数据后面。</p>
+<blockquote>
+<p><strong>二进制位中1的个数与奇偶位中1的个数之和总是偶数！！！</strong></p>
+</blockquote>
+<p>任何一个读写错误，都会导致1的个数变为奇数。所以这样我们就能知道磁盘数据是否异常了。</p>
+<h3 id="稳定存储"><a href="#稳定存储" class="headerlink" title="稳定存储"></a>稳定存储</h3><p>稳定存储的基本思想是：扇区是成对儿的，每一对儿代表一个扇区内容X，我们把代表X的扇区对儿分别称作 <strong>“左拷贝” <script type="math/tex">X_{L}</script></strong> 和 <strong>“右拷贝” <script type="math/tex">X_{R}</script></strong>。</p>
+<p>我们用足够多的奇偶校验位来排除扇区坏掉的可能性。</p>
+<p>如果是读操作：如果读函数在校验 <script type="math/tex">X_{L}</script> 或者 <script type="math/tex">X_{R}</script> 时返回的是校验通过的值，那么该值就是我们想要得到的值；</p>
+<p>如果是写操作：将待写入的值写入到<script type="math/tex">X_{L}</script>，检查校验和是否通过。如果尝试多次写之后依然失败，那么我们认为<script type="math/tex">X_{L}</script>介质损坏。那么就使用备用扇区<script type="math/tex">X_{R}</script>进行补救。如果尝试多次之后依然失败，那么我们认为扇区X不可读。</p>
+<p>因此稳定存储针对“介质故障”、“写故障”两种故障有了对应的校正方案：</p>
+<ul>
+<li>1、 <strong>介质故障</strong>：<script type="math/tex">X_{L}</script> 和 <script type="math/tex">X_{R}</script> 在 读取扇区X的值时可以作为对方的备份，来减少读失败的可能；</li>
+<li>2、 <strong>写故障</strong>：当出现了系统发生故障的情形。如果故障是发生在写完 <script type="math/tex">X_{L}</script> 之前，那么它的校验位将会失败，那么此时我们可以将<script type="math/tex">X_{R}</script>的值拷贝到<script type="math/tex">X_{L}</script>中；如果故障发生在写完<script type="math/tex">X_{L}</script>之后，那么<script type="math/tex">X_{L}</script>则为正确地值，我们此时就将<script type="math/tex">X_{L}</script>的值拷贝到<script type="math/tex">X_{R}</script>中；</li>
+</ul>
+<h3 id="奇偶块"><a href="#奇偶块" class="headerlink" title="奇偶块"></a>奇偶块</h3><p>先看下图：</p>
+<p><img src="./uploads/StorageManagement/5.png" alt=""></p>
+<p>不管有多少数据盘，我们只使用一个冗余盘。并且数据盘和冗余盘的大小是一致的。</p>
+<p>在冗余盘中，第i块的数据由所有数据盘对应第i块的数据决定。决定的方案是对比每个数据盘的第i块，并且依次对比该块内部的所有二进制位。<br>然后运用前面提到的奇偶校验，数据盘中对应块内相应位上1的个数为奇数时，冗余盘对应块内相应位为1；如果为偶数则为0。</p>
+<p>比如上图中的第1块，从所有数据盘的第1块的第1位开始统计1的个数，并设置冗余盘中对应位置的值。</p>
+<p>对于读操作而言：从一个数据盘读块与从任何一个磁盘读块没有什么差别；</p>
+<p>对于写操作而言：</p>
+<p>写操作时我们不仅要更新数据盘，而且还要更新冗余盘对应的数据以使其保持奇偶校验。我们可以执行下面的方式：</p>
+<ul>
+<li>1、读取要被改变的数据盘上的旧值；</li>
+<li>2、读取冗余盘中对应的块；</li>
+<li>3、写新数据块；</li>
+<li>4、重新计算并写冗余盘的块；</li>
+</ul>
+<p>如果 <strong>磁盘之一</strong> 崩溃了，我们需要重新计算任何丢失数据。这个计算规则很简单：</p>
+<blockquote>
+<p><strong>所有磁盘（包括数据盘和冗余盘）对应位置上1的个数总是偶数个</strong>。这里只能有一个磁盘发生崩溃。</p>
+</blockquote>
+<p>那么一个磁盘崩溃，我们就可以根据这个性质并查看其他磁盘的数据，计算出发生故障磁盘的数据。</p>
+<h3 id="基于海明码多个盘崩溃时的处理"><a href="#基于海明码多个盘崩溃时的处理" class="headerlink" title="基于海明码多个盘崩溃时的处理"></a>基于海明码多个盘崩溃时的处理</h3><p>下面讲得的方法可以处理同事发生两个崩溃的情形，它是基于最简单的 <strong>海明码</strong> ：</p>
+<p><img src="./uploads/StorageManagement/6.png" alt=""></p>
+<ul>
+<li>1、盘5的位是盘1、2、3相应位的奇偶性；</li>
+<li>2、盘6的位是盘1、2、4相应位的奇偶性；</li>
+<li>3、盘7的位是盘1、3、4相应位的奇偶性；</li>
+</ul>
+<p>对于读操作：从任何一个数据盘中正常地读取数据，冗余盘可以不予理睬。</p>
+<p>对于写操作而言：和上面的意义，我们不仅要更新数据盘的内容，而且还要根据海明码矩阵来更新对应冗余盘的数据。即当前要更新的数据盘，然后查看该数据盘在海明码矩阵中，哪些行是为1并获得对应冗余盘。最后根据上面的3条规则计算出冗余盘对应的内容。</p>
+<p>比如我们要更新数据盘2的数据，由于数据盘2所在列为1的行数分别为：第一行和第二行。此时查看冗余盘第一行和第二行为1的盘为：冗余盘5和冗余盘6。<br>计算盘5的方案是，冗余盘5的每一行的值都是盘1，2，3对应行的奇偶位；计算盘6的方案是，冗余盘6的每一位都是盘1，2，4相应位的奇偶位。</p>
+<p>对于故障恢复，也是通过奇偶位的特性来进行计算的。比如数据盘2和冗余盘5同时崩溃了，为了能够分别复原盘2和盘5的数据，<strong>我们需要在海明码矩阵里面找到盘2和盘5不相同的行</strong>，在这里就是第二行（盘2的第二行为1，盘5的第二行为0）。那我们就可以根据海明码的第二条（盘6某一位反映了盘1、2、4相应位的奇偶性），我们可以根据盘1、4、6计算出盘2的所有数据。由于前面已经知道了盘2的数据，那么我们就可以根据海明码的第一条（盘5某一位反映了盘1、2、3相应位的奇偶性）求出冗余盘5的数据。</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>存储层次从高速缓存，主存最后到磁盘。这里看到了磁盘的主要结构，以及他们的工作原理，并针对磁盘的结构优化存储。最后看到了针对磁盘故障的多种方案（包括校验和，奇偶块，以及海明码）。</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2020/09/07/opengl_ projection_matrix/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2020/09/09/storyge_layer/';
+var disqus_title = '辅助存储管理';
+var disqus_url = 'http://yoursite.com/2020/09/09/storyge_layer/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>关注微博<a href="http://weibo.com/wwloading" target="_blank">@凌云壮志幾多愁</a>，让我们有更多的联系。</p><p>© 2016 - 2020 <a href="http://yoursite.com">王望</a>, Powered By <a href="https://hexo.io/" target="_blank">Hexo</a></p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>

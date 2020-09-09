@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>http://yoursite.com/2020/09/09/storyge_layer/</loc>
+    
+    <lastmod>2020-09-09T10:00:19.316Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>http://yoursite.com/2020/09/07/opengl_%20projection_matrix/</loc>
     
-    <lastmod>2020-09-07T15:23:06.087Z</lastmod>
+    <lastmod>2020-09-07T15:26:08.384Z</lastmod>
     
   </url>
   

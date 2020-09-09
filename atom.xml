@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-09-07T15:23:06.087Z</updated>
+  <updated>2020-09-09T10:00:19.316Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,11 +16,145 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
+    <title>辅助存储管理</title>
+    <link href="http://yoursite.com/2020/09/09/storyge_layer/"/>
+    <id>http://yoursite.com/2020/09/09/storyge_layer/</id>
+    <published>2020-09-09T09:52:13.904Z</published>
+    <updated>2020-09-09T10:00:19.316Z</updated>
+    
+    <content type="html"><![CDATA[<p>存储器的层次结构这里就不细述了，主要来看看存储器层次间传输数据。对于磁盘来说，它被划分成磁盘块（逻辑层面上的划分，并不是实际存在的），每块大小大约为4~64kb。整个块在从缓冲区中移进移出，因此</p>
+<blockquote>
+<p>加速数据库操作的关键技术是 <strong>安排好数据</strong> ，使得当某一个磁盘块中有数据访问的时候，大约同时很有可能该块上的其他数据也需要被访问。</p>
+</blockquote>
+<p>而对于主存储器和高速缓存来说，它们之间的传输是以 <strong>高速缓存线</strong> 为基本单元。一般是32个连续的字节。同样的我们希望整个高速缓存线的数据能够被一起使用。就比如说，如果一条高速缓存线存储着一个程序的连续指令，我们希望当第一条指令被请求时，接下来的指令也会随之执行。高速缓存也分是全相联，还是分多路组相联。比如下图的可以叫做E路组相联：</p>
+<p><img src="./uploads/StorageManagement/1.png" alt=""></p>
+<h2 id="一、虚拟存储器"><a href="#一、虚拟存储器" class="headerlink" title="一、虚拟存储器"></a>一、虚拟存储器</h2><p>虚拟存储器，我们也称之为虚拟内存，它一部分留在内存中，剩下的保存在磁盘中。在Linux中对内存寻址划分的粒度比较细，它引入了多个概念：逻辑地址、线性地址、物理地址。下面我画一个图来阐述它们之间的联系，以及转换关系：</p>
+<p><img src="./uploads/StorageManagement/2.png" alt=""></p>
+<h2 id="二、磁盘"><a href="#二、磁盘" class="headerlink" title="二、磁盘"></a>二、磁盘</h2><p>我们先来看看磁盘的结构：</p>
+<p><img src="./uploads/StorageManagement/3.png" alt=""></p>
+<p>从上图可以看出：</p>
+<ul>
+<li>1、<strong>盘片</strong>：磁盘由多个盘片组成，它们围绕着 <strong>“转轴”</strong> 旋转。</li>
+<li>2、<strong>盘面</strong>：每个盘片又有两个盘面；</li>
+<li>3、<strong>磁道</strong>：盘面被划分为多个 <strong>磁道</strong>（track），也就是单个盘片上的同心圆。</li>
+<li>4、<strong>柱面</strong>：所有盘面上半径相同的磁盘构成了 <strong>柱面</strong>（cylinder）。</li>
+<li>5、<strong>扇区</strong>：磁盘被分割为多个扇区，分割扇区的间隙没有存储数据；</li>
+<li>6、<strong>磁头</strong>：每个盘面都对应一个磁头，磁头读出经过它下面盘面的磁方向，同样的为了能够在磁盘上写数据，磁头也能改变磁方向；</li>
+</ul>
+<blockquote>
+<p><strong>扇区是不可分割的单位</strong>；</p>
+</blockquote>
+<h3 id="磁盘控制器"><a href="#磁盘控制器" class="headerlink" title="磁盘控制器"></a>磁盘控制器</h3><p>磁盘控制器是一个小处理器，它能够完成以下功能：</p>
+<ul>
+<li>1、选择柱面：移动磁头组合，让磁头定位到一个特定的半径位置，<strong>使得某一柱面任何磁道都可以被读写</strong>；</li>
+<li>2、选择扇区：从磁头所在柱面的扇区中选择一个扇区；</li>
+<li>3、读取数据：将扇区中的二进制数据传送到计算机的主存储器中；</li>
+<li>4、缓存磁道：将一整条或更多磁道缓存与磁盘控制器的内存中；</li>
+</ul>
+<p>下图是简单的示意图：</p>
+<p><img src="./uploads/StorageManagement/4.png" alt=""></p>
+<p>这里是一个磁盘控制器控制了3个磁盘。</p>
+<h3 id="磁盘存取"><a href="#磁盘存取" class="headerlink" title="磁盘存取"></a>磁盘存取</h3><p>存取一般分为3步，而每一步都有相应的延迟：</p>
+<ul>
+<li>1、<strong>寻道时延</strong>：磁盘控制器将磁头组合定位到磁盘块所在磁道的柱面上所需的时间（确定园的半径）；</li>
+<li>2、<strong>旋转时延</strong>：磁盘控制器将待访问的扇区旋转到磁头下方所需的时间；</li>
+<li>3、<strong>传输时延</strong>：数据所在扇区和扇区间的空隙经过磁头的时间（也就是从扇区的起始部分，到该扇区与下一个扇区间的间隙部分所需的时长）；</li>
+</ul>
+<p>因此磁盘延迟：</p>
+<script type="math/tex; mode=display">
+磁盘延迟(latency) = 寻道时延（seek\ time） + 旋转时延（ratational\ lantency） + 传输时延（transfer\ time）；</script><p>读取所需的 <strong>最小时间仅仅为传输时延</strong>，即磁头已经定位在块所在的磁道上，并且第一个扇区即将从磁头下面经过。读取数据的最长时间为，待读取的数据处于最外层，磁头处于最内层无数据的启停区，并且此时磁头刚好经过待读取数据所处的扇区。</p>
+<h2 id="三、加速对辅助存储器的访问"><a href="#三、加速对辅助存储器的访问" class="headerlink" title="三、加速对辅助存储器的访问"></a>三、加速对辅助存储器的访问</h2><p>下面是一些加速数据库访问磁盘的技术：</p>
+<ul>
+<li>1、 <strong>将要一起访问的块放在同一个柱面上</strong>，这样可以避免寻道时间和旋转延迟；</li>
+<li>2、 <strong>将数据分割存储在几个相对较小的磁盘上而不是放在一个大的磁盘上</strong>，可以增减单位时间内磁头访问的磁盘块数量；</li>
+<li>3、 <strong>“镜像”磁盘</strong>，使得同时可以访问多个磁盘块。但是，写磁盘的速率却没有任何提高，原因是一个新的磁盘块必须被写到n个磁盘的每一个上；</li>
+<li>4、 <strong>预先将预期被访问的磁盘块读取到主存储器中</strong>；</li>
+</ul>
+<h3 id="电梯算法"><a href="#电梯算法" class="headerlink" title="电梯算法"></a>电梯算法</h3><p>调度大量块请求的一个简单有效的方法称为 <strong>电梯算法（elevator algorithm）</strong>。它能够很有效的减少寻道时间。</p>
+<p>首先，将磁盘柱面的最内圈和最外圈，分别比作电梯房的1楼和32楼（顶层）。那么我们可以将磁头从最内圈到最外圈的过程，看作是电梯从1楼到32楼的过程往返运动。</p>
+<p>当磁头通过柱面（电梯途径某一楼）时，如果有一个或多个对该柱面上块的请求（在某一楼有乘客需要乘坐电梯），那么磁头（电梯）会停下来。根据请求所有这些块被读或者写。</p>
+<p>然后磁头沿着它原有的方向继续移动，直到遇到下一个包含待请求的柱面（下一位乘客在另一层楼按了电梯）。当磁头到达其行进方向上的某一个位置时，该位置的前方不再有访问请求，磁头就朝着反方向移动。</p>
+<h2 id="四、磁盘故障"><a href="#四、磁盘故障" class="headerlink" title="四、磁盘故障"></a>四、磁盘故障</h2><ul>
+<li><strong>间断性故障</strong>：指读或者写一个扇区的某次尝试没有成功，但是经过反复尝试，又能成功地读或写；</li>
+<li><strong>介质损坏</strong>：一个或者多个二进制位永久的损坏；</li>
+<li><strong>写故障</strong>：当我们企图写一个扇区时，既不能正确地写，也不能检索先前写入的扇区；</li>
+<li><strong>磁盘崩溃</strong>：整个磁盘永久不可读；</li>
+</ul>
+<h3 id="校验和"><a href="#校验和" class="headerlink" title="校验和"></a>校验和</h3><p>每个扇区有若干个附加位，称为 <strong>校验和</strong> 。附加位的设置取决于存储在那个扇区的数据位的值。读取时，如果我们发现校验和对数据位不合适，那么就知道有读错误。</p>
+<blockquote>
+<p>校验和的一种简单形式是基于扇区内所有位的 <strong>奇偶性</strong></p>
+</blockquote>
+<p>下面我们先看一个例子，然后根据例子来整理一个方法出来。</p>
+<h4 id="例子"><a href="#例子" class="headerlink" title="例子"></a>例子</h4><p>先阐述一下奇偶位的定义：它和普通的数据位一样。就是一个bit（值有0或者1），0表示原数据有偶数个“1”，1表示原数据有奇数个“1”；</p>
+<p>如果扇区中二进制位序列为 <code>01101000</code> ，那么这儿有奇数个 “1”，所以奇偶位为1。我们在原数据的末尾追加上奇偶位，得到新的二进制序列为 <code>011010001</code>；<br>如果扇区中二进制位序列为 <code>11101110</code> ，那么这儿有偶数个 “1”，所以奇偶位为0。我们在原数据的末尾追加上奇偶位，得到新的二进制序列为 <code>111011100</code>；</p>
+<p>综上所述：如果二进制集合中有奇数个1，我们将奇偶位设置为1，并追加到原数据后面；如果二进制集合中有偶数个1，我们将奇偶位设置为0，并追加到原数据后面。</p>
+<blockquote>
+<p><strong>二进制位中1的个数与奇偶位中1的个数之和总是偶数！！！</strong></p>
+</blockquote>
+<p>任何一个读写错误，都会导致1的个数变为奇数。所以这样我们就能知道磁盘数据是否异常了。</p>
+<h3 id="稳定存储"><a href="#稳定存储" class="headerlink" title="稳定存储"></a>稳定存储</h3><p>稳定存储的基本思想是：扇区是成对儿的，每一对儿代表一个扇区内容X，我们把代表X的扇区对儿分别称作 <strong>“左拷贝” <script type="math/tex">X_{L}</script></strong> 和 <strong>“右拷贝” <script type="math/tex">X_{R}</script></strong>。</p>
+<p>我们用足够多的奇偶校验位来排除扇区坏掉的可能性。</p>
+<p>如果是读操作：如果读函数在校验 <script type="math/tex">X_{L}</script> 或者 <script type="math/tex">X_{R}</script> 时返回的是校验通过的值，那么该值就是我们想要得到的值；</p>
+<p>如果是写操作：将待写入的值写入到<script type="math/tex">X_{L}</script>，检查校验和是否通过。如果尝试多次写之后依然失败，那么我们认为<script type="math/tex">X_{L}</script>介质损坏。那么就使用备用扇区<script type="math/tex">X_{R}</script>进行补救。如果尝试多次之后依然失败，那么我们认为扇区X不可读。</p>
+<p>因此稳定存储针对“介质故障”、“写故障”两种故障有了对应的校正方案：</p>
+<ul>
+<li>1、 <strong>介质故障</strong>：<script type="math/tex">X_{L}</script> 和 <script type="math/tex">X_{R}</script> 在 读取扇区X的值时可以作为对方的备份，来减少读失败的可能；</li>
+<li>2、 <strong>写故障</strong>：当出现了系统发生故障的情形。如果故障是发生在写完 <script type="math/tex">X_{L}</script> 之前，那么它的校验位将会失败，那么此时我们可以将<script type="math/tex">X_{R}</script>的值拷贝到<script type="math/tex">X_{L}</script>中；如果故障发生在写完<script type="math/tex">X_{L}</script>之后，那么<script type="math/tex">X_{L}</script>则为正确地值，我们此时就将<script type="math/tex">X_{L}</script>的值拷贝到<script type="math/tex">X_{R}</script>中；</li>
+</ul>
+<h3 id="奇偶块"><a href="#奇偶块" class="headerlink" title="奇偶块"></a>奇偶块</h3><p>先看下图：</p>
+<p><img src="./uploads/StorageManagement/5.png" alt=""></p>
+<p>不管有多少数据盘，我们只使用一个冗余盘。并且数据盘和冗余盘的大小是一致的。</p>
+<p>在冗余盘中，第i块的数据由所有数据盘对应第i块的数据决定。决定的方案是对比每个数据盘的第i块，并且依次对比该块内部的所有二进制位。<br>然后运用前面提到的奇偶校验，数据盘中对应块内相应位上1的个数为奇数时，冗余盘对应块内相应位为1；如果为偶数则为0。</p>
+<p>比如上图中的第1块，从所有数据盘的第1块的第1位开始统计1的个数，并设置冗余盘中对应位置的值。</p>
+<p>对于读操作而言：从一个数据盘读块与从任何一个磁盘读块没有什么差别；</p>
+<p>对于写操作而言：</p>
+<p>写操作时我们不仅要更新数据盘，而且还要更新冗余盘对应的数据以使其保持奇偶校验。我们可以执行下面的方式：</p>
+<ul>
+<li>1、读取要被改变的数据盘上的旧值；</li>
+<li>2、读取冗余盘中对应的块；</li>
+<li>3、写新数据块；</li>
+<li>4、重新计算并写冗余盘的块；</li>
+</ul>
+<p>如果 <strong>磁盘之一</strong> 崩溃了，我们需要重新计算任何丢失数据。这个计算规则很简单：</p>
+<blockquote>
+<p><strong>所有磁盘（包括数据盘和冗余盘）对应位置上1的个数总是偶数个</strong>。这里只能有一个磁盘发生崩溃。</p>
+</blockquote>
+<p>那么一个磁盘崩溃，我们就可以根据这个性质并查看其他磁盘的数据，计算出发生故障磁盘的数据。</p>
+<h3 id="基于海明码多个盘崩溃时的处理"><a href="#基于海明码多个盘崩溃时的处理" class="headerlink" title="基于海明码多个盘崩溃时的处理"></a>基于海明码多个盘崩溃时的处理</h3><p>下面讲得的方法可以处理同事发生两个崩溃的情形，它是基于最简单的 <strong>海明码</strong> ：</p>
+<p><img src="./uploads/StorageManagement/6.png" alt=""></p>
+<ul>
+<li>1、盘5的位是盘1、2、3相应位的奇偶性；</li>
+<li>2、盘6的位是盘1、2、4相应位的奇偶性；</li>
+<li>3、盘7的位是盘1、3、4相应位的奇偶性；</li>
+</ul>
+<p>对于读操作：从任何一个数据盘中正常地读取数据，冗余盘可以不予理睬。</p>
+<p>对于写操作而言：和上面的意义，我们不仅要更新数据盘的内容，而且还要根据海明码矩阵来更新对应冗余盘的数据。即当前要更新的数据盘，然后查看该数据盘在海明码矩阵中，哪些行是为1并获得对应冗余盘。最后根据上面的3条规则计算出冗余盘对应的内容。</p>
+<p>比如我们要更新数据盘2的数据，由于数据盘2所在列为1的行数分别为：第一行和第二行。此时查看冗余盘第一行和第二行为1的盘为：冗余盘5和冗余盘6。<br>计算盘5的方案是，冗余盘5的每一行的值都是盘1，2，3对应行的奇偶位；计算盘6的方案是，冗余盘6的每一位都是盘1，2，4相应位的奇偶位。</p>
+<p>对于故障恢复，也是通过奇偶位的特性来进行计算的。比如数据盘2和冗余盘5同时崩溃了，为了能够分别复原盘2和盘5的数据，<strong>我们需要在海明码矩阵里面找到盘2和盘5不相同的行</strong>，在这里就是第二行（盘2的第二行为1，盘5的第二行为0）。那我们就可以根据海明码的第二条（盘6某一位反映了盘1、2、4相应位的奇偶性），我们可以根据盘1、4、6计算出盘2的所有数据。由于前面已经知道了盘2的数据，那么我们就可以根据海明码的第一条（盘5某一位反映了盘1、2、3相应位的奇偶性）求出冗余盘5的数据。</p>
+<h2 id="五、总结"><a href="#五、总结" class="headerlink" title="五、总结"></a>五、总结</h2><p>存储层次从高速缓存，主存最后到磁盘。这里看到了磁盘的主要结构，以及他们的工作原理，并针对磁盘的结构优化存储。最后看到了针对磁盘故障的多种方案（包括校验和，奇偶块，以及海明码）。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;存储器的层次结构这里就不细述了，主要来看看存储器层次间传输数据。对于磁盘来说，它被划分成磁盘块（逻辑层面上的划分，并不是实际存在的），每块大小大约为4~64kb。整个块在从缓冲区中移进移出，因此&lt;/p&gt;
+&lt;blockquote&gt;
+&lt;p&gt;加速数据库操作的关键技术是 &lt;stro
+    
+    </summary>
+    
+      <category term="数据库" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="数据库系统" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
+  
+  <entry>
     <title>OpenGL投影变换矩阵</title>
     <link href="http://yoursite.com/2020/09/07/opengl_%20projection_matrix/"/>
     <id>http://yoursite.com/2020/09/07/opengl_ projection_matrix/</id>
     <published>2020-09-07T14:54:40.000Z</published>
-    <updated>2020-09-07T15:23:06.087Z</updated>
+    <updated>2020-09-07T15:26:08.384Z</updated>
     
     <content type="html"><![CDATA[<h2 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h2><p>本文是对<a href="http://www.songho.ca/opengl/gl_projectionmatrix.html" target="_blank" rel="external">OpenGL Projection Matrix</a>一文的中文翻译，初衷是因为自己学习OpenGL时，对投影变形的数学推导比较感兴趣，因此找到了该文章。而本文并不是对该一对一的翻译，其中会增加一些易于理解的内容。</p>
 <h2 id="正文"><a href="#正文" class="headerlink" title="正文"></a>正文</h2><p>计算机显示器是2D平面的。如果3D场景通过OpenGL来渲染，那么就需要以2D图像的方式投影到计算机屏幕上。其中GL_PROJECTION矩阵就是用作投影变换。首先它将所有的顶点数据从观察（View）坐标变换到裁剪坐标；然后裁剪坐标还需要变换为归一化坐标（NDC，Normalized Device Coordinates），具体的方法就是裁剪坐标除以其w分量（默认是4分量向量，即x，y，z，w）。</p>
@@ -4016,51 +4150,6 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
     
     
       <category term="算法" scheme="http://yoursite.com/tags/%E7%AE%97%E6%B3%95/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>栈（Stack）和堆（Heap）</title>
-    <link href="http://yoursite.com/2017/03/21/stack_heap_with_c/"/>
-    <id>http://yoursite.com/2017/03/21/stack_heap_with_c/</id>
-    <published>2017-03-21T12:40:24.000Z</published>
-    <updated>2017-08-01T13:02:39.000Z</updated>
-    
-    <content type="html"><![CDATA[<p>  目前来说我们知道怎么去声明一个基础类型的变量，比如int，float，等等。以及复杂数据类型数组和结构，声明它们的时候C会把这些变量放在栈上。<strong>每个线程都有一个栈，而程序通常只有一个堆</strong>。<br><a id="more"></a> </p>
-<h3 id="栈（Stack）"><a href="#栈（Stack）" class="headerlink" title="栈（Stack）"></a>栈（Stack）</h3><p>  什么是栈？它是内存中一块特殊的区域，<strong>用于保存在函数中声明的零时变量</strong>（其中也包括<code>main()</code>函数）。栈是LIFO(Last in First Out 后进先出)的数据结构，进出操作是由CPU来管理和优化的。每当函数声明了一个变量，该变量就会被<strong>推入(Pushed)</strong>栈中。每当函数退出时，所有的变量都会被函数推出栈，并被<strong>释放掉(Free)</strong>。一旦变量被释放，该内存区域就可以被其他栈变量使用。<br>  使用栈的优势是它会为你管理内存，而不需要你手动去分配或者释放内存。更进一步说，由于CPU可以有效地管理栈内存，所以从栈中读写变量是很快的。<br>  理解栈的关键是需要知道函数什么时候退出，此时栈中所有的变量被推出，因此<strong>栈变量是局部的</strong>（也就是局部变量）。C中经常出现的一个错误就是，在函数返回以后去访问函数内部中栈变量。<br>  如果使用太多的栈空间会导致溢出，比如在使用递归的时候，该函数使用了太多的局部变量在递归过程中就有可能造成<strong>栈溢出</strong>。</p>
-<blockquote>
-<p>总结</p>
-<ul>
-<li>栈是LIFO数据结构；</li>
-<li>CPU管理内存，而不需要手动去管理。正是因为这个原因从栈中读写变量<strong>很快</strong>的；</li>
-<li>栈变量是局部的（也就是局部变量）；</li>
-<li>栈的容量会随着函数的Push和Pop变化；</li>
-</ul>
-</blockquote>
-<h3 id="堆（Heap）"><a href="#堆（Heap）" class="headerlink" title="堆（Heap）"></a>堆（Heap）</h3><p>  堆也是内存中一块特定区域，但是CPU并不会自动管理相关的操作，而且它的空间大小会有一定的浮动。在堆上分配内存的时候，在C中使用<code>malloc()</code>和<code>calloc()</code>函数。在不需要堆上这块内存之后，需要使用<code>free()</code>函数释放掉它。<strong>如果不释放的话就会造成内存泄漏</strong>，这块内存就会被闲置。<br>  和栈不同之处在于，<strong>堆内存数据的读写速度会比栈慢</strong>。</p>
-<h3 id="栈（Stack）和堆（Heap）的差异"><a href="#栈（Stack）和堆（Heap）的差异" class="headerlink" title="栈（Stack）和堆（Heap）的差异"></a>栈（Stack）和堆（Heap）的差异</h3><h4 id="配置堆栈大小"><a href="#配置堆栈大小" class="headerlink" title="配置堆栈大小"></a>配置堆栈大小</h4><p>  堆的大小在程序启动时分配，数值在不同操作系统中可能有所不同。<br>  在Cocoa中想要修改线程的栈大小的话，可以使用<code>NSThread</code>的实例方法<code>setStackSize:</code>，如果使用POSIX线程技术创建的线程的话，想要设置栈大小的话使用<code>pthread_attr_setstacksize</code>函数。</p>
-<blockquote>
-<p>⚠️如果要设置栈大小就必须要在创建线程之前完成。</p>
-</blockquote>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div></pre></td><td class="code"><pre><div class="line">/</div><div class="line">// 第一种</div><div class="line">NSThread *thread = [[NSThread alloc] initWithTarget:self selector:@selector(backgroudMethod:) object:nil];</div><div class="line">[thread setStackSize:1024];</div><div class="line">[thread start];</div><div class="line"></div><div class="line">/// 第二种</div><div class="line">pthread_attr_t attr;</div><div class="line">pthread_t posix_tread_id;</div><div class="line">int returnVal;</div><div class="line">returnVal = pthread_attr_init(&amp;attr);</div><div class="line">returnVal = pthread_attr_setstacksize(&amp;attr, 1024);/// 在创建线程前设置堆栈大小</div><div class="line">char *data;</div><div class="line">data = &quot;To ensure that a thread knows what work to do&quot;;</div><div class="line">int thread_error = pthread_create(&amp;posix_tread_id, &amp;attr, posix_thread_mainroutine, data);</div></pre></td></tr></table></figure>
-<h4 id="生命周期"><a href="#生命周期" class="headerlink" title="生命周期"></a>生命周期</h4><p>  栈是和线程相关联的，意思就是说当线程退出时，栈被回收。而堆通常是在启动程序时分配，当程序退出之后被回收。</p>
-<h3 id="什么时候使用栈什么时候使用堆"><a href="#什么时候使用栈什么时候使用堆" class="headerlink" title="什么时候使用栈什么时候使用堆"></a>什么时候使用栈什么时候使用堆</h3><ul>
-<li>需要申请较大内存空间（比如struct，array之类的），而且需要该变量存在较长时间，就是将该变量放在<strong>堆</strong>中；</li>
-<li>如果需要动态修改struct或者array的大小，将该变量放在<strong>堆</strong>上。使用<code>malloc()，calloc()，realloc()和free()</code>等函数来管理内存；</li>
-<li>如果使用相对较小的变量，并且只在函数中使用它们，此时该变量就存在于栈上。这样做会更快而且更简单；</li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;  目前来说我们知道怎么去声明一个基础类型的变量，比如int，float，等等。以及复杂数据类型数组和结构，声明它们的时候C会把这些变量放在栈上。&lt;strong&gt;每个线程都有一个栈，而程序通常只有一个堆&lt;/strong&gt;。&lt;br&gt;
-    
-    </summary>
-    
-      <category term="C" scheme="http://yoursite.com/categories/C/"/>
-    
-    
-      <category term="基础知识" scheme="http://yoursite.com/tags/%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86/"/>
     
   </entry>
   
