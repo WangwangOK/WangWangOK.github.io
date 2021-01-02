@@ -447,6 +447,621 @@
   </entry>
   
   <entry>
+    <title>数据库原理——多维索引和位图索引</title>
+    <link href="http://yoursite.com/2020/09/09/database_multidimensional_index/"/>
+    <id>http://yoursite.com/2020/09/09/database_multidimensional_index/</id>
+    <published>2020-09-09T09:52:13.898Z</published>
+    <updated>2021-01-02T09:11:37.196Z</updated>
+    
+    <content type="html"><![CDATA[<p>在上一篇文章中看到的都是一维索引。也就是说，它们是使用单个查找键，并且按给定的查找键值来检索记录。</p>
+<p>大多数支持多维数据查询的数据结构归于以下两类之一：</p>
+<ul>
+<li>1、类散列表方法；</li>
+<li>2、类树方法；</li>
+</ul>
+<p>下面我们就分别来看看这些数据结构。</p>
+<h2 id="一、多维数据的散列结构"><a href="#一、多维数据的散列结构" class="headerlink" title="一、多维数据的散列结构"></a>一、多维数据的散列结构</h2><p>一种方法称为“网格文件”，它通常不是按维来“散列”值，而是通过排序该维的值来划分该维；另一种方法是“分段散列”，它确实散列各维，且每一维都影响桶号。</p>
+<h3 id="网格文件"><a href="#网格文件" class="headerlink" title="网格文件"></a>网格文件</h3><p>在涉及多维数据查询时，作为最简单的数据结构之一的网格文件通常要比单维索引性能要好。</p>
+<p>每一维上的网格线把空间分成条状，落在网格线上的点被认为是属于该网格为其 <strong>低边界</strong> 的条。</p>
+<ul>
+<li>1、不同网格线的数目可以不同；</li>
+<li>2、相邻网格线之间可有不同的长度，甚至同一维的线之间也可有不同的区间长度；</li>
+</ul>
+<p>下图是年龄和薪水（二维）分布的网格文件：</p>
+<p><img src="/uploads/IndexStructure/25.png" alt=""></p>
+<p>在这里空间被分为了9个条状矩形。一般来说，一个矩形包括落在其左边界和下边界上的点，但是不包括其右边界和上边界的点。</p>
+<h4 id="网格文件的查找"><a href="#网格文件的查找" class="headerlink" title="网格文件的查找"></a>网格文件的查找</h4><p>空间划分成的每一个区域可以被看成是散列表的一个桶，落入该区域的每个点的记录都存放在属于该桶的块中。如有必要，溢出块可以用来增加桶的大小。</p>
+<blockquote>
+<p>网格文件使用的桶数组维数和数据文件的维数一样。</p>
+</blockquote>
+<p>关注 “点” 的每一个分量，并且确定该维上点在网格中的位置。 <strong>点在每一维的位置一起决定点所属的桶</strong> 。</p>
+<p>下面是年龄和薪资对应的一个数据集：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">薪资</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">400</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">350</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">75</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">120</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">275</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">110</td>
+</tr>
+<tr>
+<td style="text-align:left">85</td>
+<td style="text-align:left">140</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们根据上面的数据集构建一个网格文件：</p>
+<p><img src="/uploads/IndexStructure/26.png" alt=""></p>
+<p>上图中使用的桶数组维数和网格文件的维数相同，均为2。横向表示年龄，纵向表示薪水。而且在上面的例子中没有桶超过两个记录，因此不需要溢出块。</p>
+<h4 id="网格文件的插入"><a href="#网格文件的插入" class="headerlink" title="网格文件的插入"></a>网格文件的插入</h4><p>插入操作同样也遵循查找记录的过程（即多个维度来确定桶的位置），并将新记录放到查找到的桶中。当桶中有足够的空间时，直接插入即可；如果桶中没有空间，可以用如下两种方法来解决这个问题：</p>
+<ul>
+<li>1、按需给桶增加溢出块；</li>
+<li>2、 <strong>通过增加或移动网格线来重组结构</strong>；</li>
+</ul>
+<p>网格文件在每一维上的条目数量可能非常大，如果那样的话，我们必须为每一维建立一个索引。索引的搜索码是该维分割值的集合。</p>
+<h4 id="网格文件的性能"><a href="#网格文件的性能" class="headerlink" title="网格文件的性能"></a>网格文件的性能</h4><p>网格文件虽然能够有任意数目的维，</p>
+<blockquote>
+<p><strong>但我们一直以来只考虑二维的情况</strong>。</p>
+</blockquote>
+<p>这是因为随着维数的增加，桶的数目成指数级增长。如果网格空间大部分是空，那么将会有许多的空桶。使用网格文件的场景为：</p>
+<blockquote>
+<p>数据分布很好，且数据文件本身又不太大</p>
+</blockquote>
+<p>对于部分匹配和范围查询来说，由于我们需要检查许多的桶，因此磁盘I/O数可能会很大。</p>
+<h3 id="分段散列函数"><a href="#分段散列函数" class="headerlink" title="分段散列函数"></a>分段散列函数</h3><p>该散列函数，它可以产生若干个二进制位，比如说k个。这k位二进制划分给各个不同的属性，比如属性A占用3位，属性B占用4位，属性C占用 k-3-4 位。</p>
+<p>更确切的说，散列函数h实际上是一个散列函数 <script type="math/tex">(h_{1}, h_{2}, ... , h_{n})</script>的列表。其中每个 <script type="math/tex">h_{i}</script> 运用到第i个属性，且产生 <script type="math/tex">k_{i}</script>位二进制位序列。</p>
+<p>我们还是来看个例子：如果我们有一个桶数目为 10位 （注意是10位，不是10个）的散列表（1024个桶）。我们把4位分给属性a（假设属性值为A），剩下的6位分给属性b（假设属性值为B）。如果 <script type="math/tex">h_{a}(A) = 0101,\ h_{b}(B)=111000</script> ，那么对应的桶号为两个二进制序列拼接的 <code>0101111000</code>。</p>
+<h2 id="二、多维数据的树结构"><a href="#二、多维数据的树结构" class="headerlink" title="二、多维数据的树结构"></a>二、多维数据的树结构</h2><p>下面四种结构对于多维数据范围查询和最邻近查询都有用。这四种结构分别是：</p>
+<ul>
+<li>1、多键索引；</li>
+<li>2、kd树；</li>
+<li>3、四叉树；</li>
+<li>4、R-树；</li>
+</ul>
+<p>前三种用于点集，R-树用来表示区域集合，也可以用来表示点集。</p>
+<h3 id="多键索引"><a href="#多键索引" class="headerlink" title="多键索引"></a>多键索引</h3><p>为了能够用几个属性来表示我们数据点的不同维度，并且支持范围查询和最近邻查询。那么我们可以一棵树，该树的每一层结点都是一个属性的索引。</p>
+<blockquote>
+<p><strong>每一个属性对应树的一层</strong>!!!</p>
+</blockquote>
+<p>换句话说就是“索引的索引”。下图是一个示意图：</p>
+<p><img src="/uploads/IndexStructure/27.png" alt=""></p>
+<p>“树根”表示第一个属性，他可以使任何类型的索引。该索引包含的内容有：索引键值，指向另一个索引的指针。在下面的例子中体现更加明显。现在我们来看一个例子，下面是各个不同的记录：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">薪资</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">400</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">350</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">75</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">120</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">275</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">110</td>
+</tr>
+<tr>
+<td style="text-align:left">85</td>
+<td style="text-align:left">140</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>现在我们根据年龄和薪资两个不同属性来构建一个多级索引：</p>
+<p><img src="/uploads/IndexStructure/28.png" alt=""></p>
+<h3 id="kd树"><a href="#kd树" class="headerlink" title="kd树"></a>kd树</h3><p>kd树是把二叉搜索树推广到 多维度数据 的一种 <strong>主存数据结构</strong> 。</p>
+<blockquote>
+<p><strong>kd树是一个二叉树</strong>。对于表示的多维度数据而言，所有维度的属性 <strong>在层间交替出现</strong>，因此不同层上的属性是不同的。</p>
+</blockquote>
+<p>举个例子，比如用kd树来表示前面多级索引中年龄-薪资，那么第一层用来表示薪资、第二层用来表示年龄、第三层用来表示薪资、第四层用来表示年龄… 这样依次交替的出现在每一层。</p>
+<p>kd树结点的两个特性：</p>
+<ul>
+<li>1、 <strong>内部结点</strong>：只表示一个属性，基于该属性的划分值（小于该划分值在左子树，大于等于该划分值在右子树），以及指向左子树、右子树的指针；</li>
+<li>2、 <strong>叶子结点</strong>：为一个数据块，块中存放尽可能多的记录；</li>
+</ul>
+<p>下图的kd树，每一层交叉出现“年龄”和“薪资”属性。而叶子结点是存放两个记录的块。</p>
+<p><img src="./img/29.png" alt=""></p>
+<h4 id="kd树相关操作"><a href="#kd树相关操作" class="headerlink" title="kd树相关操作"></a>kd树相关操作</h4><p>为了实现插入，我们找到一个叶结点：</p>
+<ul>
+<li>1、如果叶结点的块有空闲空间：我们就把新的数据点放在那里；</li>
+<li><p>2、如果叶结点的块空间已满：我们把块分裂成两个，并根据分裂叶结点所在层的相应属性划分叶结点中的内容。最后创建一个新的内部结点：其子节点为分裂得到的新块，并且 <strong>给该内部结点一个与分裂相对应的划分值</strong> 。</p>
+<p>  当无法进行分裂时，我们可以尝试沿另一个维读（属性）进行分裂，或者 <strong>可以使用溢出块</strong>。</p>
+</li>
+</ul>
+<p>比如针对上图，我们要插入一个（年龄，薪资）的记录（35，500）。从上图我们找到由（25，400）和（45，350）组成的叶结点，但是该叶结点空间已满。从上图得知第4层是根据年龄来分裂的，假如我们用年龄35来进行划分，进行分裂之后得到的kb-树如下：</p>
+<p><img src="./img/30.png" alt=""></p>
+<p>对于查询操作而言：</p>
+<ul>
+<li>1、如果当前处于属性已知的二叉树层级时，比如当前我们处于根节点，并且要查询 <strong>薪资</strong> 大于150的情形时，那么我们可以直接查找右子节点；</li>
+<li>2、如果当前处于未知属性的二叉树层级时，比如当前我们处于根节点，要查询 <strong>年龄</strong> 小于50的情形时，我们就需要 <strong>查看当前层级的左右子节点</strong> 进行比较，然后再进行选择；</li>
+<li>3、对于范围查询而言，如果范围跨越了结点的划分值，那么我们就必须要考察两个子结点；</li>
+</ul>
+<h3 id="四叉树"><a href="#四叉树" class="headerlink" title="四叉树"></a>四叉树</h3><p>在一个四叉树中，每个内部结点对应于二维空间中的一个正方形区域。</p>
+<ul>
+<li>1、如果一个正方形中的点数小于等于一个块能够存放的记录数量，那么我们就将该正方形看作是树的叶结点；</li>
+<li>2、如果一个正方形中的点数大于一个块能够存放的记录数量，那么我们就把该正方形看作内部结点，<strong>它的子节点对应于它的四个象限</strong> ；</li>
+</ul>
+<p>下图是四叉树结点的区域分布：</p>
+<p><img src="/uploads/IndexStructure/31.png" alt=""></p>
+<p>为什么说四叉树，在二维平面上以原点划分4个象限。比如上图的（50，200）点就对应了四个象限，这里我们加入一个数据块只能存放两个记录。也就是当一个象限内的记录多余2个时，我们需要根据记录在空间内的分布情况划分子空间。新找一个原点，比如（25，300），然后同样划分四个象限。</p>
+<p>下图是根据上面的记录分布构造的四叉树：</p>
+<p><img src="/uploads/IndexStructure/32.png" alt=""></p>
+<p>从上图我们可以看到，分裂了两个子象限，其原点分别为（75，100）和（25，300）。结点（75，100）的“东南”指针为空，结点（25，300）的“西南”和“西北”指针为空。这里还只是2维的情况（即从年龄和薪资两个维度），</p>
+<blockquote>
+<p>当维度更大之后，出现空指针的情况会越加明显。</p>
+</blockquote>
+<h3 id="R树"><a href="#R树" class="headerlink" title="R树"></a>R树</h3><p>R树表示由二维或者更高维度区域组成的数据，我们把它称为 <strong>数据区</strong> 。R树的一个内部结点对应于某个内部区域，“区域”可以是任何形状，但实际上大多为矩形或者其他简单地形状。</p>
+<p>R树结点的键位置上含有子区域，它表示结点的子结点。子区域之间可以有重叠，但尽量做到重叠区域更小。</p>
+<p><img src="/uploads/IndexStructure/33.png" alt=""></p>
+<p>根节点关联着整个区域。</p>
+<h4 id="R树查询操作"><a href="#R树查询操作" class="headerlink" title="R树查询操作"></a>R树查询操作</h4><p>我们从根结点开始，然后确定其子结点区域内包含有目标点：</p>
+<ul>
+<li>1、如果当前没有区域包含目标点，那么查询失败结束；</li>
+<li>2、如果有至少一个子结点区域包含目标点，那么我们需要递归地查询子孙结点区域。<strong>直到找到一个或者多个叶子结点</strong>；</li>
+</ul>
+<p>也就是说：</p>
+<blockquote>
+<p>最终的数据存放于叶子结点中；</p>
+</blockquote>
+<h4 id="R树插入操作"><a href="#R树插入操作" class="headerlink" title="R树插入操作"></a>R树插入操作</h4><p>当我们向R树中插入一个新区域时，我们从根开始找到一个适合新区域结点的子区域。如果多余一个子区域可供插入，那么我们就看哪个子区域扩大的尽可能少，以此递归地进行下去；</p>
+<p>如果不存在包含新区域的子区域，那么我们就得扩大其中一个子区域用于存放新区域；</p>
+<p>最后到达叶结点时，查看该叶结点是否有足够的空间。如果没有足够的空间，我们必须要分裂叶结点，</p>
+<blockquote>
+<p>分裂之后的叶结点必须要覆盖原始叶结点的所有数据区；</p>
+</blockquote>
+<p>这个插入过程和B+树类似，从叶子结点分裂，直到某个父结点有空间则结束分裂；</p>
+<h2 id="三、位图索引"><a href="#三、位图索引" class="headerlink" title="三、位图索引"></a>三、位图索引</h2><p>位图索引是一个长度为n的位向量集合。它能够表示n个记录。</p>
+<p>例如有一个由name、age两个字段组成的记录。此时存在6个记录：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">下标</th>
+<th style="text-align:left">name</th>
+<th style="text-align:left">age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">foo</td>
+<td style="text-align:left">30</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">bar</td>
+<td style="text-align:left">30</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">baz</td>
+<td style="text-align:left">40</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">foo</td>
+<td style="text-align:left">50</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">bar</td>
+<td style="text-align:left">40</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">baz</td>
+<td style="text-align:left">30</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>那么对于字段name而言的位图是从左到右生长的，即左边表示第一位：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">name</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">foo</td>
+<td style="text-align:left">100100</td>
+</tr>
+<tr>
+<td style="text-align:left">bar</td>
+<td style="text-align:left">010010</td>
+</tr>
+<tr>
+<td style="text-align:left">baz</td>
+<td style="text-align:left">001001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>解释一下<code>foo</code>对应的位图<code>100100</code>，第1位为0表示在上面的表格中下标为1的name为foo，第2位为0表示在上面的表格中下标为2的name不为foo。以此类推下去。</p>
+<p>我们也可以看看字段age每一个值对应的位图：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">age</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">110001</td>
+</tr>
+<tr>
+<td style="text-align:left">40</td>
+<td style="text-align:left">001010</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">000100</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>规律和上面的一样。总的来说就是对于字段F（比如上面的”name”字段）的位图索引而言，如果第i个记录的字段F为v（比如上面的”foo”）。那么对应于值v的位向量在位置i上的取值为1；否则该向量的位置i上的取值为0；</p>
+<blockquote>
+<p><strong>位的总数是记录个数和取值数（字段取值）的乘积</strong>。</p>
+</blockquote>
+<h3 id="位图索引的优势"><a href="#位图索引的优势" class="headerlink" title="位图索引的优势"></a>位图索引的优势</h3><p>位图索引的优势是它们允许我们在许多情况下高效地回答 <strong>部分匹配查询</strong> 。下面我们来看个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">SELECT title </div><div class="line">FROM Movie</div><div class="line">WHERE studioName = &apos;Disney&apos; AND year = 2005;</div></pre></td></tr></table></figure>
+<p>那么我们针对字段<code>studioName</code>和字段<code>year</code>建立位图索引，那么我们就可以得到<code>Disney</code>对应的位向量A，<code>year</code>对应的位向量B。现在我们对位向量A和B求交集，即两个位向量做按位与的操作得到一个位向量C。然后我们观察位向量C的二进制位，当某一位值为1时就表示该记录满足上诉约束条件的结果；</p>
+<p>位图索引也能够帮助回答范围查询。下面来看个例子，还是上面一直用的“薪资-年龄”表格：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">薪资</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">400</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">350</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">75</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">120</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">275</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">110</td>
+</tr>
+<tr>
+<td style="text-align:left">85</td>
+<td style="text-align:left">140</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们为字段年龄建立位图索引：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">110000000000</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">001000000000</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">000110000000</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">000001111000</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">000000000100</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">000000000010</td>
+</tr>
+<tr>
+<td style="text-align:left">80</td>
+<td style="text-align:left">000000000001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>现在为薪水字段建立位图索引</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">薪水</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">100100000000</td>
+</tr>
+<tr>
+<td style="text-align:left">400</td>
+<td style="text-align:left">010000000000</td>
+</tr>
+<tr>
+<td style="text-align:left">260</td>
+<td style="text-align:left">001000000100</td>
+</tr>
+<tr>
+<td style="text-align:left">350</td>
+<td style="text-align:left">000010000000</td>
+</tr>
+<tr>
+<td style="text-align:left">75</td>
+<td style="text-align:left">000001000000</td>
+</tr>
+<tr>
+<td style="text-align:left">100</td>
+<td style="text-align:left">000000100000</td>
+</tr>
+<tr>
+<td style="text-align:left">120</td>
+<td style="text-align:left">000000010000</td>
+</tr>
+<tr>
+<td style="text-align:left">275</td>
+<td style="text-align:left">000000001000</td>
+</tr>
+<tr>
+<td style="text-align:left">110</td>
+<td style="text-align:left">000000000010</td>
+</tr>
+<tr>
+<td style="text-align:left">140</td>
+<td style="text-align:left">000000000001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们以上述为基础，找出年龄在 <code>45~55</code>且薪水范围在<code>100~200</code>之间记录。首先找到范围内的年龄向量，并对它们进行按位或操作得到一个新的向量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">000110000000</div><div class="line">|</div><div class="line">000001111000</div><div class="line">=</div><div class="line">000111111000</div></pre></td></tr></table></figure>
+<p>就得到符合年龄的记录。<br>然后找到符合薪水的向量，同样对他们进行按位或操作得到一个新向量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">000000100000</div><div class="line">|</div><div class="line">000000010000</div><div class="line">|</div><div class="line">000000000010</div><div class="line">|</div><div class="line">000000000001</div><div class="line">=</div><div class="line">000000110011</div></pre></td></tr></table></figure>
+<p>现在我们对上面的两个新向量进行按位与来求交集：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">000111111000</div><div class="line">&amp;</div><div class="line">000000110011</div><div class="line">=</div><div class="line">000000110000</div></pre></td></tr></table></figure>
+<p>也就得出第7个和第8个记录是符合约束条件的。</p>
+<blockquote>
+<p>使用位图向量求交集时用按位与，并集用按位或！！！</p>
+</blockquote>
+<h3 id="压缩位图"><a href="#压缩位图" class="headerlink" title="压缩位图"></a>压缩位图</h3><p>假定我们有n个记录的文件，该文件存在字段F。该字段F在文件内有m个不同的值。现在我们要对字段F建立位图索引，那么就就需要 <code>mn</code> 位的二进制位。随着m或者n的增大会导致位图索引所占的空间变大。</p>
+<p>一个常见的压缩方案叫做 <strong>分段长度编码</strong> ：<strong>段是由 i个0 后跟 1个1 组成的序列</strong>。通过对整数i适当地二进制编码来表示一个段。然后把每个段拼接在一起，得到的位序列就是整个位向量的编码。</p>
+<h4 id="确定位数、编码"><a href="#确定位数、编码" class="headerlink" title="确定位数、编码"></a>确定位数、编码</h4><p>下面我们先来看看如何适当地来表示 <strong>i</strong>，具体的方案如下：</p>
+<ul>
+<li>1）、首先需要确定 i 的二进制表示由多少位；位数近似地等于 $j = log_{2}i$ (j表示i的二进制位数)。那么就用j-1个1和一个0来表示i所占的位数。</li>
+<li>2）、然后我们在后面加上二进制表示；</li>
+</ul>
+<p>比如对于 i = 13，那么$log_{2}13 \approx 4$，也就是说j为4.那么前面的位数需要 $4-1=3$ 个1和1个0： <code>1110</code>。而13的二进制表示为<code>1101</code>。因此最终的编码为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">11101101</div></pre></td></tr></table></figure></p>
+<p>特殊的情况：</p>
+<blockquote>
+<p>当i=0或者i=1时j为1。那么我们以0开始且0后面为表示 i 的 <strong>一位</strong> 二进制数；</p>
+</blockquote>
+<h4 id="解码"><a href="#解码" class="headerlink" title="解码"></a>解码</h4><p>而根据编码来解码整数 i 也是很简单的。当我们处于某个整数 i 编码位序列的开始位置上：</p>
+<ul>
+<li>1）、向前扫描到第一个0，以此来确定位长度（即 j 的值）；</li>
+<li>2）、我们查找位序列后的 j 位，这些二进制数就用来表示整数 i ；</li>
+</ul>
+<p>比如我们现在有一个二进制位序列：<code>11101101001011</code>。我们从左到右扫描直到遇到第一个0：</p>
+<ul>
+<li>首先扫描到3个1，那么后续的4个二进制位 <code>1101</code> 用来表示整数13；</li>
+<li>接着马上看到一个0，即后续的1位二进制 <code>0</code> 表示整数 0；</li>
+<li>最后扫描到1个1，那么后续的2个二进制位<code>11</code>用来表示整数3；</li>
+</ul>
+<h4 id="确定位序列"><a href="#确定位序列" class="headerlink" title="确定位序列"></a>确定位序列</h4><p>现在我们解码了整数 i 。那么我们就需要根据上面提到的一句话 <strong>由i个0和1个1的位序列来组成段</strong> 。那么得到的最重的位向量为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/// (13个0，1个1) + (0个0，1个1) + (3个0，1个1)</div><div class="line">00000000000001     1              0001</div></pre></td></tr></table></figure>
+<p>上面讲这么多都是为了能够压缩上面这个位向量的那一系列二进制位。每个这样解码的位向量都以 1 结尾。且任何的尾数0串都不会被恢复。</p>
+<blockquote>
+<p><strong>既然位向量中0表示相应的记录不在所描述的集合中，我们甚至不必知道记录的总数，并且可以忽略这个尾数0串</strong>。</p>
+</blockquote>
+<h4 id="例子🌰"><a href="#例子🌰" class="headerlink" title="例子🌰"></a>例子🌰</h4><p>下面是2个年龄的原始位向量：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">000110000000</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">000001111000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>现在我们需要对这个三个位向量进行压缩。</p>
+<p>对于年龄45：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">0001           1           0000000</div><div class="line">(3个0、1个1) + (0个0、1个1)  全是0直接省略</div></pre></td></tr></table></figure>
+<p>那么得到的数字序列为 <code>(3,0)</code>，这里i=3、0，那么编码的结果为 <code>1011 00</code>。也就是说位向量 <code>000110000000</code> 被压缩为 <code>1011 00</code>。</p>
+<p>对于年龄50：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">000001         1             1             1           000</div><div class="line">(5个0、1个1) + (0个0、1个1) + (0个0、1个1) + (0个0、1个1)  全是0直接省略</div></pre></td></tr></table></figure>
+<p>那么得到的数字序列为<code>5000</code>，这里i=5、0、0、0，那么编码的结果为 <code>110101 00 00 00</code>也就是说位向量 <code>000001111000</code> 被压缩为 <code>110101 00 00 00</code>。</p>
+<blockquote>
+<p>总结：</p>
+<p>1、根据原始数据中0的个数来确定需要压缩的位数；</p>
+<p>2、根据得到的压缩位数，对这个数字求对数，并进行编码；</p>
+</blockquote>
+<h3 id="位图索引的管理"><a href="#位图索引的管理" class="headerlink" title="位图索引的管理"></a>位图索引的管理</h3><p>位图索引相关的三个问题：</p>
+<ul>
+<li><p>1、 <strong>查找位向量</strong>：当想要查找一个给定值的位向量，或者给定范围内的值对应的多个位向量时，我们如何有效地找到它们；</p>
+<p>  把位向量看成记录，它们的键是对应于该位向量的字段值。然后任何辅助索引技术都可以使我们有效地按值找到它们的位向量。<br>  我们存储位向量时，把他们当做可变长记录。这是因为随着数据文件中记录的增加，它们一般会增长。</p>
+</li>
+<li><p>2、 <strong>查找记录</strong>：当我们已经选择好回答查询查询的记录集时，我们如何有效地检索记录；</p>
+<p>  我们可在数据文件上创建辅助索引（稠密索引，无序，桶），它的索引键是记录号。</p>
+</li>
+<li>3、 <strong>更新位图索引</strong>：当出现插入或者删除时，如何调整给定字段的位图索引；</li>
+</ul>
+<h4 id="数据文件修改的处理"><a href="#数据文件修改的处理" class="headerlink" title="数据文件修改的处理"></a>数据文件修改的处理</h4><p>数据文件的改变需要位图索引也做相应的改变。</p>
+<p>对于插入而言，我们保留一个可用记录号，并且把它分派给新纪录。对于每个位图索引，我们必须确定新纪录在相应字段的值，并且在该值的位向量后面加1。而需要向其他位向量后面加0，而对于上面提到的压缩技术而言，加0操作完全可以省略；</p>
+<p>当新纪录中有一个索引字段是首次出现的，那么我们就需要给这个字段增加一个新的位向量，然后根据位向量的值插入到索引结构中。</p>
+<p>最后是将位图索引字段的值从旧值更改为新值，那么我们就需要修改旧值对应的位向量：即该向量相应位置的1更改为0；同样也需要修改新值对应的位向量：如果新值之前尚未存在过，那么就是上面的插入逻辑；如果新值之前存在，那么就需要将该向量对应位置的0更改为1。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>在本篇文章中主要是记录了一下多维索引和位图索引，它们存在目的主要是为了处理范围查询。其中比较重要的多维树形结构包括有多级索引（一层表示一个字段）、kd树（不同属性交替出现）、四叉树和R树。最后就是位图索引，它的主体是某一个字段，然后根据每个记录对应字段值构造不同的位图，即对同一字段在不同记录中查找不同的值。以及根据位图索引的压缩操作和解码操作。</p>
+]]></content>
+    
+    <summary type="html">
+    
+      &lt;p&gt;在上一篇文章中看到的都是一维索引。也就是说，它们是使用单个查找键，并且按给定的查找键值来检索记录。&lt;/p&gt;
+&lt;p&gt;大多数支持多维数据查询的数据结构归于以下两类之一：&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;1、类散列表方法；&lt;/li&gt;
+&lt;li&gt;2、类树方法；&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;
+    
+    </summary>
+    
+      <category term="数据库" scheme="http://yoursite.com/categories/%E6%95%B0%E6%8D%AE%E5%BA%93/"/>
+    
+    
+      <category term="数据库系统" scheme="http://yoursite.com/tags/%E6%95%B0%E6%8D%AE%E5%BA%93%E7%B3%BB%E7%BB%9F/"/>
+    
+  </entry>
+  
+  <entry>
     <title>OpenGL投影变换矩阵</title>
     <link href="http://yoursite.com/2020/09/07/opengl_%20projection_matrix/"/>
     <id>http://yoursite.com/2020/09/07/opengl_ projection_matrix/</id>
@@ -4114,242 +4729,6 @@ Vuforia::setInitParameters(mVuforiaInitFlags,"AT16FIX/////AAAAGVieZ/kg1UkghTnYAz
     
       &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-d284587e19456111.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  在上一篇文章中，我们对GCD有了基本的认知，知道其中一些简单的类型，和一些简单函数。这本篇文章中，我们将继续学习GCD中我们在日常开发中使用较多的函数，及其使用方法。在本篇会介绍&lt;strong&gt;dispatch_after、dispatch_apply、dispatch_group_t、dispatch_semaphore_t和dispatch_barrier&lt;/strong&gt;等相关函数。&lt;/p&gt;
 &lt;h2 id=&quot;&quot;&gt;&lt;a href=&quot;#&quot; class=&quot;headerlink&quot; title=&quot; &quot;&gt;&lt;/a&gt;
-    
-    </summary>
-    
-      <category term="实战" scheme="http://yoursite.com/categories/%E5%AE%9E%E6%88%98/"/>
-    
-    
-      <category term="GCD" scheme="http://yoursite.com/tags/GCD/"/>
-    
-  </entry>
-  
-  <entry>
-    <title>从头认识GCD——派发队列基础</title>
-    <link href="http://yoursite.com/2017/07/29/gcd_basic/"/>
-    <id>http://yoursite.com/2017/07/29/gcd_basic/</id>
-    <published>2017-07-29T10:33:29.000Z</published>
-    <updated>2017-07-29T11:55:28.000Z</updated>
-    
-    <content type="html"><![CDATA[<p><img src="http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt=""><br>  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。（建议在PC端浏览）<br>  <a id="more"></a><br>  包括使用较少的<code>dispatch_qos_class_t 、dispatch_block_t</code>等等知识点。<br>  GCD任务队列能够让开发者能够更加专注于同步或者异步任务task，而不用把重点放在创建线程和具体同步和加锁等相关操作。但是如果我们想异步做更加灵活的任务的话（比如后台任务之类的），那选择线程肯定是更好的选择。毕竟操作简单带来就是灵活性的确实嘛！首先先来看看派发队列。<br>  当用户向某一线程提交一个task时，<strong>_dispatch_queue_t_</strong>作为任务队列以用户期望的方式来管理这些task。 管理的任务的方式有两种类型，分别是串行队列(<code>DISPATCH_QUEUE_SERIAL</code>)和并行队列(<code>DISPATCH_QUEUE_CONCURRENT</code>)，它们两个是由宏定义的。 <br></p>
-<hr>
-<h4 id="一、获取任务队列"><a href="#一、获取任务队列" class="headerlink" title="一、获取任务队列"></a>一、获取任务队列</h4><p>现在问题来了，我们既然知道有这么一个类型了，那我们总要有方式来得到它啊是吧。就目前而言，Apple给我们提供获取该类型变量的方式有三种，分别是：</p>
-<ul>
-<li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452921-dispatch_get_main_queue?language=objc" target="_blank" rel="external">dispatch_get_main_queue</a></em></strong>：程序主线程的任务队列，这是一个串行队列（<code>DISPATCH_QUEUE_SERIAL</code>）。在程序<code>main()</code>函数被调用之前由系统自动创建。在官方文档中还提到了，我们可以主动去执行被添加到<code>main_queue</code>的任务task（也就是说我们可以主动来调用添加到主线程队列的<strong>block</strong>）。三个方法分别是：<code>dispatch_main()、UIApplicationMain 、CFRunLoopRun()</code>，选用其中一个。我尝试了一下使用<code>dispatch_main()</code>会导致程序中断。</p>
-</li>
-<li><p><strong><em><a href="https://developer.apple.com/documentation/dispatch/1452927-dispatch_get_global_queue?language=objc" target="_blank" rel="external">dispatch_get_global_queue</a></em></strong>：由系统定义并管理的一个全局并行队列。在获取时，我们需要指定任务队列的系统等级（DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND）。</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>但是在iOS8以后，使用枚举<code>qos_class_t</code>的值，提供了细粒度更高的全局任务队列，关于QOS在后面统一梳理一下。</p>
-<pre><code><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);</div></pre></td></tr></table></figure>
-</code></pre><blockquote>
-<p>该函数的返回值上使用<code>dispatch_resume、dispatch_suspend</code>无效，</p>
-</blockquote>
-<ul>
-<li><p><strong><em>dispatch_queue_create</em></strong>：除了上诉系统提供的两种类型的任务队列之外，我们还可以自己去创建任务队列。我们可以自己创建串行（<code>DISPATCH_QUEUE_SERIAL</code>）和并行（<code>DISPATCH_QUEUE_CONCURRENT</code>）两种类型的队列，但是它们都有一个变种DISPATCH_QUEUE_SERIAL_INACTIVE, DISPATCH_QUEUE_CONCURRENT_INACTIVE。它们同样会有涉及到QOS的创建方法，后面一起记录一下</p>
-  <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_create(&quot;com.example.gcd&quot;, DISPATCH_QUEUE_CONCURRENT);</div></pre></td></tr></table></figure>
-</li>
-</ul>
-<p>上诉三种就是获得任务队列方法，我们在设置<code>dispatch_ge_global_queue</code>的第二个参数时一般设置为<strong><em>0</em></strong>。上面这三种方式是我们在日常开发中，使用并发编程时通过GCD的方式来获取任务队列的方法。<strong>在大部分时间使用并行的任务队列时，<code>global_queue</code>能够基本满足需求；对于我来说创建线程的场景，主要是当我们需要一个串行的任务，但是又不想在主线程去执行时使用</strong>。既然我在上面提到了QOS，下面我们就系统的来认识一下QOS。</p>
-<h4 id="二、通过QOS配置队列"><a href="#二、通过QOS配置队列" class="headerlink" title="二、通过QOS配置队列"></a>二、通过QOS配置队列</h4><p>  由于在我们的程序中，存在各种各样的场景，比如用户界面刷新，网络请求，资源下载，缓存存取之类的。为了能够保证程序的高效响应，需要对不同的任务对资源的消耗做出一些调整。<br>此时我们就可以使用QOS来解决不同任务的资源分配问题，QOS可以用于<code>dispatch_queue, NSOperation, NSOperationQueue, NSThread ,pthreads</code>中，这篇文章中主要讲一下在<strong><em>dispatch_queue</em></strong>中的使用场景。</p>
-<blockquote>
-<p>在官方文档中也说，关于QOS的只能在iOS8以后使用</p>
-</blockquote>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:left">QOS_CLASS</th>
-<th style="text-align:left">执行时机</th>
-<th style="text-align:center">相关使用场景</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left"><strong>USER_INTERACTIVE</strong></td>
-<td style="text-align:left">必须是要及时处理</td>
-<td style="text-align:center">等级最高。主要用户用户交互，比如主线程上的刷新用户界面等等。</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>USER_INITIATED</strong></td>
-<td style="text-align:left">需要很快完成工作</td>
-<td style="text-align:center">它主要用于比如已经开了一个任务，此时需要立刻执行的场景。意思就是说需要瞬间完成的工作</td>
-</tr>
-<tr>
-<td style="text-align:left">❌ DEFAULT</td>
-<td style="text-align:left">——</td>
-<td style="text-align:center">这个我们一般不使用，<code>dispatch_get_global_queue</code>就是这一等级。</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>UTILITY</strong></td>
-<td style="text-align:left">可能需要相当长一段时间</td>
-<td style="text-align:center">不需要及时响应，比如下载操作之类的，但是用户是可以看见进度之类的</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>BACKGROUND</strong></td>
-<td style="text-align:left">长时间类型任务</td>
-<td style="text-align:center">完全是后台执行，用户不知道进度的</td>
-</tr>
-<tr>
-<td style="text-align:left">❌ UNSPECIFIED</td>
-<td style="text-align:left">——</td>
-<td style="text-align:center">开发人员没有指定，系统根据情况进行选定QOS等级</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>上诉QOS对应OC参数如下：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:left">QOS-Class</th>
-<th style="text-align:left">对应OC</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">USER_INTERACTIVE</td>
-<td style="text-align:left">NSQualityOfServiceUserInteractive</td>
-</tr>
-<tr>
-<td style="text-align:left">USER_INITIATED</td>
-<td style="text-align:left">NSQualityOfServiceUserInitiated</td>
-</tr>
-<tr>
-<td style="text-align:left">UTILITY</td>
-<td style="text-align:left">NSQualityOfServiceUtility</td>
-</tr>
-<tr>
-<td style="text-align:left">BACKGROUND</td>
-<td style="text-align:left">NSQualityOfServiceBackground</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>在dispatch_queue中，如果我们想要指定QOS的等级的话，我们可以使用函数<a href="https://developer.apple.com/documentation/dispatch/1453028-dispatch_queue_attr_make_with_qo" target="_blank" rel="external">dispatch_queue_attr_make_with_qos_class</a>。在创建任务队列时使用方法如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">dispatch_queue_attr_t attr_qos = dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INTERACTIVE, 0);</div><div class="line">dispatch_queue_t queue = dispatch_queue_create(&quot;com.example.gcd&quot;, attr_qos);</div></pre></td></tr></table></figure>
-<p>因为 <strong>QOS对于<code>dispatch_queue</code>来说是无法变更的属性</strong>，以致于我们无法去更改已存在任务队列的QOS属性。但是我们可以使用<code>dispatch_queue_get_qos_class</code>函数来获取任务队列的QOS：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div></pre></td><td class="code"><pre><div class="line">dispatch_qos_class_t qos_class = dispatch_queue_get_qos_class(the_queue, 0);</div><div class="line">/// 一般用于 根据已知队列来获取同qos等级的全局任务队列</div><div class="line">dispatch_get_global_queue(dispatch_queue_get_qos_class(the_queue, nil), 0);</div><div class="line">/// 或者是 根据已知的全局任务队列来创建与其qos相等的任务队列</div><div class="line">dispatch_queue_t the_global = dispatch_get_global_queue(QOS_CLASS_UTILITY, 0);</div><div class="line">dispatch_queue_t the_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, dispatch_queue_get_qos_class(the_global, 0), 0));</div></pre></td></tr></table></figure>
-<p>当我们要获取全局队列时，在此之前可以使用<code>DISPATCH_QUEUE_PRIORITY_HIGH、DISPATCH_QUEUE_PRIORITY_DEFAULT、DISPATCH_QUEUE_PRIORITY_LOW、DISPATCH_QUEUE_PRIORITY_BACKGROUND</code>。现在我们可以使用QOS来获取一个全局的并发任务队列，因此我们有必要来了解一下它们之间的差异和共性：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:left">以前</th>
-<th style="text-align:left">现在QOS</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left">Main Thread</td>
-<td style="text-align:left">QOS_CLASS_USER_INTERACTIVE</td>
-</tr>
-<tr>
-<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_HIGH</td>
-<td style="text-align:left">QOS_CLASS_USER_INITIATED</td>
-</tr>
-<tr>
-<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_DEFAULT</td>
-<td style="text-align:left">QOS_CLASS_DEFAULT</td>
-</tr>
-<tr>
-<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_LOW</td>
-<td style="text-align:left">QOS_CLASS_UTILITY</td>
-</tr>
-<tr>
-<td style="text-align:left">DISPATCH_QUEUE_PRIORITY_BACKGROUND</td>
-<td style="text-align:left">QOS_CLASS_BACKGROUND</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>具体使用方法如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">dispatch_get_global_queue(QOS_CLASS_USER_INTERACTIVE, 0);</div></pre></td></tr></table></figure>
-<p> 除此之外，我们还可以在<code>dispatch_block</code>中对每一个人任务块来设置Qos等级，这里我先将<code>dispatch_block</code>提出来，后面我会对其进行较为详细的解释。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t the_block = dispatch_block_create_with_qos_class(0, QOS_CLASS_UTILITY, -8, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div><div class="line">dispatch_async(the_queue, the_block);///dispatch_sync, dispatch_after等等需要用到dispatch_block的地方</div></pre></td></tr></table></figure>
-<h4 id="三、创建任务"><a href="#三、创建任务" class="headerlink" title="三、创建任务"></a>三、创建任务</h4><p>  前面两点说了任务的执行地点和怎样来创建和配置任务的执行地点，但是我们必须得知道任务是什么？怎么创建任务？在GCD中使用block来作为任务提交给特定的任务队列，例如<strong>_dispatch_block_t_</strong>或者直接是一个简单的block。<br>对于<code>dispatch_block_t</code>类型的变量，首先我们得要知道怎么去创建它。首先根据我们的尝试（下面的例子出自<a href="https://developer.apple.com/documentation/dispatch/dispatch_block_t" target="_blank" rel="external">Apple官方</a>），对block进行直接赋值：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t error_block;</div><div class="line">NSInteger x = 0;</div><div class="line">if (x) &#123;</div><div class="line">        error_block = ^void(void)&#123;</div><div class="line">            NSLog(@&quot;TRUE&quot;);</div><div class="line">        &#125;;</div><div class="line">&#125;else&#123;</div><div class="line">        error_block = ^void(void)&#123;</div><div class="line">            NSLog(@&quot;FALSE&quot;);</div><div class="line">        &#125;;</div><div class="line">&#125;</div><div class="line">error_block();/// unsafe</div></pre></td></tr></table></figure>
-<p>  官网中解释到：“ 由于该<code>dispatch_block_t</code>变量是在栈内存上声明的，如果执行过该变量作用域之后就有可能导致该变量被释放 ”。到这里我们还是不得不提一下<code>block</code>在MRC和ARC下的区别，我们先看一篇<a href="http://blog.parse.com/learn/engineering/objective-c-blocks-quiz/" target="_blank" rel="external">测试</a>，在这篇测试中很明显的一个点便是：“ MRC中有NSStackBlock类型，NSMallocBlock类型，NSGlobalBlock类型同时存在。但是在ARC中不再存在NSStackBlock类型，而是直接声明为NSMallocBlock类型” 。也就是说在ARC中就算是在函数方法中声明的block变量也是被声明为NSMallocBlock类型。<br>  NSMallocBlock类型就不存在上诉官网中提到的变量被提前释放的问题，这一步我并没有去实践，所以上诉结论是否为真，既然官方不建议这么做，那便放弃使用该方法。使用一下两种方式来创建<code>dispatch_block_t</code>变量：</p>
-<ul>
-<li><strong><em>dispatch_block_create</em></strong></li>
-<li><strong><em>dispatch_block_create_with_qos_class</em></strong></li>
-</ul>
-<p>当我们在使用上诉两种方法来创建<code>dispatch_block_t</code>变量时，遇到的第一个便是<code>dispatch_block_flags_t</code>参数。它是一个枚举类型：</p>
-<div class="table-container">
-<table>
-<thead>
-<tr>
-<th style="text-align:left">枚举类型</th>
-<th style="text-align:left">作用</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td style="text-align:left"><strong>DISPATCH_BLOCK_ASSIGN_CURRENT</strong></td>
-<td style="text-align:left">说明该块会被分配在创建该对象的上下文中（直接执行该块对象时推荐使用）</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>DISPATCH_BLOCK_BARRIER</strong></td>
-<td style="text-align:left">类似于在做同步操作时的<code>barrier</code></td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>DISPATCH_BLOCK_DETACHED</strong></td>
-<td style="text-align:left">表明dispatch_block与当前的执行环境属性无关</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>DISPATCH_BLOCK_ENFORCE_QOS_CLASS</strong></td>
-<td style="text-align:left">当dispatch_block提交到队列或者直接提交执行做同步操作时，该值是默认值</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>DISPATCH_BLOCK_INHERIT_QOS_CLASS</strong></td>
-<td style="text-align:left">异步执行的默认值，优先级低于<code>DISPATCH_BLOCK_ENFORCE_QOS_CLASS</code>。可以用该值来覆盖原来QOS类</td>
-</tr>
-<tr>
-<td style="text-align:left"><strong>DISPATCH_BLOCK_NO_QOS_CLASS</strong></td>
-<td style="text-align:left">表明dispatch_block不分配QOS类</td>
-</tr>
-</tbody>
-</table>
-</div>
-<p>来创建<code>dispatch_block</code>变量：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div></pre></td><td class="code"><pre><div class="line">/// 第一种使用QOS的方式来创建dispatch_block</div><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);</div><div class="line">&#125;);</div><div class="line">/// 直接创建dispatch_block</div><div class="line">dispatch_block_create(DISPATCH_BLOCK_NO_QOS_CLASS, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
-<p>对于<code>dispatch_block_create_with_qos_class</code>方法中relative_priority的参数的规则是：<code>relative_priority</code>的值需要在0到<code>QOS_MIN_RELATIVE_PRIORITY</code>（-15）之间。<br>  我们<strong>创建的block会被拷贝到堆上，并由<code>dispatch_block_t</code>类型的变量所持有</strong>。创建完成之后，我们可以将其提交到对应的任务队列中（下一节提到的dispatch_async等等函数…），也可以直接去执行（比如：task_block()）。<br>  既然可以直接去输入一个block块，那为什么我们还需要去使用<code>dispatch_block_t</code>？存在即有价值，那么最明显的优势便是：我们可以对该任务块执行<strong>取消操作</strong>！例如：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(0.5 * NSEC_PER_SEC)), dispatch_get_main_queue(), task_block);</div><div class="line">dispatch_block_cancel(task_block);</div></pre></td></tr></table></figure>
-<p>但是<strong>如果dispatch_block已经开始执行，便无法取消该任务的执行</strong>。比如下面的例子中，我们对上面的代码进行一点小小的修改：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;RUN&quot;);/// 成功执行</div><div class="line">        /// 模拟一个长时间的耗时任务</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);/// 成功执行</div><div class="line">&#125;);</div><div class="line">dispatch_async(dispatch_get_main_queue(), task_block);</div><div class="line">dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(1 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^&#123;</div><div class="line">        /// 保证dispatch_block_t已经开始执行</div><div class="line">        dispatch_block_cancel(task_block);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
-<p>在这里我们是无法去取消已经执行的块。<code>dispatch_block_testcancel</code>函数的作用是让我们能够知道当前任务块是否已经被取消。</p>
-<blockquote>
-<p>在调用<code>dispatch_block_cancel</code>函数时，我们必须要确定即将被cancle的块没有捕获任何其他外部变量，如果持有将会造成内存泄漏。</p>
-</blockquote>
-<p>  除此之外我们来认识一下<strong><em>dispatch_block_wait</em></strong> 函数，它的作用是以同步的方式执行并等待，得等待指定的任务块执行完成之后，抑或者是超时之后然后去执行当前线程的后续任务。如下：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_async(dispatch_get_main_queue(), task_block);</div><div class="line">NSLog(@&quot;Before Wait&quot;);</div><div class="line">dispatch_block_wait(task_block, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;After Wait&quot;);</div></pre></td></tr></table></figure>
-<p>此时运行并不会得到<code>Start</code>。由于<code>dispatch_block_wait</code>函数是使用的同步的方式，只要是在该线程的执行流中，它不管你是同步提交还是异步提交（这两种提交方式在下面一节马上会讲）的方式，<code>dispatch_block_wait</code>函数如果是在被执行的block之前执行，后续的代码都会被挂起，并不仅仅是<code>dispatch_block_wait</code>函数后的代码，也包括block中的代码。因此也就导致了在同一个任务队列中（都处于main_queue中）的<code>dispatch_block_t</code>永远不会执行。解决办法也很简单，第一种我们先让block执行起来；第二种我们让它们处在不同队列中即可：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_queue_t block_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_async(block_queue, task_block);</div><div class="line">NSLog(@&quot;Before Wait&quot;);</div><div class="line">dispatch_block_wait(task_block, DISPATCH_TIME_FOREVER);</div><div class="line">NSLog(@&quot;After Wait&quot;);</div></pre></td></tr></table></figure>
-<p>我们可以利用这个方法来做由异步转同步的需求（后面还会介绍<code>dispatch_semaphore_t</code>，它同样可以达到这个效果）。<br>  最后来看一下函数<strong>_dispatch_block_notify_</strong>，它的作用是当指定的<code>dispatch_block_t</code>变量执行完了之后，通知到给特定的任务队列。在上面的例子中，我们在<code>block_queue</code>中去执行了我们的任务块，但是我们想要在它执行完了以后在<code>main_queue</code>中来执行相关的操作，比如我们需要在<code>main_queue</code>中更新UI界面之类的：</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t task_block = dispatch_block_create_with_qos_class(DISPATCH_BLOCK_INHERIT_QOS_CLASS, QOS_CLASS_USER_INITIATED, -8, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div><div class="line">dispatch_queue_t block_queue = dispatch_queue_create(&quot;com.example.gcd&quot;, dispatch_queue_attr_make_with_qos_class(DISPATCH_QUEUE_CONCURRENT, QOS_CLASS_USER_INITIATED, 0));</div><div class="line">dispatch_async(block_queue, task_block);</div><div class="line">dispatch_block_notify(task_block, dispatch_get_main_queue(), ^&#123;</div><div class="line">        NSLog(@&quot;Notify&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
-<h4 id="四、将任务提交到队列"><a href="#四、将任务提交到队列" class="headerlink" title="四、将任务提交到队列"></a>四、将任务提交到队列</h4><p>  在文章的最后，我们来看看怎样把已经创建好的任务提交到特定的任务队列中去！对于提交操作主要涉及到的函数有：<strong>dispatch_async、dispatch_sync、dispatch_block_perform、dispatch_group_async、dispatch_barrier_async、dispatch_barrier_sync</strong>。在这篇文章中先讲前面三个。再后面文章中详解dispatch_group_t、dispatch_barrier时在进行对应的学习。<br>  <code>dispatch_async</code>使用异步地方式去提交任务块，何为异步？异步方法调用它通过使用一种立即返回的异步的变体并提供额外的方法来支持接受完成通知以及完成等待改进长期运行的(同步)方法（出自<a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E6%AD%A5%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8" target="_blank" rel="external">维基百科</a>）。<code>dispatch_sync</code>使用同步的方式取提交任务块。下图是根据我自己的理解来解释了一下异步和同步的差异性。<br></p>
-<p><img src="http://upload-images.jianshu.io/upload_images/619906-601bf2002a932ad4.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="异步和同步的对比"><br>上诉函数分别有对应的版本，分别是<code>dispatch_async_f、dispatch_sync_f</code>。它们两个和前面的区别在于，这两个函数不使用block的方式，而是使用C函数指针的方式来执行任务。它们中的<strong>context</strong>是以<code>void *</code>类型的变量作为参数，传递给函数指针指向的具体函数。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div><div class="line">10</div><div class="line">11</div><div class="line">12</div><div class="line">13</div><div class="line">14</div><div class="line">15</div><div class="line">16</div><div class="line">17</div><div class="line">18</div></pre></td><td class="code"><pre><div class="line">/// 异步使用block</div><div class="line">dispatch_async(queue, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div><div class="line">/// 同步使用block</div><div class="line">dispatch_sync(queue, ^&#123;</div><div class="line">        ...</div><div class="line">&#125;);</div><div class="line">/// 异步使用函数指针</div><div class="line">dispatch_async_f(dispatch_get_main_queue(),  (__bridge void * _Nullable)(self), task_place);</div><div class="line">void task_place(void *data)&#123;</div><div class="line">    ...</div><div class="line">&#125;</div><div class="line">/// 同步使用函数指针</div><div class="line">dispatch_sync_f(block_queue, (__bridge void * _Nullable)(self), task_place);</div><div class="line">void task_place(void *data)&#123;</div><div class="line">    ...</div><div class="line">&#125;</div></pre></td></tr></table></figure>
-<p>最后我们来看看本应属于<code>dispatch_block_t</code>中应该讲解的函数<code>dispatch_block_perform</code>，但是它作为一个提交任务的函数，放在这里讲我觉得要更为合适一点。它会创建一个<code>dispatch_block_t</code>变量，并在该任务队列中以同步的方式来执行block中的内容。</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">dispatch_block_perform(DISPATCH_BLOCK_BARRIER, ^&#123;</div><div class="line">        NSLog(@&quot;Start&quot;);</div><div class="line">        [NSThread sleepForTimeInterval:3];</div><div class="line">        NSLog(@&quot;End&quot;);</div><div class="line">&#125;);</div></pre></td></tr></table></figure>
-<p>上面的代码以下代码效果一样（取自<a href="https://developer.apple.com/documentation/dispatch/1431048-dispatch_block_perform?language=objc" target="_blank" rel="external">Apple官方文档</a>）:</p>
-<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">dispatch_block_t b = dispatch_block_create(flags, block);</div><div class="line">b();</div><div class="line">Block_release(b);</div></pre></td></tr></table></figure>
-<p>但是<code>dispatch_block_perform</code>方法可以以更加高效的方式来进行以上步骤，而不需要在对象分配时将block拷贝到指定堆中。<br>  到这里把最基础的部分算是走了一遍，可以说是走了最小的一步，但是本文的目的是力求以清晰地路线把每一步所涉及到的知识深挖严查。在后续的文章中会继续介绍GCD中的其他函数和相关的使用方法。</p>
-<h4 id="相关链接"><a href="#相关链接" class="headerlink" title="相关链接"></a>相关链接</h4><p>以文章中出现顺序：</p>
-<ul>
-<li><a href="https://developer.apple.com/library/content/documentation/Performance/Conceptual/EnergyGuide-iOS/PrioritizeWorkWithQoS.html#//apple_ref/doc/uid/TP40015243-CH39-SW1" target="_blank" rel="external">Prioritize Work with Quality of Service Classes</a></li>
-<li><a href="https://developer.apple.com/library/content/documentation/General/Conceptual/ConcurrencyProgrammingGuide/OperationQueues/OperationQueues.html#//apple_ref/doc/uid/TP40008091-CH102-SW17" target="_blank" rel="external">Concurrency Programming Guide</a></li>
-<li><a href="http://blog.parse.com/learn/engineering/objective-c-blocks-quiz/" target="_blank" rel="external">Objective-C Blocks Quiz</a></li>
-<li><a href="https://developer.apple.com/library/content/releasenotes/ObjectiveC/RN-TransitioningToARC/Introduction/Introduction.html" target="_blank" rel="external">Transitioning to ARC Release Notes</a></li>
-<li><a href="https://zh.wikipedia.org/wiki/%E5%BC%82%E6%AD%A5%E6%96%B9%E6%B3%95%E8%B0%83%E7%94%A8" target="_blank" rel="external">异步调用</a></li>
-</ul>
-]]></content>
-    
-    <summary type="html">
-    
-      &lt;p&gt;&lt;img src=&quot;http://upload-images.jianshu.io/upload_images/619906-27e0e0084cc378cf.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240&quot; alt=&quot;&quot;&gt;&lt;br&gt;  本文包括了从最基础的获取任务队列开始，配置任务队列，创建任务，提交任务一步一步地来复习GCD中所涉及到的知识。（建议在PC端浏览）&lt;br&gt;
     
     </summary>
     

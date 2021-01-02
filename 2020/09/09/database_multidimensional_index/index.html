@@ -1,0 +1,596 @@
+<!DOCTYPE html><html lang="zh-Hans"><head><meta charset="utf-8"><meta name="X-UA-Compatible" content="IE=edge"><title> 数据库原理——多维索引和位图索引 · 凌云壮志幾多愁</title><meta name="description" content="数据库原理——多维索引和位图索引 - 王望"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="/uploads/avatar/heart.png"><link rel="stylesheet" href="/css/apollo.css"><link rel="search" type="application/opensearchdescription+xml" href="http://yoursite.com/atom.xml" title="凌云壮志幾多愁"></head><body><div class="wrap"><header><a href="/" class="logo-link"><img src="/uploads/avatar/pencil.png" alt="logo"></a><ul class="nav nav-list"><li class="nav-list-item"><a href="/" target="_self" class="nav-list-link">BLOG</a></li><li class="nav-list-item"><a href="/archives/" target="_self" class="nav-list-link">ARCHIVE</a></li><li class="nav-list-item"><a href="http://weibo.com/wwloading" target="_blank" class="nav-list-link">WEIBO</a></li><li class="nav-list-item"><a href="https://github.com/wangwangok" target="_blank" class="nav-list-link">GITHUB</a></li><li class="nav-list-item"><a href="https://legacy.gitbook.com/@wangwangok" target="_blank" class="nav-list-link">GITBOOK</a></li><li class="nav-list-item"><a href="http://www.jianshu.com/u/11188e5bb304" target="_blank" class="nav-list-link">JIANSHU</a></li></ul></header><main class="container"><div class="post"><article class="post-block"><h1 class="post-title">数据库原理——多维索引和位图索引</h1><div class="post-info">Sep 9, 2020</div><div class="post-content"><p>在上一篇文章中看到的都是一维索引。也就是说，它们是使用单个查找键，并且按给定的查找键值来检索记录。</p>
+<p>大多数支持多维数据查询的数据结构归于以下两类之一：</p>
+<ul>
+<li>1、类散列表方法；</li>
+<li>2、类树方法；</li>
+</ul>
+<p>下面我们就分别来看看这些数据结构。</p>
+<h2 id="一、多维数据的散列结构"><a href="#一、多维数据的散列结构" class="headerlink" title="一、多维数据的散列结构"></a>一、多维数据的散列结构</h2><p>一种方法称为“网格文件”，它通常不是按维来“散列”值，而是通过排序该维的值来划分该维；另一种方法是“分段散列”，它确实散列各维，且每一维都影响桶号。</p>
+<h3 id="网格文件"><a href="#网格文件" class="headerlink" title="网格文件"></a>网格文件</h3><p>在涉及多维数据查询时，作为最简单的数据结构之一的网格文件通常要比单维索引性能要好。</p>
+<p>每一维上的网格线把空间分成条状，落在网格线上的点被认为是属于该网格为其 <strong>低边界</strong> 的条。</p>
+<ul>
+<li>1、不同网格线的数目可以不同；</li>
+<li>2、相邻网格线之间可有不同的长度，甚至同一维的线之间也可有不同的区间长度；</li>
+</ul>
+<p>下图是年龄和薪水（二维）分布的网格文件：</p>
+<p><img src="/uploads/IndexStructure/25.png" alt=""></p>
+<p>在这里空间被分为了9个条状矩形。一般来说，一个矩形包括落在其左边界和下边界上的点，但是不包括其右边界和上边界的点。</p>
+<h4 id="网格文件的查找"><a href="#网格文件的查找" class="headerlink" title="网格文件的查找"></a>网格文件的查找</h4><p>空间划分成的每一个区域可以被看成是散列表的一个桶，落入该区域的每个点的记录都存放在属于该桶的块中。如有必要，溢出块可以用来增加桶的大小。</p>
+<blockquote>
+<p>网格文件使用的桶数组维数和数据文件的维数一样。</p>
+</blockquote>
+<p>关注 “点” 的每一个分量，并且确定该维上点在网格中的位置。 <strong>点在每一维的位置一起决定点所属的桶</strong> 。</p>
+<p>下面是年龄和薪资对应的一个数据集：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">薪资</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">400</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">350</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">75</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">120</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">275</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">110</td>
+</tr>
+<tr>
+<td style="text-align:left">85</td>
+<td style="text-align:left">140</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们根据上面的数据集构建一个网格文件：</p>
+<p><img src="/uploads/IndexStructure/26.png" alt=""></p>
+<p>上图中使用的桶数组维数和网格文件的维数相同，均为2。横向表示年龄，纵向表示薪水。而且在上面的例子中没有桶超过两个记录，因此不需要溢出块。</p>
+<h4 id="网格文件的插入"><a href="#网格文件的插入" class="headerlink" title="网格文件的插入"></a>网格文件的插入</h4><p>插入操作同样也遵循查找记录的过程（即多个维度来确定桶的位置），并将新记录放到查找到的桶中。当桶中有足够的空间时，直接插入即可；如果桶中没有空间，可以用如下两种方法来解决这个问题：</p>
+<ul>
+<li>1、按需给桶增加溢出块；</li>
+<li>2、 <strong>通过增加或移动网格线来重组结构</strong>；</li>
+</ul>
+<p>网格文件在每一维上的条目数量可能非常大，如果那样的话，我们必须为每一维建立一个索引。索引的搜索码是该维分割值的集合。</p>
+<h4 id="网格文件的性能"><a href="#网格文件的性能" class="headerlink" title="网格文件的性能"></a>网格文件的性能</h4><p>网格文件虽然能够有任意数目的维，</p>
+<blockquote>
+<p><strong>但我们一直以来只考虑二维的情况</strong>。</p>
+</blockquote>
+<p>这是因为随着维数的增加，桶的数目成指数级增长。如果网格空间大部分是空，那么将会有许多的空桶。使用网格文件的场景为：</p>
+<blockquote>
+<p>数据分布很好，且数据文件本身又不太大</p>
+</blockquote>
+<p>对于部分匹配和范围查询来说，由于我们需要检查许多的桶，因此磁盘I/O数可能会很大。</p>
+<h3 id="分段散列函数"><a href="#分段散列函数" class="headerlink" title="分段散列函数"></a>分段散列函数</h3><p>该散列函数，它可以产生若干个二进制位，比如说k个。这k位二进制划分给各个不同的属性，比如属性A占用3位，属性B占用4位，属性C占用 k-3-4 位。</p>
+<p>更确切的说，散列函数h实际上是一个散列函数 <script type="math/tex">(h_{1}, h_{2}, ... , h_{n})</script>的列表。其中每个 <script type="math/tex">h_{i}</script> 运用到第i个属性，且产生 <script type="math/tex">k_{i}</script>位二进制位序列。</p>
+<p>我们还是来看个例子：如果我们有一个桶数目为 10位 （注意是10位，不是10个）的散列表（1024个桶）。我们把4位分给属性a（假设属性值为A），剩下的6位分给属性b（假设属性值为B）。如果 <script type="math/tex">h_{a}(A) = 0101,\ h_{b}(B)=111000</script> ，那么对应的桶号为两个二进制序列拼接的 <code>0101111000</code>。</p>
+<h2 id="二、多维数据的树结构"><a href="#二、多维数据的树结构" class="headerlink" title="二、多维数据的树结构"></a>二、多维数据的树结构</h2><p>下面四种结构对于多维数据范围查询和最邻近查询都有用。这四种结构分别是：</p>
+<ul>
+<li>1、多键索引；</li>
+<li>2、kd树；</li>
+<li>3、四叉树；</li>
+<li>4、R-树；</li>
+</ul>
+<p>前三种用于点集，R-树用来表示区域集合，也可以用来表示点集。</p>
+<h3 id="多键索引"><a href="#多键索引" class="headerlink" title="多键索引"></a>多键索引</h3><p>为了能够用几个属性来表示我们数据点的不同维度，并且支持范围查询和最近邻查询。那么我们可以一棵树，该树的每一层结点都是一个属性的索引。</p>
+<blockquote>
+<p><strong>每一个属性对应树的一层</strong>!!!</p>
+</blockquote>
+<p>换句话说就是“索引的索引”。下图是一个示意图：</p>
+<p><img src="/uploads/IndexStructure/27.png" alt=""></p>
+<p>“树根”表示第一个属性，他可以使任何类型的索引。该索引包含的内容有：索引键值，指向另一个索引的指针。在下面的例子中体现更加明显。现在我们来看一个例子，下面是各个不同的记录：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">薪资</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">400</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">350</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">75</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">120</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">275</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">110</td>
+</tr>
+<tr>
+<td style="text-align:left">85</td>
+<td style="text-align:left">140</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>现在我们根据年龄和薪资两个不同属性来构建一个多级索引：</p>
+<p><img src="/uploads/IndexStructure/28.png" alt=""></p>
+<h3 id="kd树"><a href="#kd树" class="headerlink" title="kd树"></a>kd树</h3><p>kd树是把二叉搜索树推广到 多维度数据 的一种 <strong>主存数据结构</strong> 。</p>
+<blockquote>
+<p><strong>kd树是一个二叉树</strong>。对于表示的多维度数据而言，所有维度的属性 <strong>在层间交替出现</strong>，因此不同层上的属性是不同的。</p>
+</blockquote>
+<p>举个例子，比如用kd树来表示前面多级索引中年龄-薪资，那么第一层用来表示薪资、第二层用来表示年龄、第三层用来表示薪资、第四层用来表示年龄… 这样依次交替的出现在每一层。</p>
+<p>kd树结点的两个特性：</p>
+<ul>
+<li>1、 <strong>内部结点</strong>：只表示一个属性，基于该属性的划分值（小于该划分值在左子树，大于等于该划分值在右子树），以及指向左子树、右子树的指针；</li>
+<li>2、 <strong>叶子结点</strong>：为一个数据块，块中存放尽可能多的记录；</li>
+</ul>
+<p>下图的kd树，每一层交叉出现“年龄”和“薪资”属性。而叶子结点是存放两个记录的块。</p>
+<p><img src="./img/29.png" alt=""></p>
+<h4 id="kd树相关操作"><a href="#kd树相关操作" class="headerlink" title="kd树相关操作"></a>kd树相关操作</h4><p>为了实现插入，我们找到一个叶结点：</p>
+<ul>
+<li>1、如果叶结点的块有空闲空间：我们就把新的数据点放在那里；</li>
+<li><p>2、如果叶结点的块空间已满：我们把块分裂成两个，并根据分裂叶结点所在层的相应属性划分叶结点中的内容。最后创建一个新的内部结点：其子节点为分裂得到的新块，并且 <strong>给该内部结点一个与分裂相对应的划分值</strong> 。</p>
+<p>  当无法进行分裂时，我们可以尝试沿另一个维读（属性）进行分裂，或者 <strong>可以使用溢出块</strong>。</p>
+</li>
+</ul>
+<p>比如针对上图，我们要插入一个（年龄，薪资）的记录（35，500）。从上图我们找到由（25，400）和（45，350）组成的叶结点，但是该叶结点空间已满。从上图得知第4层是根据年龄来分裂的，假如我们用年龄35来进行划分，进行分裂之后得到的kb-树如下：</p>
+<p><img src="./img/30.png" alt=""></p>
+<p>对于查询操作而言：</p>
+<ul>
+<li>1、如果当前处于属性已知的二叉树层级时，比如当前我们处于根节点，并且要查询 <strong>薪资</strong> 大于150的情形时，那么我们可以直接查找右子节点；</li>
+<li>2、如果当前处于未知属性的二叉树层级时，比如当前我们处于根节点，要查询 <strong>年龄</strong> 小于50的情形时，我们就需要 <strong>查看当前层级的左右子节点</strong> 进行比较，然后再进行选择；</li>
+<li>3、对于范围查询而言，如果范围跨越了结点的划分值，那么我们就必须要考察两个子结点；</li>
+</ul>
+<h3 id="四叉树"><a href="#四叉树" class="headerlink" title="四叉树"></a>四叉树</h3><p>在一个四叉树中，每个内部结点对应于二维空间中的一个正方形区域。</p>
+<ul>
+<li>1、如果一个正方形中的点数小于等于一个块能够存放的记录数量，那么我们就将该正方形看作是树的叶结点；</li>
+<li>2、如果一个正方形中的点数大于一个块能够存放的记录数量，那么我们就把该正方形看作内部结点，<strong>它的子节点对应于它的四个象限</strong> ；</li>
+</ul>
+<p>下图是四叉树结点的区域分布：</p>
+<p><img src="/uploads/IndexStructure/31.png" alt=""></p>
+<p>为什么说四叉树，在二维平面上以原点划分4个象限。比如上图的（50，200）点就对应了四个象限，这里我们加入一个数据块只能存放两个记录。也就是当一个象限内的记录多余2个时，我们需要根据记录在空间内的分布情况划分子空间。新找一个原点，比如（25，300），然后同样划分四个象限。</p>
+<p>下图是根据上面的记录分布构造的四叉树：</p>
+<p><img src="/uploads/IndexStructure/32.png" alt=""></p>
+<p>从上图我们可以看到，分裂了两个子象限，其原点分别为（75，100）和（25，300）。结点（75，100）的“东南”指针为空，结点（25，300）的“西南”和“西北”指针为空。这里还只是2维的情况（即从年龄和薪资两个维度），</p>
+<blockquote>
+<p>当维度更大之后，出现空指针的情况会越加明显。</p>
+</blockquote>
+<h3 id="R树"><a href="#R树" class="headerlink" title="R树"></a>R树</h3><p>R树表示由二维或者更高维度区域组成的数据，我们把它称为 <strong>数据区</strong> 。R树的一个内部结点对应于某个内部区域，“区域”可以是任何形状，但实际上大多为矩形或者其他简单地形状。</p>
+<p>R树结点的键位置上含有子区域，它表示结点的子结点。子区域之间可以有重叠，但尽量做到重叠区域更小。</p>
+<p><img src="/uploads/IndexStructure/33.png" alt=""></p>
+<p>根节点关联着整个区域。</p>
+<h4 id="R树查询操作"><a href="#R树查询操作" class="headerlink" title="R树查询操作"></a>R树查询操作</h4><p>我们从根结点开始，然后确定其子结点区域内包含有目标点：</p>
+<ul>
+<li>1、如果当前没有区域包含目标点，那么查询失败结束；</li>
+<li>2、如果有至少一个子结点区域包含目标点，那么我们需要递归地查询子孙结点区域。<strong>直到找到一个或者多个叶子结点</strong>；</li>
+</ul>
+<p>也就是说：</p>
+<blockquote>
+<p>最终的数据存放于叶子结点中；</p>
+</blockquote>
+<h4 id="R树插入操作"><a href="#R树插入操作" class="headerlink" title="R树插入操作"></a>R树插入操作</h4><p>当我们向R树中插入一个新区域时，我们从根开始找到一个适合新区域结点的子区域。如果多余一个子区域可供插入，那么我们就看哪个子区域扩大的尽可能少，以此递归地进行下去；</p>
+<p>如果不存在包含新区域的子区域，那么我们就得扩大其中一个子区域用于存放新区域；</p>
+<p>最后到达叶结点时，查看该叶结点是否有足够的空间。如果没有足够的空间，我们必须要分裂叶结点，</p>
+<blockquote>
+<p>分裂之后的叶结点必须要覆盖原始叶结点的所有数据区；</p>
+</blockquote>
+<p>这个插入过程和B+树类似，从叶子结点分裂，直到某个父结点有空间则结束分裂；</p>
+<h2 id="三、位图索引"><a href="#三、位图索引" class="headerlink" title="三、位图索引"></a>三、位图索引</h2><p>位图索引是一个长度为n的位向量集合。它能够表示n个记录。</p>
+<p>例如有一个由name、age两个字段组成的记录。此时存在6个记录：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">下标</th>
+<th style="text-align:left">name</th>
+<th style="text-align:left">age</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">1</td>
+<td style="text-align:left">foo</td>
+<td style="text-align:left">30</td>
+</tr>
+<tr>
+<td style="text-align:left">2</td>
+<td style="text-align:left">bar</td>
+<td style="text-align:left">30</td>
+</tr>
+<tr>
+<td style="text-align:left">3</td>
+<td style="text-align:left">baz</td>
+<td style="text-align:left">40</td>
+</tr>
+<tr>
+<td style="text-align:left">4</td>
+<td style="text-align:left">foo</td>
+<td style="text-align:left">50</td>
+</tr>
+<tr>
+<td style="text-align:left">5</td>
+<td style="text-align:left">bar</td>
+<td style="text-align:left">40</td>
+</tr>
+<tr>
+<td style="text-align:left">6</td>
+<td style="text-align:left">baz</td>
+<td style="text-align:left">30</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>那么对于字段name而言的位图是从左到右生长的，即左边表示第一位：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">name</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">foo</td>
+<td style="text-align:left">100100</td>
+</tr>
+<tr>
+<td style="text-align:left">bar</td>
+<td style="text-align:left">010010</td>
+</tr>
+<tr>
+<td style="text-align:left">baz</td>
+<td style="text-align:left">001001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>解释一下<code>foo</code>对应的位图<code>100100</code>，第1位为0表示在上面的表格中下标为1的name为foo，第2位为0表示在上面的表格中下标为2的name不为foo。以此类推下去。</p>
+<p>我们也可以看看字段age每一个值对应的位图：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">age</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">110001</td>
+</tr>
+<tr>
+<td style="text-align:left">40</td>
+<td style="text-align:left">001010</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">000100</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>规律和上面的一样。总的来说就是对于字段F（比如上面的”name”字段）的位图索引而言，如果第i个记录的字段F为v（比如上面的”foo”）。那么对应于值v的位向量在位置i上的取值为1；否则该向量的位置i上的取值为0；</p>
+<blockquote>
+<p><strong>位的总数是记录个数和取值数（字段取值）的乘积</strong>。</p>
+</blockquote>
+<h3 id="位图索引的优势"><a href="#位图索引的优势" class="headerlink" title="位图索引的优势"></a>位图索引的优势</h3><p>位图索引的优势是它们允许我们在许多情况下高效地回答 <strong>部分匹配查询</strong> 。下面我们来看个例子：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">SELECT title </div><div class="line">FROM Movie</div><div class="line">WHERE studioName = &apos;Disney&apos; AND year = 2005;</div></pre></td></tr></table></figure>
+<p>那么我们针对字段<code>studioName</code>和字段<code>year</code>建立位图索引，那么我们就可以得到<code>Disney</code>对应的位向量A，<code>year</code>对应的位向量B。现在我们对位向量A和B求交集，即两个位向量做按位与的操作得到一个位向量C。然后我们观察位向量C的二进制位，当某一位值为1时就表示该记录满足上诉约束条件的结果；</p>
+<p>位图索引也能够帮助回答范围查询。下面来看个例子，还是上面一直用的“薪资-年龄”表格：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">薪资</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">400</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">60</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">350</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">75</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">100</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">120</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">275</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">260</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">110</td>
+</tr>
+<tr>
+<td style="text-align:left">85</td>
+<td style="text-align:left">140</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们为字段年龄建立位图索引：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">25</td>
+<td style="text-align:left">110000000000</td>
+</tr>
+<tr>
+<td style="text-align:left">30</td>
+<td style="text-align:left">001000000000</td>
+</tr>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">000110000000</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">000001111000</td>
+</tr>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">000000000100</td>
+</tr>
+<tr>
+<td style="text-align:left">70</td>
+<td style="text-align:left">000000000010</td>
+</tr>
+<tr>
+<td style="text-align:left">80</td>
+<td style="text-align:left">000000000001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>现在为薪水字段建立位图索引</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">薪水</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">60</td>
+<td style="text-align:left">100100000000</td>
+</tr>
+<tr>
+<td style="text-align:left">400</td>
+<td style="text-align:left">010000000000</td>
+</tr>
+<tr>
+<td style="text-align:left">260</td>
+<td style="text-align:left">001000000100</td>
+</tr>
+<tr>
+<td style="text-align:left">350</td>
+<td style="text-align:left">000010000000</td>
+</tr>
+<tr>
+<td style="text-align:left">75</td>
+<td style="text-align:left">000001000000</td>
+</tr>
+<tr>
+<td style="text-align:left">100</td>
+<td style="text-align:left">000000100000</td>
+</tr>
+<tr>
+<td style="text-align:left">120</td>
+<td style="text-align:left">000000010000</td>
+</tr>
+<tr>
+<td style="text-align:left">275</td>
+<td style="text-align:left">000000001000</td>
+</tr>
+<tr>
+<td style="text-align:left">110</td>
+<td style="text-align:left">000000000010</td>
+</tr>
+<tr>
+<td style="text-align:left">140</td>
+<td style="text-align:left">000000000001</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>我们以上述为基础，找出年龄在 <code>45~55</code>且薪水范围在<code>100~200</code>之间记录。首先找到范围内的年龄向量，并对它们进行按位或操作得到一个新的向量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">000110000000</div><div class="line">|</div><div class="line">000001111000</div><div class="line">=</div><div class="line">000111111000</div></pre></td></tr></table></figure>
+<p>就得到符合年龄的记录。<br>然后找到符合薪水的向量，同样对他们进行按位或操作得到一个新向量：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div><div class="line">6</div><div class="line">7</div><div class="line">8</div><div class="line">9</div></pre></td><td class="code"><pre><div class="line">000000100000</div><div class="line">|</div><div class="line">000000010000</div><div class="line">|</div><div class="line">000000000010</div><div class="line">|</div><div class="line">000000000001</div><div class="line">=</div><div class="line">000000110011</div></pre></td></tr></table></figure>
+<p>现在我们对上面的两个新向量进行按位与来求交集：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div><div class="line">4</div><div class="line">5</div></pre></td><td class="code"><pre><div class="line">000111111000</div><div class="line">&amp;</div><div class="line">000000110011</div><div class="line">=</div><div class="line">000000110000</div></pre></td></tr></table></figure>
+<p>也就得出第7个和第8个记录是符合约束条件的。</p>
+<blockquote>
+<p>使用位图向量求交集时用按位与，并集用按位或！！！</p>
+</blockquote>
+<h3 id="压缩位图"><a href="#压缩位图" class="headerlink" title="压缩位图"></a>压缩位图</h3><p>假定我们有n个记录的文件，该文件存在字段F。该字段F在文件内有m个不同的值。现在我们要对字段F建立位图索引，那么就就需要 <code>mn</code> 位的二进制位。随着m或者n的增大会导致位图索引所占的空间变大。</p>
+<p>一个常见的压缩方案叫做 <strong>分段长度编码</strong> ：<strong>段是由 i个0 后跟 1个1 组成的序列</strong>。通过对整数i适当地二进制编码来表示一个段。然后把每个段拼接在一起，得到的位序列就是整个位向量的编码。</p>
+<h4 id="确定位数、编码"><a href="#确定位数、编码" class="headerlink" title="确定位数、编码"></a>确定位数、编码</h4><p>下面我们先来看看如何适当地来表示 <strong>i</strong>，具体的方案如下：</p>
+<ul>
+<li>1）、首先需要确定 i 的二进制表示由多少位；位数近似地等于 $j = log_{2}i$ (j表示i的二进制位数)。那么就用j-1个1和一个0来表示i所占的位数。</li>
+<li>2）、然后我们在后面加上二进制表示；</li>
+</ul>
+<p>比如对于 i = 13，那么$log_{2}13 \approx 4$，也就是说j为4.那么前面的位数需要 $4-1=3$ 个1和1个0： <code>1110</code>。而13的二进制表示为<code>1101</code>。因此最终的编码为：<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div></pre></td><td class="code"><pre><div class="line">11101101</div></pre></td></tr></table></figure></p>
+<p>特殊的情况：</p>
+<blockquote>
+<p>当i=0或者i=1时j为1。那么我们以0开始且0后面为表示 i 的 <strong>一位</strong> 二进制数；</p>
+</blockquote>
+<h4 id="解码"><a href="#解码" class="headerlink" title="解码"></a>解码</h4><p>而根据编码来解码整数 i 也是很简单的。当我们处于某个整数 i 编码位序列的开始位置上：</p>
+<ul>
+<li>1）、向前扫描到第一个0，以此来确定位长度（即 j 的值）；</li>
+<li>2）、我们查找位序列后的 j 位，这些二进制数就用来表示整数 i ；</li>
+</ul>
+<p>比如我们现在有一个二进制位序列：<code>11101101001011</code>。我们从左到右扫描直到遇到第一个0：</p>
+<ul>
+<li>首先扫描到3个1，那么后续的4个二进制位 <code>1101</code> 用来表示整数13；</li>
+<li>接着马上看到一个0，即后续的1位二进制 <code>0</code> 表示整数 0；</li>
+<li>最后扫描到1个1，那么后续的2个二进制位<code>11</code>用来表示整数3；</li>
+</ul>
+<h4 id="确定位序列"><a href="#确定位序列" class="headerlink" title="确定位序列"></a>确定位序列</h4><p>现在我们解码了整数 i 。那么我们就需要根据上面提到的一句话 <strong>由i个0和1个1的位序列来组成段</strong> 。那么得到的最重的位向量为：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">/// (13个0，1个1) + (0个0，1个1) + (3个0，1个1)</div><div class="line">00000000000001     1              0001</div></pre></td></tr></table></figure>
+<p>上面讲这么多都是为了能够压缩上面这个位向量的那一系列二进制位。每个这样解码的位向量都以 1 结尾。且任何的尾数0串都不会被恢复。</p>
+<blockquote>
+<p><strong>既然位向量中0表示相应的记录不在所描述的集合中，我们甚至不必知道记录的总数，并且可以忽略这个尾数0串</strong>。</p>
+</blockquote>
+<h4 id="例子🌰"><a href="#例子🌰" class="headerlink" title="例子🌰"></a>例子🌰</h4><p>下面是2个年龄的原始位向量：</p>
+<div class="table-container">
+<table>
+<thead>
+<tr>
+<th style="text-align:left">年龄</th>
+<th style="text-align:left">位图</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align:left">45</td>
+<td style="text-align:left">000110000000</td>
+</tr>
+<tr>
+<td style="text-align:left">50</td>
+<td style="text-align:left">000001111000</td>
+</tr>
+</tbody>
+</table>
+</div>
+<p>现在我们需要对这个三个位向量进行压缩。</p>
+<p>对于年龄45：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">0001           1           0000000</div><div class="line">(3个0、1个1) + (0个0、1个1)  全是0直接省略</div></pre></td></tr></table></figure>
+<p>那么得到的数字序列为 <code>(3,0)</code>，这里i=3、0，那么编码的结果为 <code>1011 00</code>。也就是说位向量 <code>000110000000</code> 被压缩为 <code>1011 00</code>。</p>
+<p>对于年龄50：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">000001         1             1             1           000</div><div class="line">(5个0、1个1) + (0个0、1个1) + (0个0、1个1) + (0个0、1个1)  全是0直接省略</div></pre></td></tr></table></figure>
+<p>那么得到的数字序列为<code>5000</code>，这里i=5、0、0、0，那么编码的结果为 <code>110101 00 00 00</code>也就是说位向量 <code>000001111000</code> 被压缩为 <code>110101 00 00 00</code>。</p>
+<blockquote>
+<p>总结：</p>
+<p>1、根据原始数据中0的个数来确定需要压缩的位数；</p>
+<p>2、根据得到的压缩位数，对这个数字求对数，并进行编码；</p>
+</blockquote>
+<h3 id="位图索引的管理"><a href="#位图索引的管理" class="headerlink" title="位图索引的管理"></a>位图索引的管理</h3><p>位图索引相关的三个问题：</p>
+<ul>
+<li><p>1、 <strong>查找位向量</strong>：当想要查找一个给定值的位向量，或者给定范围内的值对应的多个位向量时，我们如何有效地找到它们；</p>
+<p>  把位向量看成记录，它们的键是对应于该位向量的字段值。然后任何辅助索引技术都可以使我们有效地按值找到它们的位向量。<br>  我们存储位向量时，把他们当做可变长记录。这是因为随着数据文件中记录的增加，它们一般会增长。</p>
+</li>
+<li><p>2、 <strong>查找记录</strong>：当我们已经选择好回答查询查询的记录集时，我们如何有效地检索记录；</p>
+<p>  我们可在数据文件上创建辅助索引（稠密索引，无序，桶），它的索引键是记录号。</p>
+</li>
+<li>3、 <strong>更新位图索引</strong>：当出现插入或者删除时，如何调整给定字段的位图索引；</li>
+</ul>
+<h4 id="数据文件修改的处理"><a href="#数据文件修改的处理" class="headerlink" title="数据文件修改的处理"></a>数据文件修改的处理</h4><p>数据文件的改变需要位图索引也做相应的改变。</p>
+<p>对于插入而言，我们保留一个可用记录号，并且把它分派给新纪录。对于每个位图索引，我们必须确定新纪录在相应字段的值，并且在该值的位向量后面加1。而需要向其他位向量后面加0，而对于上面提到的压缩技术而言，加0操作完全可以省略；</p>
+<p>当新纪录中有一个索引字段是首次出现的，那么我们就需要给这个字段增加一个新的位向量，然后根据位向量的值插入到索引结构中。</p>
+<p>最后是将位图索引字段的值从旧值更改为新值，那么我们就需要修改旧值对应的位向量：即该向量相应位置的1更改为0；同样也需要修改新值对应的位向量：如果新值之前尚未存在过，那么就是上面的插入逻辑；如果新值之前存在，那么就需要将该向量对应位置的0更改为1。</p>
+<h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>在本篇文章中主要是记录了一下多维索引和位图索引，它们存在目的主要是为了处理范围查询。其中比较重要的多维树形结构包括有多级索引（一层表示一个字段）、kd树（不同属性交替出现）、四叉树和R树。最后就是位图索引，它的主体是某一个字段，然后根据每个记录对应字段值构造不同的位图，即对同一字段在不同记录中查找不同的值。以及根据位图索引的压缩操作和解码操作。</p>
+</div></article></div></main><footer><div class="paginator"><a href="/2020/09/09/database_index/" class="prev">PREV</a><a href="/2020/09/07/opengl_ projection_matrix/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+var disqus_identifier = '2020/09/09/database_multidimensional_index/';
+var disqus_title = '数据库原理——多维索引和位图索引';
+var disqus_url = 'http://yoursite.com/2020/09/09/database_multidimensional_index/';
+(function() {
+    var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+    dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+    (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+})();</script><script id="dsq-count-scr" src="//seansun.disqus.com/count.js" async></script><div class="copyright"><p>关注微博<a href="http://weibo.com/wwloading" target="_blank">@凌云壮志幾多愁</a>，让我们有更多的联系。</p><p>© 2016 - 2021 <a href="http://yoursite.com">王望</a>, Powered By <a href="https://hexo.io/" target="_blank">Hexo</a></p></div></footer></div><script async src="//cdn.bootcss.com/mathjax/2.7.0/MathJax.js?config=TeX-MML-AM_CHTML" integrity="sha384-crwIf/BuaWM9rM65iM+dWFldgQ1Un8jWZMuh3puxb8TOY9+linwLoI7ZHZT+aekW" crossorigin="anonymous"></script><script>(function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;e=o.createElement(i);r=o.getElementsByTagName(i)[0];e.src='//www.google-analytics.com/analytics.js';r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));ga('create',"UA-65933410-1",'auto');ga('send','pageview');</script></body></html>
