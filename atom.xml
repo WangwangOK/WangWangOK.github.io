@@ -154,7 +154,7 @@
     <link href="http://yoursite.com/2020/09/09/database_index/"/>
     <id>http://yoursite.com/2020/09/09/database_index/</id>
     <published>2020-09-09T09:52:13.899Z</published>
-    <updated>2021-01-02T09:01:38.167Z</updated>
+    <updated>2021-01-02T09:05:39.285Z</updated>
     
     <content type="html"><![CDATA[<p>索引以一个或多个字段的值为输入并能“快速地”找出具有该值得结果。建立索引的字段称为查找键。在本篇文章中先来看看索引的基本概念，并看几种索引数据结构表示。</p>
 <hr>
@@ -206,9 +206,14 @@
 </ul>
 <pre><code><figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div></pre></td><td class="code"><pre><div class="line">Movie(title, year, length, genre, studioName, producerC#);</div><div class="line">Studio(name, address, presC#);</div></pre></td></tr></table></figure>
 
+
+
 现在我们有一个查询的SQL:
 
+
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><div class="line">1</div><div class="line">2</div><div class="line">3</div></pre></td><td class="code"><pre><div class="line">SELECT title, year</div><div class="line">FROM Movie, Studio</div><div class="line">WHERE presC#=zzz AND Movie.studioName = Studio.name;</div></pre></td></tr></table></figure>
+
+
 
 这个SQL的意思是已知一个电影制片厂，我们需要找到该制片厂制作的所有电影。因此我们可以根据Studio和Movie建立一个 __聚集文件__ ：
 
