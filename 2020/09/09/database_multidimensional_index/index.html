@@ -585,7 +585,7 @@
 <p>当新纪录中有一个索引字段是首次出现的，那么我们就需要给这个字段增加一个新的位向量，然后根据位向量的值插入到索引结构中。</p>
 <p>最后是将位图索引字段的值从旧值更改为新值，那么我们就需要修改旧值对应的位向量：即该向量相应位置的1更改为0；同样也需要修改新值对应的位向量：如果新值之前尚未存在过，那么就是上面的插入逻辑；如果新值之前存在，那么就需要将该向量对应位置的0更改为1。</p>
 <h2 id="后记"><a href="#后记" class="headerlink" title="后记"></a>后记</h2><p>在本篇文章中主要是记录了一下多维索引和位图索引，它们存在目的主要是为了处理范围查询。其中比较重要的多维树形结构包括有多级索引（一层表示一个字段）、kd树（不同属性交替出现）、四叉树和R树。最后就是位图索引，它的主体是某一个字段，然后根据每个记录对应字段值构造不同的位图，即对同一字段在不同记录中查找不同的值。以及根据位图索引的压缩操作和解码操作。</p>
-</div></article></div></main><footer><div class="paginator"><a href="/2020/09/09/database_index/" class="prev">PREV</a><a href="/2020/09/07/opengl_ projection_matrix/" class="next">NEXT</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
+</div></article></div></main><footer><div class="paginator"><a href="/2020/09/09/database_index/" class="prev">上一篇</a><a href="/2020/09/07/opengl_ projection_matrix/" class="next">下一篇</a></div><div id="disqus_thread"></div><script>var disqus_shortname = 'seansun';
 var disqus_identifier = '2020/09/09/database_multidimensional_index/';
 var disqus_title = '数据库原理——多维索引和位图索引';
 var disqus_url = 'http://yoursite.com/2020/09/09/database_multidimensional_index/';
