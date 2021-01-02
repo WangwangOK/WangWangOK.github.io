@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2021-01-02T08:46:18.720Z</updated>
+  <updated>2021-01-02T08:49:50.725Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -16,11 +16,11 @@
   <generator uri="http://hexo.io/">Hexo</generator>
   
   <entry>
-    <title>辅助存储管理</title>
+    <title>数据库原理——辅助存储管理</title>
     <link href="http://yoursite.com/2020/09/09/storyge_layer/"/>
     <id>http://yoursite.com/2020/09/09/storyge_layer/</id>
     <published>2020-09-09T09:52:13.904Z</published>
-    <updated>2021-01-02T08:46:18.720Z</updated>
+    <updated>2021-01-02T08:49:50.725Z</updated>
     
     <content type="html"><![CDATA[<p>存储器的层次结构这里就不细述了，主要来看看存储器层次间传输数据。对于磁盘来说，它被划分成磁盘块（逻辑层面上的划分，并不是实际存在的），每块大小大约为4~64kb。整个块在从缓冲区中移进移出，因此</p>
 <blockquote>
