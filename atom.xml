@@ -5,7 +5,7 @@
   <link href="/atom.xml" rel="self"/>
   
   <link href="http://yoursite.com/"/>
-  <updated>2020-09-09T10:00:19.316Z</updated>
+  <updated>2021-01-02T08:46:18.720Z</updated>
   <id>http://yoursite.com/</id>
   
   <author>
@@ -20,18 +20,18 @@
     <link href="http://yoursite.com/2020/09/09/storyge_layer/"/>
     <id>http://yoursite.com/2020/09/09/storyge_layer/</id>
     <published>2020-09-09T09:52:13.904Z</published>
-    <updated>2020-09-09T10:00:19.316Z</updated>
+    <updated>2021-01-02T08:46:18.720Z</updated>
     
     <content type="html"><![CDATA[<p>存储器的层次结构这里就不细述了，主要来看看存储器层次间传输数据。对于磁盘来说，它被划分成磁盘块（逻辑层面上的划分，并不是实际存在的），每块大小大约为4~64kb。整个块在从缓冲区中移进移出，因此</p>
 <blockquote>
 <p>加速数据库操作的关键技术是 <strong>安排好数据</strong> ，使得当某一个磁盘块中有数据访问的时候，大约同时很有可能该块上的其他数据也需要被访问。</p>
 </blockquote>
 <p>而对于主存储器和高速缓存来说，它们之间的传输是以 <strong>高速缓存线</strong> 为基本单元。一般是32个连续的字节。同样的我们希望整个高速缓存线的数据能够被一起使用。就比如说，如果一条高速缓存线存储着一个程序的连续指令，我们希望当第一条指令被请求时，接下来的指令也会随之执行。高速缓存也分是全相联，还是分多路组相联。比如下图的可以叫做E路组相联：</p>
-<p><img src="./uploads/StorageManagement/1.png" alt=""></p>
+<p><img src="/uploads/StorageManagement/1.png" alt=""></p>
 <h2 id="一、虚拟存储器"><a href="#一、虚拟存储器" class="headerlink" title="一、虚拟存储器"></a>一、虚拟存储器</h2><p>虚拟存储器，我们也称之为虚拟内存，它一部分留在内存中，剩下的保存在磁盘中。在Linux中对内存寻址划分的粒度比较细，它引入了多个概念：逻辑地址、线性地址、物理地址。下面我画一个图来阐述它们之间的联系，以及转换关系：</p>
-<p><img src="./uploads/StorageManagement/2.png" alt=""></p>
+<p><img src="/uploads/StorageManagement/2.png" alt=""></p>
 <h2 id="二、磁盘"><a href="#二、磁盘" class="headerlink" title="二、磁盘"></a>二、磁盘</h2><p>我们先来看看磁盘的结构：</p>
-<p><img src="./uploads/StorageManagement/3.png" alt=""></p>
+<p><img src="/uploads/StorageManagement/3.png" alt=""></p>
 <p>从上图可以看出：</p>
 <ul>
 <li>1、<strong>盘片</strong>：磁盘由多个盘片组成，它们围绕着 <strong>“转轴”</strong> 旋转。</li>
@@ -52,7 +52,7 @@
 <li>4、缓存磁道：将一整条或更多磁道缓存与磁盘控制器的内存中；</li>
 </ul>
 <p>下图是简单的示意图：</p>
-<p><img src="./uploads/StorageManagement/4.png" alt=""></p>
+<p><img src="/uploads/StorageManagement/4.png" alt=""></p>
 <p>这里是一个磁盘控制器控制了3个磁盘。</p>
 <h3 id="磁盘存取"><a href="#磁盘存取" class="headerlink" title="磁盘存取"></a>磁盘存取</h3><p>存取一般分为3步，而每一步都有相应的延迟：</p>
 <ul>
@@ -102,7 +102,7 @@
 <li>2、 <strong>写故障</strong>：当出现了系统发生故障的情形。如果故障是发生在写完 <script type="math/tex">X_{L}</script> 之前，那么它的校验位将会失败，那么此时我们可以将<script type="math/tex">X_{R}</script>的值拷贝到<script type="math/tex">X_{L}</script>中；如果故障发生在写完<script type="math/tex">X_{L}</script>之后，那么<script type="math/tex">X_{L}</script>则为正确地值，我们此时就将<script type="math/tex">X_{L}</script>的值拷贝到<script type="math/tex">X_{R}</script>中；</li>
 </ul>
 <h3 id="奇偶块"><a href="#奇偶块" class="headerlink" title="奇偶块"></a>奇偶块</h3><p>先看下图：</p>
-<p><img src="./uploads/StorageManagement/5.png" alt=""></p>
+<p><img src="/uploads/StorageManagement/5.png" alt=""></p>
 <p>不管有多少数据盘，我们只使用一个冗余盘。并且数据盘和冗余盘的大小是一致的。</p>
 <p>在冗余盘中，第i块的数据由所有数据盘对应第i块的数据决定。决定的方案是对比每个数据盘的第i块，并且依次对比该块内部的所有二进制位。<br>然后运用前面提到的奇偶校验，数据盘中对应块内相应位上1的个数为奇数时，冗余盘对应块内相应位为1；如果为偶数则为0。</p>
 <p>比如上图中的第1块，从所有数据盘的第1块的第1位开始统计1的个数，并设置冗余盘中对应位置的值。</p>
@@ -121,7 +121,7 @@
 </blockquote>
 <p>那么一个磁盘崩溃，我们就可以根据这个性质并查看其他磁盘的数据，计算出发生故障磁盘的数据。</p>
 <h3 id="基于海明码多个盘崩溃时的处理"><a href="#基于海明码多个盘崩溃时的处理" class="headerlink" title="基于海明码多个盘崩溃时的处理"></a>基于海明码多个盘崩溃时的处理</h3><p>下面讲得的方法可以处理同事发生两个崩溃的情形，它是基于最简单的 <strong>海明码</strong> ：</p>
-<p><img src="./uploads/StorageManagement/6.png" alt=""></p>
+<p><img src="/uploads/StorageManagement/6.png" alt=""></p>
 <ul>
 <li>1、盘5的位是盘1、2、3相应位的奇偶性；</li>
 <li>2、盘6的位是盘1、2、4相应位的奇偶性；</li>
